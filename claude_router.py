@@ -54,7 +54,7 @@ async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obt
             claude_client.stream_message(message, conversation_id, model),
             media_type="text/event-stream",
 
-            headers={"conversation_id": conversation_id}  # 这里通过header返回conversation_id
+            # headers={"conversation_id": conversation_id}  # 这里通过header返回conversation_id
 
         )
     else:
