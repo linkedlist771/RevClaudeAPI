@@ -35,8 +35,9 @@ async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obt
             status_code=400,
             content={"error": f"Model not found."},
         )
-    conversation_id = "test"
     conversation_id = claude_chat_request.conversation_id
+    conversation_id = "test"
+
     try:
         if not conversation_id:
             conversation = claude_client.create_new_chat()
