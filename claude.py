@@ -268,13 +268,12 @@ class Client:
     answer = ""
     with httpx.stream("POST", url, headers=headers, data=payload) as r:
       for text in r.iter_text():
-        logger.info(f"raw text: {text}")
+        # logger.info(f"raw text: {text}")
         response_parse_text = await parse_text(text)
-        logger.info(f"parsed text: {response_parse_text}")
+        # logger.info(f"parsed text: {response_parse_text}")
         if response_parse_text:
-            for text in response_parse_text:
-                # print(text)  # Debugging: 打印解析出的每条信息
-                yield text  # 使用 yield 发送每条解析出的信息
+            resp_text = "".join(response_parse_text)
+            yield resp_text
 
 
   # Deletes the conversation
