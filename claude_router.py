@@ -26,9 +26,20 @@ async def list_conversations(claude_client=Depends(obtain_claude_client)):
 async def list_models():
     return [model.value for model in ClaudeModels]
 
+import time
+def generate_data():
+    """生成器函数，每秒输出当前时间戳"""
+    for _ in range(10):
+        yield f"data: {time.time()}\n\n"
+        time.sleep(0.02)  # 模拟数据处理时间
+
+
 
 @router.post("/chat")
 async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obtain_claude_client)):
+    """返回一个流式响应，客户端将逐步接收数据"""
+    r = generate_data()
+    return StreamingResponse(r, media_type="text/event-stream")
     model = claude_chat_request.model
     if model not in [model.value for model in ClaudeModels]:
         return JSONResponse(
