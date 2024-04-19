@@ -29,31 +29,34 @@ async def list_models():
 
 @router.post("/chat")
 async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obtain_claude_client)):
-    model = claude_chat_request.model
-    if model not in [model.value for model in ClaudeModels]:
-        return JSONResponse(
-            status_code=400,
-            content={"error": f"Model not found."},
-        )
-    conversation_id = claude_chat_request.conversation_id
     try:
-        if not conversation_id:
-            conversation = claude_client.create_new_chat()
-            conversation_id = conversation["uuid"]
+        model = claude_chat_request.model
+        if model not in [model.value for model in ClaudeModels]:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Model not found."},
+            )
+        conversation_id = claude_chat_request.conversation_id
+        try:
+            if not conversation_id:
+                conversation = claude_client.create_new_chat()
+                conversation_id = conversation["uuid"]
+        except Exception as e:
+            logger.error(f"Meet an error: {e}")
+            return ("error: ", e)
+
+        message = claude_chat_request.message
+        is_stream = claude_chat_request.stream
+
+        if is_stream:
+            res = claude_client.stream_message(message, conversation_id, model)
+            return StreamingResponse(
+                res,
+                media_type="text/event-stream",
+            )
+        else:
+            res = claude_client.send_message(message, conversation_id, model)
+            return res
     except Exception as e:
         logger.error(f"Meet an error: {e}")
-        return ("error: ", e)
-
-    message = claude_chat_request.message
-    is_stream = claude_chat_request.stream
-
-    if is_stream:
-        res = claude_client.stream_message(message, conversation_id, model)
-        return StreamingResponse(
-            res,
-            media_type="text/event-stream",
-        )
-    else:
-        res = claude_client.send_message(message, conversation_id, model)
-        return res
 
