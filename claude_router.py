@@ -29,9 +29,10 @@ async def list_models():
 import time
 def generate_data():
     """生成器函数，每秒输出当前时间戳"""
-    for _ in range(10):
+    for _ in range(20):
         yield f"data: {time.time()}\n\n"
-        time.sleep(0.02)  # 模拟数据处理时间
+        logger.info(f"data: {time.time()}")
+        time.sleep(1)  # 模拟数据处理时间
 
 
 

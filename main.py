@@ -62,21 +62,21 @@ def ResponseModel():
 OpenAIResponseModel = ResponseModel()
 
 """ Initialization AI Models and Cookies """
-COOKIE_CLAUDE = utility.getCookie_Claude(configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME) #message.session_id
-CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
+COOKIE_CLAUDE = None# utility.getCookie_Claude(configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME) #message.session_id
+CLAUDE_CLIENT = None # claude.Client(COOKIE_CLAUDE)
 
 """FastAPI application instance."""
 
 app = FastAPI()
 
 # Add CORS middleware to allow all origins, credentials, methods, and headers.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 
 
