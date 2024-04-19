@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Union
 
 
 class BaseChatRequest(BaseModel):
@@ -10,4 +11,4 @@ class BaseChatRequest(BaseModel):
 class ClaudeChatRequest(BaseChatRequest):
     """Request message data model for Claude."""
     stream: bool = True
-    conversation_id: str
+    conversation_id: Union[str, None]
