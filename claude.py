@@ -265,8 +265,9 @@ class Client:
       'TE': 'trailers'
     }
 
-    with httpx.stream("POST", url, headers=headers, data=payload) as r:
-      for text in r.iter_text():
+    # with httpx.stream("POST", url, headers=headers, data=payload) as r:
+    if 1:
+      for text in "This is a test message.":
         # logger.info(f"raw text: {text}")
         response_parse_text = await parse_text(text)
         # logger.info(f"parsed text: {response_parse_text}")
