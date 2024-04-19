@@ -267,10 +267,10 @@ class Client:
     import time
     # with httpx.stream("POST", url, headers=headers, data=payload) as r:
     if 1:
-      for text in "This is a test message.":
+      for text in ["This is a test message."] * 10:
         logger.info(f"raw text: {text}")
         yield text
-        time.sleep(0.1)
+        time.sleep(1)
 
         # # logger.info(f"raw text: {text}")
         # response_parse_text = await parse_text(text)
