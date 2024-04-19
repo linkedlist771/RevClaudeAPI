@@ -11,4 +11,4 @@ class BaseChatRequest(BaseModel):
 class ClaudeChatRequest(BaseChatRequest):
     """Request message data model for Claude."""
     stream: bool = True
-    conversation_id: Union[str, None]
+    conversation_id: Union[str, None] = None
