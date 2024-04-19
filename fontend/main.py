@@ -26,7 +26,7 @@ headers = {
 
 # 你的请求体
 data = {
-    "message": "Hello, how are you?",
+    "message": "Hello, how are you? Doyou",
     "model": "claude-3-sonnet-20240229",
     "stream": True
 }

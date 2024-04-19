@@ -7,6 +7,8 @@ import re
 from datetime import datetime
 import httpx
 
+from loguru import logger
+
 class Client:
   def fix_sessionKey(self, cookie):
     if "sessionKey=" not in cookie:
@@ -170,58 +172,58 @@ class Client:
   # Send and Response Stream Message to Claude
   async def stream_message(self, prompt, conversation_id, model, attachment=None, timeout=120):
 
-    # async def parse_text(text):
-    #     try:
-    #         parsed_response = json.loads(text)
-    #         if 'error' in parsed_response:
-    #             error_message = parsed_response['error']['message']
-    #             print("Error Message:", error_message)
-    #     except json.JSONDecodeError:
-    #         events = []
-    #         lines = text.split('\n')
-    #         for line in lines:
-    #             line = line.strip()
-    #             if line:
-    #                 parts = line.split(': ')
-    #                 if len(parts) == 2:
-    #                     event_type, data = parts
-    #                     if data != 'completion' and data != 'ping':
-    #                       try:
-    #                         event_data = json.loads(data)
-    #                         events.append(event_data['completion'])
-    #                       except json.JSONDecodeError:
-    #                         print("CLAUDE STREAM ERROR: ", data)
-                          
-    #         # print(events)
-    #         return events
-
     async def parse_text(text):
-          # 这个缓冲区可以跨多个文本片段保存不完整的JSON字符串
-          buffer = ""
-          events = []
+        try:
+            parsed_response = json.loads(text)
+            if 'error' in parsed_response:
+                error_message = parsed_response['error']['message']
+                print("Error Message:", error_message)
+        except json.JSONDecodeError:
+            events = []
+            lines = text.split('\n')
+            for line in lines:
+                line = line.strip()
+                if line:
+                    parts = line.split(': ')
+                    if len(parts) == 2:
+                        event_type, data = parts
+                        if data != 'completion' and data != 'ping':
+                          try:
+                            event_data = json.loads(data)
+                            events.append(event_data['completion'])
+                          except json.JSONDecodeError:
+                            print("CLAUDE STREAM ERROR: ", data)
+                          
+            # print(events)
+            return events
 
-          lines = text.split('\n')
-          for line in lines:
-              line = line.strip()
-              if not line:
-                  continue
-              buffer += line  # 添加到缓冲区
+    # async def parse_text(text):
+    #       # 这个缓冲区可以跨多个文本片段保存不完整的JSON字符串
+    #       buffer = ""
+    #       events = []
 
-              # 尝试解析缓冲区内容
-              try:
-                  parsed_response = json.loads(buffer)
-                  if 'error' in parsed_response:
-                      print("Error Message:", parsed_response['error']['message'])
-                  else:
-                      # 处理正常的消息
-                      if 'completion' in parsed_response:
-                          events.append(parsed_response['completion'])
-                  buffer = ""  # 清空缓冲区，因为已经成功解析
-              except json.JSONDecodeError:
-                  # 如果解析失败，保留当前缓冲区内容，等待更多数据
-                  continue
+    #       lines = text.split('\n')
+    #       for line in lines:
+    #           line = line.strip()
+    #           if not line:
+    #               continue
+    #           buffer += line  # 添加到缓冲区
 
-          return events
+    #           # 尝试解析缓冲区内容
+    #           try:
+    #               parsed_response = json.loads(buffer)
+    #               if 'error' in parsed_response:
+    #                   print("Error Message:", parsed_response['error']['message'])
+    #               else:
+    #                   # 处理正常的消息
+    #                   if 'completion' in parsed_response:
+    #                       events.append(parsed_response['completion'])
+    #               buffer = ""  # 清空缓冲区，因为已经成功解析
+    #           except json.JSONDecodeError:
+    #               # 如果解析失败，保留当前缓冲区内容，等待更多数据
+    #               continue
+
+    #       return events
 
     url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
 
@@ -266,8 +268,9 @@ class Client:
     answer = ""
     with httpx.stream("POST", url, headers=headers, data=payload) as r:
       for text in r.iter_text():
+        logger.info(f"raw text: {text}")
         response_parse_text = await parse_text(text)
-
+        logger.info(f"parsed text: {response_parse_text}")
         if response_parse_text:
             for text in response_parse_text:
                 # print(text)  # Debugging: 打印解析出的每条信息
