@@ -63,7 +63,7 @@ OpenAIResponseModel = ResponseModel()
 
 """ Initialization AI Models and Cookies """
 COOKIE_CLAUDE = utility.getCookie_Claude(configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME) #message.session_id
-CLAUDE_CLIENT = None#claude.Client(COOKIE_CLAUDE)
+CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
 
 """FastAPI application instance."""
 
