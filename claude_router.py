@@ -40,6 +40,7 @@ async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obt
         if not conversation_id:
             conversation = claude_client.create_new_chat()
             conversation_id = conversation["uuid"]
+            logger.info(f"Created new conversation with id: {conversation_id}")
     except Exception as e:
         logger.error(f"Meet an error: {e}")
         return ("error: ", e)
@@ -52,6 +53,9 @@ async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obt
         return StreamingResponse(
             res,
             media_type="text/event-stream",
+
+            headers={"conversation_id": conversation_id}  # 这里通过header返回conversation_id
+
         )
     else:
         res = claude_client.send_message(message, conversation_id, model)
