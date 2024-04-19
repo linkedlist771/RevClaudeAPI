@@ -264,10 +264,11 @@ class Client:
       'Sec-Fetch-Site': 'same-origin',
       'TE': 'trailers'
     }
-
+    import time
     # with httpx.stream("POST", url, headers=headers, data=payload) as r:
     if 1:
       for text in "This is a test message.":
+        time.sleep(1)
         yield text
         # # logger.info(f"raw text: {text}")
         # response_parse_text = await parse_text(text)
