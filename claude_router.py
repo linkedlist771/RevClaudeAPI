@@ -49,9 +49,8 @@ async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obt
     is_stream = claude_chat_request.stream
 
     if is_stream:
-        res = claude_client.stream_message(message, conversation_id, model)
         return StreamingResponse(
-            res,
+            claude_client.stream_message(message, conversation_id, model),
             media_type="text/event-stream",
 
             headers={"conversation_id": conversation_id}  # 这里通过header返回conversation_id

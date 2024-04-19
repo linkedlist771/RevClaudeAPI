@@ -267,7 +267,7 @@ class Client:
 
     answer = ""
     with httpx.stream("POST", url, headers=headers, data=payload) as r:
-      for text in r.iter_text():
+      async for text in r.iter_text():
         # logger.info(f"raw text: {text}")
         response_parse_text = await parse_text(text)
         # logger.info(f"parsed text: {response_parse_text}")
