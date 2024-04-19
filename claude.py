@@ -268,12 +268,13 @@ class Client:
     # with httpx.stream("POST", url, headers=headers, data=payload) as r:
     if 1:
       for text in "This is a test message.":
-        # logger.info(f"raw text: {text}")
-        response_parse_text = await parse_text(text)
-        # logger.info(f"parsed text: {response_parse_text}")
-        # if response_parse_text:
-        resp_text = "".join(response_parse_text)
-        yield resp_text
+        yield text
+        # # logger.info(f"raw text: {text}")
+        # response_parse_text = await parse_text(text)
+        # # logger.info(f"parsed text: {response_parse_text}")
+        # # if response_parse_text:
+        # resp_text = "".join(response_parse_text)
+        # yield resp_text
 
 
   # Deletes the conversation
