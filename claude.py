@@ -240,15 +240,10 @@ class Client:
       for text in r.iter_text():
         response_parse_text = await parse_text(text)
 
-        text_res = ""
         if response_parse_text:
             for text in response_parse_text:
-                text_res += text
-
-        answer = ''.join(text_res)
-        print(answer)
-    
-        yield answer
+                # print(text)  # Debugging: 打印解析出的每条信息
+                yield text  # 使用 yield 发送每条解析出的信息
 
 
   # Deletes the conversation
