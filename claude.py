@@ -266,13 +266,13 @@ class Client:
     }
 
     with httpx.stream("POST", url, headers=headers, data=payload) as r:
-      async for text in r.aiter_text():
+      for text in r.iter_text():
         # logger.info(f"raw text: {text}")
         response_parse_text = await parse_text(text)
         # logger.info(f"parsed text: {response_parse_text}")
-        if response_parse_text:
-            resp_text = "".join(response_parse_text)
-            yield resp_text
+        # if response_parse_text:
+        resp_text = "".join(response_parse_text)
+        yield resp_text
 
 
   # Deletes the conversation
