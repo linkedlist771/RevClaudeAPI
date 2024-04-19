@@ -6,7 +6,7 @@ from curl_cffi import requests
 import re
 from datetime import datetime
 import httpx
-
+import asyncio
 from loguru import logger
 
 class Client:
@@ -264,20 +264,17 @@ class Client:
       'Sec-Fetch-Site': 'same-origin',
       'TE': 'trailers'
     }
-    import time
-    # with httpx.stream("POST", url, headers=headers, data=payload) as r:
-    if 1:
-      for text in ["This is a test message."] * 10:
-        logger.info(f"raw text: {text}")
-        yield text
-        time.sleep(1)
 
-        # # logger.info(f"raw text: {text}")
-        # response_parse_text = await parse_text(text)
-        # # logger.info(f"parsed text: {response_parse_text}")
-        # # if response_parse_text:
-        # resp_text = "".join(response_parse_text)
-        # yield resp_text
+    with httpx.stream("POST", url, headers=headers, data=payload) as r:
+      for text in r.iter_text():
+        # logger.info(f"raw text: {text}")
+        response_parse_text = await parse_text(text)
+        # logger.info(f"parsed text: {response_parse_text}")
+        if response_parse_text:
+            resp_text = "".join(response_parse_text)
+            yield resp_text
+            await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+
 
 
   # Deletes the conversation

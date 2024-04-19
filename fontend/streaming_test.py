@@ -2,14 +2,15 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 import time
 import uvicorn
+import asyncio
 
 app = FastAPI()
 
-def generate_data():
+async def generate_data():
     """生成器函数，每秒输出当前时间戳"""
     for _ in range(10):
         yield f"data: {time.time()}\n\n"
-        time.sleep(0.02)  # 模拟数据处理时间
+        await asyncio.sleep(0)  # 模拟异步操作, 让出权限
 
 @app.post("/stream")
 async def stream():
