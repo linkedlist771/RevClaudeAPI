@@ -268,6 +268,7 @@ class Client:
     # with httpx.stream("POST", url, headers=headers, data=payload) as r:
     if 1:
       for text in "This is a test message.":
+        logger.info(f"raw text: {text}")
         yield text
         time.sleep(0.1)
 
