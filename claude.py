@@ -265,9 +265,8 @@ class Client:
       'TE': 'trailers'
     }
 
-    answer = ""
     with httpx.stream("POST", url, headers=headers, data=payload) as r:
-      async for text in r.iter_text():
+      async for text in r.aiter_text():
         # logger.info(f"raw text: {text}")
         response_parse_text = await parse_text(text)
         # logger.info(f"parsed text: {response_parse_text}")
