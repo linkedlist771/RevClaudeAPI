@@ -12,13 +12,15 @@ import fire
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from h11 import Response
 from pydantic import BaseModel
 from anyio import Path
 from loguru import logger
 import claude
-from router import  router
+from router import router
 
 
 
@@ -62,8 +64,8 @@ def ResponseModel():
 OpenAIResponseModel = ResponseModel()
 
 """ Initialization AI Models and Cookies """
-COOKIE_CLAUDE = utility.getCookie_Claude(configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME) #message.session_id
-CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
+COOKIE_CLAUDE = None #utility.getCookie_Claude(configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME) #message.session_id
+CLAUDE_CLIENT = None #claude.Client(COOKIE_CLAUDE)
 
 """FastAPI application instance."""
 
@@ -77,6 +79,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# add index route
+app.mount("/static", StaticFiles(directory="frontui"), name="static")
+@app.get("/")
+async def index():
+    # use the index.html file in the frontui/ folder
+    return FileResponse('frontui/index.html')
 
 
 
