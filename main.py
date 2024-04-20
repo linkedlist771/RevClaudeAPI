@@ -27,6 +27,7 @@ from router import router
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="0.0.0.0", help="host")
 parser.add_argument("--port", default=6238, help="port")
+parser.add_argument("--pattern", default="dev", help="pattern")
 args = parser.parse_args()
 
 
@@ -64,8 +65,12 @@ def ResponseModel():
 OpenAIResponseModel = ResponseModel()
 
 """ Initialization AI Models and Cookies """
-COOKIE_CLAUDE = None #utility.getCookie_Claude(configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME) #message.session_id
-CLAUDE_CLIENT = None #claude.Client(COOKIE_CLAUDE)
+if args.pattern == "dev":
+    COOKIE_CLAUDE = None
+    CLAUDE_CLIENT = None
+else:
+    COOKIE_CLAUDE = utility.getCookie_Claude(configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME) #message.session_id
+    CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
 
 """FastAPI application instance."""
 
