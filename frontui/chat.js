@@ -3,7 +3,7 @@ const chatContainer = $('.right .top');
 const sendLink = $('.write-link.send');
 const loader = $('#loader');
 const quirkinessLevel = $('input[name="quirkiness-level"]:checked');
-const url = "http://198.23.176.34:6238";
+const url = "https://claude3.edu.cn.ucas.life";
 const route = "/api/v1/claude/chat";
 const streamingUrl = `${url}${route}`;
 let conversationID = null;
