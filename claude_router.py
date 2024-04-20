@@ -15,6 +15,13 @@ def obtain_claude_client():
     from main import CLAUDE_CLIENT
     return CLAUDE_CLIENT
 
+async def patched_generate_data(original_generator, conversation_id):
+    # 首先发送 conversation_id
+    yield f"<{conversation_id}>"
+
+    # 然后，对原始生成器进行迭代，产生剩余的数据
+    async for data in original_generator:
+        yield data
 
 @router.get("/list_conversations")
 async def list_conversations(claude_client=Depends(obtain_claude_client)):
@@ -51,8 +58,10 @@ async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obt
     is_stream = claude_chat_request.stream
 
     if is_stream:
+        streaming_res = claude_client.stream_message(message, conversation_id, model)
+        streaming_res = patched_generate_data(streaming_res, conversation_id)
         return StreamingResponse(
-            claude_client.stream_message(message, conversation_id, model),
+            streaming_res,
             media_type="text/event-stream",
             headers={"conversation_id": conversation_id}  # 这里通过header返回conversation_id
 

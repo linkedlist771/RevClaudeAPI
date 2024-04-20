@@ -3,6 +3,54 @@ import reflex as rx
 from openai import OpenAI
 
 
+import requests
+
+CONVERSATION_ID = None
+
+
+def stream_response(url, payload, headers):
+    # 发起一个流式的 POST 请求
+    global CONVERSATION_ID
+    with requests.post(url, json=payload, headers=headers, stream=True) as response:
+        # 逐个字符处理响应体
+        if not CONVERSATION_ID:
+            CONVERSATION_ID = response.headers.get("conversation_id")
+        for chunk in response.iter_content(decode_unicode=True, chunk_size=1):  # 设置chunk_size为1来逐个字符获取
+            if chunk:  # 过滤掉keep-alive新行
+                yield chunk  # 打印每个字符，end='' 防止自动换行
+
+
+def build_url_headers_payload(message: str, model: str):
+    # 你的API URL
+    url = 'http://198.23.176.34:6238/api/v1/claude/chat'
+
+    # 你的请求头
+    headers = {
+        'accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+
+    # 你的请求体
+    data = {
+        "message": message,
+        "model": model,
+        "stream": True
+    }
+    if CONVERSATION_ID:
+        data["conversation_id"] = CONVERSATION_ID
+
+    # headers: {'date': 'Fri, 19 Apr 2024 16:25:12 GMT', 'server': 'uvicorn',
+    #           'conversation_id': '411a9cff-fa7d-49be-9043-9471a29ad7fd',
+    #           'content-type': 'text/event-stream; charset=utf-8', 'connection': 'close', 'transfer-encoding': 'chunked'}
+    return url, headers, data
+
+
+
+
+
+
+#
+
 # Checking if the API key is set properly
 
 class QA(rx.Base):

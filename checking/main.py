@@ -5,6 +5,7 @@ def stream_response(url, payload, headers):
     # 发起一个流式的 POST 请求
     with requests.post(url, json=payload, headers=headers, stream=True) as response:
         # 逐个字符处理响应体
+        print(f"headers: {response.headers}")
         for chunk in response.iter_content(decode_unicode=True, chunk_size=1):  # 设置chunk_size为1来逐个字符获取
             if chunk:  # 过滤掉keep-alive新行
                 print(chunk, end='\n')  # 打印每个字符，end='' 防止自动换行
