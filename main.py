@@ -70,13 +70,13 @@ CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
 app = FastAPI()
 
 # Add CORS middleware to allow all origins, credentials, methods, and headers.
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 
