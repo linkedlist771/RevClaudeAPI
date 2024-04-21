@@ -31,6 +31,7 @@ function processUserInput(user_input, quirkiness_level) {
 
 async function fetchStreamData(url, element, payload) {
     const apiKey = $('#api-key').val(); // 获取用户输入的 API key
+  console.log(conversationID);
 
   try {
     const response = await fetch(url, {
@@ -56,21 +57,23 @@ async function fetchStreamData(url, element, payload) {
           let text = new TextDecoder().decode(value);
           console.log(text);
           // begin with <. end with >
-          if (text.startsWith('<') && text.endsWith('>')) {
-            conversationID = text.slice(1, -1);
-          }
-          if (text.startsWith('<')) {
-            // conversationID = text.slice(1, -1);
-            // use regex to extract the conversation_id, which is in <> 
-            const regex = /<.*?>/;
-            const match = text.match(regex);
-            if (match) {
-              conversationID = match[0].slice(1, -1);
+          if (conversationID === null) {
+            if (text.startsWith('<') && text.endsWith('>')) {
+              conversationID = text.slice(1, -1);
             }
-            // replace the match part with empty string
-            text = text.replace(regex, '');
+            if (text.startsWith('<')) {
+              // conversationID = text.slice(1, -1);
+              // use regex to extract the conversation_id, which is in <>
+              const regex = /<.*?>/;
+              const match = text.match(regex);
+              if (match) {
+                conversationID = match[0].slice(1, -1);
+              }}
+              // replace the match part with empty string
+              text = text.replace(regex, '');
 
-          }
+            }
+
 
           element.html(element.html() + text); // 更新HTML元素
 
