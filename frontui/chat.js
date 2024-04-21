@@ -62,7 +62,9 @@ async function fetchStreamData(url, element, payload) {
                     }
                     // 使用marked.js将Markdown转换为HTML
                     const htmlContent = marked(text);
-                    element.html(element.html() + htmlContent); // 更新HTML元素
+                    let htmlText = element.html() + text;
+                    const markedText = marked(htmlText);
+                    element.html(markedText);
                 }
                 controller.close();
                 reader.releaseLock();
