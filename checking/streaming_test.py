@@ -6,6 +6,7 @@ import asyncio
 
 app = FastAPI()
 
+
 async def generate_data():
     """生成器函数，每秒输出当前时间戳"""
 
@@ -29,12 +30,14 @@ async def stream():
 
     r = generate_data()
     r = patched_generate_data(r, "test")
-    return StreamingResponse(r, media_type="text/event-stream",
-                             headers={"conversation_id": "test"}
-                             )
+    return StreamingResponse(
+        r, media_type="text/event-stream", headers={"conversation_id": "test"}
+    )
+
 
 # cross origin
 from fastapi.middleware.cors import CORSMiddleware
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 请根据需要调整此设置

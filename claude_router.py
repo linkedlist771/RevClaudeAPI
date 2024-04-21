@@ -13,7 +13,9 @@ router = APIRouter()
 
 def obtain_claude_client():
     from main import CLAUDE_CLIENT
+
     return CLAUDE_CLIENT
+
 
 async def patched_generate_data(original_generator, conversation_id):
     # 首先发送 conversation_id
@@ -22,6 +24,7 @@ async def patched_generate_data(original_generator, conversation_id):
     # 然后，对原始生成器进行迭代，产生剩余的数据
     async for data in original_generator:
         yield data
+
 
 @router.get("/list_conversations")
 async def list_conversations(claude_client=Depends(obtain_claude_client)):
@@ -35,7 +38,9 @@ async def list_models():
 
 
 @router.post("/chat")
-async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obtain_claude_client)):
+async def chat(
+    claude_chat_request: ClaudeChatRequest, claude_client=Depends(obtain_claude_client)
+):
     model = claude_chat_request.model
     if model not in [model.value for model in ClaudeModels]:
         return JSONResponse(
@@ -63,10 +68,10 @@ async def chat(claude_chat_request: ClaudeChatRequest, claude_client=Depends(obt
         return StreamingResponse(
             streaming_res,
             media_type="text/event-stream",
-            headers={"conversation_id": conversation_id}  # 这里通过header返回conversation_id
-
+            headers={
+                "conversation_id": conversation_id
+            },  # 这里通过header返回conversation_id
         )
     else:
         res = claude_client.send_message(message, conversation_id, model)
         return res
-

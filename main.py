@@ -7,6 +7,7 @@ import sys
 import time
 import utility
 import urllib.parse
+
 # Third-Party Imports
 import fire
 import uvicorn
@@ -21,7 +22,6 @@ from anyio import Path
 from loguru import logger
 import claude
 from router import router
-
 
 
 parser = argparse.ArgumentParser()
@@ -47,7 +47,6 @@ ISCONFIGONLY = False
 # CONFIG_FOLDER = Path(CONFIG_FOLDER) / "WebAI_to_API"
 
 
-
 FixConfigPath = lambda: (
     Path(CONFIG_FOLDER) / CONFIG_FILE_NAME
     if os.path.basename(CONFIG_FOLDER).lower() == "src"
@@ -57,10 +56,12 @@ FixConfigPath = lambda: (
 """Path to API configuration file."""
 CONFIG_FILE_PATH = FixConfigPath()
 
+
 def ResponseModel():
     config = configparser.ConfigParser()
     config.read(filenames=CONFIG_FILE_PATH)
     return config.get("Main", "Model", fallback="Claude")
+
 
 OpenAIResponseModel = ResponseModel()
 
@@ -69,7 +70,9 @@ if args.pattern == "dev":
     COOKIE_CLAUDE = None
     CLAUDE_CLIENT = None
 else:
-    COOKIE_CLAUDE = utility.getCookie_Claude(configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME) #message.session_id
+    COOKIE_CLAUDE = utility.getCookie_Claude(
+        configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME
+    )  # message.session_id
     CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
 
 """FastAPI application instance."""
@@ -87,13 +90,12 @@ app.add_middleware(
 
 # add index route
 app.mount("/static", StaticFiles(directory="frontui"), name="static")
+
+
 @app.get("/")
 async def index():
     # use the index.html file in the frontui/ folder
-    return FileResponse('frontui/index.html')
-
-
-
+    return FileResponse("frontui/index.html")
 
 
 def start_server(port=args.port, host=args.host):

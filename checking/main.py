@@ -6,27 +6,25 @@ def stream_response(url, payload, headers):
     with requests.post(url, json=payload, headers=headers, stream=True) as response:
         # 逐个字符处理响应体
         print(f"headers: {response.headers}")
-        for chunk in response.iter_content(decode_unicode=True, chunk_size=1):  # 设置chunk_size为1来逐个字符获取
+        for chunk in response.iter_content(
+            decode_unicode=True, chunk_size=1
+        ):  # 设置chunk_size为1来逐个字符获取
             if chunk:  # 过滤掉keep-alive新行
-                print(chunk, end='\n')  # 打印每个字符，end='' 防止自动换行
-
+                print(chunk, end="\n")  # 打印每个字符，end='' 防止自动换行
 
 
 # 你的API URL
-url = 'http://198.23.176.34:6238/api/v1/claude/chat'
+url = "http://198.23.176.34:6238/api/v1/claude/chat"
 
 # 你的请求头
-headers = {
-    'accept': 'application/json',
-    'Content-Type': 'application/json'
-}
+headers = {"accept": "application/json", "Content-Type": "application/json"}
 
 # 你的请求体
 data = {
     "message": "Hello, how are you? Doyou",
     "model": "claude-3-sonnet-20240229",
     "conversation_id": "411a9cff-fa7d-49be-9043-9471a29ad7fd",
-    "stream": True
+    "stream": True,
 }
 
 # 调用函数

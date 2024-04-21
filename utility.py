@@ -5,12 +5,15 @@ import json
 from typing import Literal
 
 _cookies = {}
-def get_cookies(cookie_domain: str) -> dict: 
-    if cookie_domain not in _cookies: 
-        _cookies[cookie_domain] = {} 
-        for cookie in browser_cookie3.load(cookie_domain): 
-            _cookies[cookie_domain][cookie.name] = cookie.value 
+
+
+def get_cookies(cookie_domain: str) -> dict:
+    if cookie_domain not in _cookies:
+        _cookies[cookie_domain] = {}
+        for cookie in browser_cookie3.load(cookie_domain):
+            _cookies[cookie_domain][cookie.name] = cookie.value
     return _cookies[cookie_domain]
+
 
 def get_Cookie(service_Name: Literal["Bard", "BardTS", "BardCC", "Claude"]) -> str:
     """
@@ -58,9 +61,7 @@ def get_Cookie(service_Name: Literal["Bard", "BardTS", "BardCC", "Claude"]) -> s
         filtered_cookies[-1].value
         if (
             filtered_cookies := [
-                cookie
-                for cookie in cookies
-                if sessionName == cookie.name
+                cookie for cookie in cookies if sessionName == cookie.name
             ]
         )
         else None
@@ -84,6 +85,7 @@ def find_all_cookie_values_for_sessions():
     json_found_items = json.dumps(found_items)
     return json_found_items
 
+
 def getCookie_Gemini(configfilepath: str, configfilename: str):
     try:
         cookie = get_Cookie("google")
@@ -98,10 +100,10 @@ def getCookie_Gemini(configfilepath: str, configfilename: str):
         cookies = browser_cookie3.load(domain_name=domain)
 
         if not cookies:
-            return  {
+            return {
                 "Error": f"Looks like you're not logged in to Gemini. Please either set the Gemini cookie manually on '{configfilename}' or log in to your gemini.google.com account through your web browser."
             }
-        
+
         for cookie in cookies:
             for session in sessions:
                 if cookie.name == session:
@@ -110,6 +112,7 @@ def getCookie_Gemini(configfilepath: str, configfilename: str):
         # print("Found Items: ", found_items)
         json_found_items = json.dumps(found_items)
         return json_found_items
+
 
 def getCookie_Claude(configfilepath: str, configfilename: str):
     # if error by system(permission denided)
@@ -129,11 +132,12 @@ def getCookie_Claude(configfilepath: str, configfilename: str):
 
             print(response_error)
             return response_error
-                        # raise ValueError(
-                        #     f"You should set 'COOKIE' in '{CONFIG_FILE_NAME}' file for the Claude or login with a browser to Claude.ai account."
-                        # )
+            # raise ValueError(
+            #     f"You should set 'COOKIE' in '{CONFIG_FILE_NAME}' file for the Claude or login with a browser to Claude.ai account."
+            # )
         else:
             return cookie
+
 
 def ConvertToChatGPT(message: str, model: str):
     """Convert response to ChatGPT JSON format.
@@ -185,6 +189,7 @@ def ConvertToChatGPT(message: str, model: str):
     # yield jsonresp
     # yield OpenAIResp
 
+
 async def ConvertToChatGPTStream(message: str, model: str):
     """Convert response to ChatGPT JSON format.
 
@@ -235,6 +240,7 @@ async def ConvertToChatGPTStream(message: str, model: str):
     # yield jsonresp
     # yield OpenAIResp
 
+
 def IsSession(session_id: str) -> bool:
     """Checks if a valid session ID is provided.
 
@@ -250,18 +256,20 @@ def IsSession(session_id: str) -> bool:
         return False
     return False if not session_id else session_id.lower() != "none"
 
-def ConfigINI_to_Dict(filepath:str):
+
+def ConfigINI_to_Dict(filepath: str):
     config_object = configparser.ConfigParser()
-    file =open(filepath,"r")
+    file = open(filepath, "r")
     config_object.read_file(file)
     file.close()
-    output_dict=dict()
-    sections=config_object.sections()
+    output_dict = dict()
+    sections = config_object.sections()
     for section in sections:
-        items=config_object.items(section)
-        output_dict[section]=dict(items)
+        items = config_object.items(section)
+        output_dict[section] = dict(items)
 
     return output_dict
+
 
 #############################################
 ####                                     ####
@@ -303,4 +311,3 @@ def fake_data_streamer():
         yield f"{openai_response}\n"
         # yield b"some fake data\n"
         time.sleep(0.5)
-
