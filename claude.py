@@ -267,8 +267,8 @@ class Client:
                     )
                     yield ("error: ", e)
                 else:
-                    logger.info("Retrying in 1 second...")
-                    await asyncio.sleep(1)
+                    logger.info("Retrying in 3 second...")
+                    await asyncio.sleep(3)
 
     # Deletes the conversation
     def delete_conversation(self, conversation_id):
