@@ -311,22 +311,24 @@ class Client:
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
         uuid = self.generate_uuid()
 
-        payload = {"uuid": uuid, "name": "", "model": model}
+        payload = json.dumps({"uuid": uuid, "name": "", "model": model})
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.5",
-            "Referer": "https://claude.ai/chats",
+            "Referer": f"https://claude.ai/chat/{uuid}",
             "Content-Type": "application/json",
             "Origin": "https://claude.ai",
             "DNT": "1",
             "Connection": "keep-alive",
             "Cookie": self.cookie,
+            "Sec-CH-Ua-Mobile": "\"Linux\"",
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
             "TE": "trailers",
         }
-
+        logger.info(f"headers: {headers}")
+        logger.info(f"payload: {payload}")
         # response = requests.post( url, headers=headers, data=payload,impersonate="chrome110")
         response = httpx.post(url, headers=headers, data=payload)
 

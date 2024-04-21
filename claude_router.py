@@ -71,6 +71,7 @@ async def chat(
         if not conversation_id:
             conversation = claude_client.create_new_chat(model=model)
             logger.info(f"Created new conversation: {conversation}")
+            logger.info(f"Created new conversation: {conversation}")
             conversation_id = conversation["uuid"]
             logger.info(f"Created new conversation with id: {conversation_id}")
     except Exception as e:
