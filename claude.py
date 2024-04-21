@@ -239,16 +239,33 @@ class Client:
             "Sec-Fetch-Site": "same-origin",
             "TE": "trailers",
         }
-
-        with httpx.stream("POST", url, headers=headers, data=payload) as r:
-            for text in r.iter_text():
-                # logger.info(f"raw text: {text}")
-                response_parse_text = await parse_text(text)
-                # logger.info(f"parsed text: {response_parse_text}")
-                if response_parse_text:
-                    resp_text = "".join(response_parse_text)
-                    yield resp_text
-                    await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+        max_retry = 3
+        current_retry = 0
+        while current_retry < max_retry:
+            try:
+                with httpx.stream("POST", url, headers=headers, data=payload) as r:
+                    for text in r.iter_text():
+                        # logger.info(f"raw text: {text}")
+                        response_parse_text = await parse_text(text)
+                        # logger.info(f"parsed text: {response_parse_text}")
+                        if response_parse_text:
+                            resp_text = "".join(response_parse_text)
+                            yield resp_text
+                            await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                break
+            except Exception as e:
+                current_retry += 1
+                logger.error(
+                    f"Failed to stream message. Retry {current_retry}/{max_retry}. Error: {e}"
+                )
+                if current_retry == max_retry:
+                    logger.error(
+                        f"Failed to stream message after {max_retry} retries."
+                    )
+                    yield ("error: ", e)
+                else:
+                    logger.info("Retrying in 1 second...")
+                    await asyncio.sleep(1)
 
     # Deletes the conversation
     def delete_conversation(self, conversation_id):
