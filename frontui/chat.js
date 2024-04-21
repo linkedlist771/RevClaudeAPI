@@ -1,4 +1,4 @@
-const inputField = $('input[type="text"]');
+const inputField = $('#user-input');
 const chatContainer = $('.right .top');
 const sendLink = $('.write-link.send');
 const loader = $('#loader');
@@ -119,7 +119,7 @@ function generatePayLoad(message) {
 
 
 async function sendMessage() {
-    const apiKey = $('#api-key').val();
+  const apiKey = $('#api-key').val();
   if (!apiKey) {
     alert('请先输入 API key');
     return;
