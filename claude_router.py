@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import Header, HTTPException
+from api_key_manage import APIKeyManager, get_api_key_manager
+
 
 from schemas import ClaudeChatRequest
 from loguru import logger
@@ -8,7 +11,15 @@ from models import ClaudeModels
 
 # This in only for claude router, I do not use the
 
-router = APIRouter()
+
+async def validate_api_key(
+    api_key: str = Header(None), manager: APIKeyManager = Depends(get_api_key_manager)
+):
+    if api_key is None or not manager.is_api_key_valid(api_key):
+        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+
+
+router = APIRouter(dependencies=[Depends(validate_api_key)])
 
 
 def obtain_claude_client():

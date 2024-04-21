@@ -133,13 +133,13 @@ def getCookie_Claude(configfilepath: str, configfilename: str):
         else:
             return cookie
 
-
     except Exception as e:
         print(f"load from config file error: {e}")
         cookie = get_Cookie("Claude")
         if not cookie:
             raise Exception()
         return cookie
+
 
 def getClaudeCookieFromJson(jsonfile: str):
     try:
