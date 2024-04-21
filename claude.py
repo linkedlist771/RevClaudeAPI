@@ -311,7 +311,7 @@ class Client:
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
         uuid = self.generate_uuid()
 
-        payload = json.dumps({"uuid": uuid, "name": "", "model": model})
+        payload = {"uuid": uuid, "name": "", "model": model}
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept-Language": "en-US,en;q=0.5",
