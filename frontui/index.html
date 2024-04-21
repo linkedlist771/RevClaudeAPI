@@ -69,17 +69,3 @@
 <script src="/static/marked.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.js"></script>
 <script src="/static/chat.js"></script>
-<script>
-    function renderMarkdown(){
-        // find all whose id is answer the
-        var answers = document.querySelectorAll('#answer');
-        answers.forEach(function(answer){
-            answer.innerHTML = marked(answer.innerHTML);
-        });
-    }
-
-    // set time interval to render markdown
-    setInterval(renderMarkdown, 3000);
-
-
-</script>

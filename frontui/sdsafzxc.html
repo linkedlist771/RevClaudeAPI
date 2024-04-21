@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Using Marked.js with HTML and JavaScript</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div id="markdown-text"></div>
+
+  <script>
+
+      const { marked } = require('marked');
+
+    const markdownText = `# This is a Markdown heading
+
+    This is some _Markdown text_.`;
+
+    const markdownContainer = document.querySelector('#markdown-text');
+
+    markdownContainer.innerHTML = marked(markdownText);
+  </script>
+</body>
+</html>
