@@ -13,7 +13,7 @@ from models import ClaudeModels
 
 
 async def validate_api_key(
-    api_key: str = Header(None), manager: APIKeyManager = Depends(get_api_key_manager)
+    api_key: str = Header(None, alias='Authorization'), manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
