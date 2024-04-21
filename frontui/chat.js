@@ -61,10 +61,8 @@ async function fetchStreamData(url, element, payload) {
                         }
                     }
                     // 使用marked.js将Markdown转换为HTML
-                    const htmlContent = marked(text);
                     let htmlText = element.html() + text;
-                    const markedText = marked(htmlText);
-                    element.html(markedText);
+                    element.html(htmlText);
                 }
                 controller.close();
                 reader.releaseLock();
@@ -119,6 +117,7 @@ async function sendMessage() {
     const payload = generatePayLoad(message);
     console.log(payload);
     await fetchStreamData(streamingUrl, assistantMessageElement, payload)
+    userMessageElement.innerHTML = marked(userMessageElement.innerHTML);
     loader.hide();
     sendLink.removeClass('disabled').css('pointer-events', 'auto');
   }
