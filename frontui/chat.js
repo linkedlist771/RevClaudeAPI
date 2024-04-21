@@ -74,10 +74,7 @@ async function fetchStreamData(url, element, payload) {
 
           element.html(element.html() + text); // 更新HTML元素
 
-          // 尝试从响应头部获取conversation_id
-          if (response.headers.has('conversation_id')) {
-            conversationID = response.headers.get('conversation_id');
-          }
+
         }
         controller.close();
         reader.releaseLock();
