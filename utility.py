@@ -116,12 +116,8 @@ def getCookie_Gemini(configfilepath: str, configfilename: str):
 
 def getCookie_Claude(configfilepath: str, configfilename: str):
     # if error by system(permission denided)
+    # try to load fron config fires
     try:
-        cookie = get_Cookie("Claude")
-        if not cookie:
-            raise Exception()
-        return cookie
-    except Exception as _:
         config = configparser.ConfigParser()
         config.read(filenames=configfilepath)
         cookie = config.get("Claude", "COOKIE")
@@ -129,7 +125,6 @@ def getCookie_Claude(configfilepath: str, configfilename: str):
             response_error = {
                 "Error": f"You should set 'COOKIE' in '{configfilename}' file for the Claude or login with a browser to Claude.ai account."
             }
-
             print(response_error)
             return response_error
             # raise ValueError(
@@ -137,6 +132,13 @@ def getCookie_Claude(configfilepath: str, configfilename: str):
             # )
         else:
             return cookie
+
+
+    except Exception as e:
+        cookie = get_Cookie("Claude")
+        if not cookie:
+            raise Exception()
+        return cookie
 
 
 def ConvertToChatGPT(message: str, model: str):
