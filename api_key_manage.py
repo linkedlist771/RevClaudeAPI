@@ -9,7 +9,7 @@ class APIKeyManager:
 
     def create_api_key(self, expiration_seconds):
         """Create a new API key with a specific expiration time."""
-        api_key = f"sj-{str(uuid.uuid4())}"
+        api_key = f"sj-{str(uuid.uuid4()).replace('-', '')}"
         self.redis.setex(api_key, expiration_seconds, "active")
         return api_key
 

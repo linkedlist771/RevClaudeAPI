@@ -30,12 +30,14 @@ function processUserInput(user_input, quirkiness_level) {
 
 
 async function fetchStreamData(url, element, payload) {
+    const apiKey = $('#api-key').val(); // 获取用户输入的 API key
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', // 指定请求体格式为 JSON
-                // 'Authorization': `Bearer ${apiKey}` // 添加 API key 到请求头
+        'Authorization': `Bearer ${apiKey}` // 添加 API key 到请求头
 
       },
       body: JSON.stringify(payload) // 将 payload 对象转换为 JSON 字符串
@@ -118,6 +120,11 @@ function generatePayLoad(message) {
 
 
 async function sendMessage() {
+    const apiKey = $('#api-key').val();
+  if (!apiKey) {
+    alert('请先输入 API key');
+    return;
+  }
   const message = inputField.val().trim();
   if (message) {
     loader.show();
