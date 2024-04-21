@@ -59,5 +59,5 @@ async def delete_key(
 @router.get("/list_keys")
 async def list_keys(manager: APIKeyManager = Depends(get_api_key_manager)):
     """List all active API keys."""
-    api_keys = manager.list_api_keys()
+    api_keys = manager.list_active_api_keys()
     return {"api_keys": api_keys}
