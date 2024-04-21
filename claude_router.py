@@ -1,5 +1,5 @@
 import asyncio
-import copy
+
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import Header, HTTPException
@@ -67,9 +67,7 @@ async def chat(
             status_code=400,
             content={"error": f"Model not found."},
         )
-
     conversation_id = claude_chat_request.conversation_id
-    original_conversation_id = copy.deepcopy(conversation_id)
     # conversation_id = "test"
     max_retry = 3
     current_retry = 0
@@ -101,9 +99,7 @@ async def chat(
             logger.error(f"Meet an error: {e}")
             return ("error: ", e)
 
-    if not original_conversation_id:
-        # after the creation, you need to wait some time before to send
-        await asyncio.sleep(3)
+
 
     message = claude_chat_request.message
     is_stream = claude_chat_request.stream
