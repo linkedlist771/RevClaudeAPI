@@ -111,16 +111,15 @@ async function sendMessage() {
   const message = inputField.val().trim();
   if (message) {
     loader.show();
-    const userMessageElement = $('<h3></h3>').html('<span>用户：</span>' + message);
+    const userMessageElement = $('<h3 ></h3>').html('<span>用户：</span>' + message);
     $(".content").append(userMessageElement);
     inputField.val('');
     sendLink.addClass('disabled').css('pointer-events', 'none');
-    const assistantMessageElement = $('<h3></h3>').html('<span>Assistant：</span>');
+    const assistantMessageElement = $('<h3></h3>').html('<span id="answer">Assistant：</span>');
     $(".content").append(assistantMessageElement);
     const payload = generatePayLoad(message);
     console.log(payload);
     await fetchStreamData(streamingUrl, assistantMessageElement, payload)
-    userMessageElement.innerHTML = marked(userMessageElement.innerHTML);
     loader.hide();
     sendLink.removeClass('disabled').css('pointer-events', 'auto');
   }

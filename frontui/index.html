@@ -68,4 +68,18 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.js"></script>
-<script type="module" src="/static/chat.js"></script>
+<script src="/static/chat.js"></script>
+<script>
+    function renderMarkdown(){
+        // find all whose id is answer the
+        var answers = document.querySelectorAll('#answer');
+        answers.forEach(function(answer){
+            answer.innerHTML = marked(answer.innerHTML);
+        });
+    }
+
+    // add event listener to the window
+    window.addEventListener('load', renderMarkdown);
+
+
+</script>
