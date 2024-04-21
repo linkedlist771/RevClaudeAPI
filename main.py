@@ -38,6 +38,7 @@ args = parser.parse_args()
 
 """Config file name and paths for chatbot API configuration."""
 CONFIG_FILE_NAME = "Config.conf"
+CLAUDE_COOKIE_JSON = "claude_config.json"
 CONFIG_FOLDER = os.getcwd()
 
 """Disable search on files cookie(fix 'PermissionError: [Errno 1] Operation not permitted') now used only for Claude"""
@@ -70,8 +71,8 @@ if args.pattern == "dev":
     COOKIE_CLAUDE = None
     CLAUDE_CLIENT = None
 else:
-    COOKIE_CLAUDE = utility.getCookie_Claude(
-        configfilepath=CONFIG_FILE_PATH, configfilename=CONFIG_FILE_NAME
+    COOKIE_CLAUDE = utility.getClaudeCookieFromJson(
+        CLAUDE_COOKIE_JSON
     )  # message.session_id
     CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
 
