@@ -246,7 +246,10 @@ class Client:
                 with httpx.stream("POST", url, headers=headers, data=payload) as r:
                     for text in r.iter_text():
                         # logger.info(f"raw text: {text}")
+                        if "permission_error" in text:
+                            raise Exception("Permission Error")
                         response_parse_text = await parse_text(text)
+
                         # logger.info(f"parsed text: {response_parse_text}")
                         if response_parse_text:
                             resp_text = "".join(response_parse_text)
