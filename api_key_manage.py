@@ -37,6 +37,14 @@ class APIKeyManager:
         pipeline.delete(usage_key)
         pipeline.execute()
 
+    def list_active_api_keys(self):
+        """List all active API keys."""
+        active_keys = []
+        for key in self.redis.scan_iter("sj-*"):  # Assuming all keys start with 'sj-'
+            if self.redis.ttl(key) > 0:  # Check if the key has not expired
+                active_keys.append(key.decode('utf-8'))
+        return active_keys
+
 
 def get_api_key_manager():
     return APIKeyManager()

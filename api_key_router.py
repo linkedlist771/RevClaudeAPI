@@ -55,3 +55,9 @@ async def delete_key(
     """Delete an API key and its usage count."""
     manager.delete_api_key(api_key)
     return JSONResponse(status_code=204)
+
+@router.get("/list_keys")
+async def list_keys(manager: APIKeyManager = Depends(get_api_key_manager)):
+    """List all active API keys."""
+    api_keys = manager.list_api_keys()
+    return {"api_keys": api_keys}
