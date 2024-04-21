@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import Header, HTTPException
@@ -67,17 +69,37 @@ async def chat(
         )
     conversation_id = claude_chat_request.conversation_id
     # conversation_id = "test"
+    max_retry = 3
+    current_retry = 0
+    # conversation_id = "test"
+    max_retry = 3
+    current_retry = 0
+    while current_retry < max_retry:
+        try:
+            if not conversation_id:
+                try:
+                    conversation = claude_client.create_new_chat(model=model)
+                    logger.info(f"Created new conversation: {conversation}")
+                    conversation_id = conversation["uuid"]
+                    logger.info(f"Created new conversation with id: {conversation_id}")
+                    break  # 成功创建对话后跳出循环
+                except Exception as e:
+                    current_retry += 1
+                    logger.error(f"Failed to create conversation. Retry {current_retry}/{max_retry}. Error: {e}")
+                    if current_retry == max_retry:
+                        logger.error(f"Failed to create conversation after {max_retry} retries.")
+                        return ("error: ", e)
+                    else:
+                        logger.info("Retrying in 1 second...")
+                        await asyncio.sleep(1)
+            else:
+                logger.info(f"Using existing conversation with id: {conversation_id}")
+                break
+        except Exception as e:
+            logger.error(f"Meet an error: {e}")
+            return ("error: ", e)
 
-    try:
-        if not conversation_id:
-            conversation = claude_client.create_new_chat(model=model)
-            logger.info(f"Created new conversation: {conversation}")
-            logger.info(f"Created new conversation: {conversation}")
-            conversation_id = conversation["uuid"]
-            logger.info(f"Created new conversation with id: {conversation_id}")
-    except Exception as e:
-        logger.error(f"Meet an error: {e}")
-        return ("error: ", e)
+
 
     message = claude_chat_request.message
     is_stream = claude_chat_request.stream
