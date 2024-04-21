@@ -307,11 +307,11 @@ class Client:
         formatted_uuid = f"{random_uuid_str[0:8]}-{random_uuid_str[9:13]}-{random_uuid_str[14:18]}-{random_uuid_str[19:23]}-{random_uuid_str[24:]}"
         return formatted_uuid
 
-    def create_new_chat(self):
+    def create_new_chat(self, model):
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
         uuid = self.generate_uuid()
 
-        payload = json.dumps({"uuid": uuid, "name": ""})
+        payload = json.dumps({"uuid": uuid, "name": "", "model": model})
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept-Language": "en-US,en;q=0.5",
