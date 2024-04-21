@@ -37,8 +37,7 @@ async function fetchStreamData(url, element, payload) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', // 指定请求体格式为 JSON
-        'Authorization': `Bearer ${apiKey}` // 添加 API key 到请求头
-
+        'Authorization': apiKey
       },
       body: JSON.stringify(payload) // 将 payload 对象转换为 JSON 字符串
 
