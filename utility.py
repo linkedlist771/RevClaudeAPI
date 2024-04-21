@@ -118,6 +118,11 @@ def getCookie_Claude(configfilepath: str, configfilename: str):
     # if error by system(permission denided)
     # try to load fron config fires
     try:
+        print(f"load from config file error: {e}")
+        cookie = get_Cookie("Claude")
+        if not cookie:
+            raise Exception()
+        return cookie
         config = configparser.ConfigParser()
         config.read(filenames=configfilepath)
         cookie = config.get("Claude", "COOKIE")
@@ -134,11 +139,20 @@ def getCookie_Claude(configfilepath: str, configfilename: str):
             return cookie
 
     except Exception as e:
-        print(f"load from config file error: {e}")
-        cookie = get_Cookie("Claude")
+        config = configparser.ConfigParser()
+        config.read(filenames=configfilepath)
+        cookie = config.get("Claude", "COOKIE")
         if not cookie:
-            raise Exception()
-        return cookie
+            response_error = {
+                "Error": f"You should set 'COOKIE' in '{configfilename}' file for the Claude or login with a browser to Claude.ai account."
+            }
+            print(response_error)
+            return response_error
+            # raise ValueError(
+            #     f"You should set 'COOKIE' in '{CONFIG_FILE_NAME}' file for the Claude or login with a browser to Claude.ai account."
+            # )
+        else:
+            return cookie
 
 
 def getClaudeCookieFromJson(jsonfile: str):
