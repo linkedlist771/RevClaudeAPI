@@ -1,5 +1,4 @@
-import $ from 'https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.js';
-import { marked } from 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+// import $ from 'https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.js';
 
 const inputField = $('#user-input');
 const chatContainer = $('.right .top');
