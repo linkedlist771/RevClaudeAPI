@@ -141,6 +141,15 @@ def getCookie_Claude(configfilepath: str, configfilename: str):
             raise Exception()
         return cookie
 
+def getClaudeCookieFromJson(jsonfile: str):
+    try:
+        with open(jsonfile, "r") as file:
+            data = json.load(file)
+            return data["cookie"]
+    except Exception as e:
+        print(f"load from json file error: {e}")
+        return None
+
 
 def ConvertToChatGPT(message: str, model: str):
     """Convert response to ChatGPT JSON format.
