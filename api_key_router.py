@@ -17,7 +17,7 @@ async def create_key(
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     """Create an API key with a set expiration time."""
-    api_key_type = api_key_type.strip().lower()
+    api_key_type = str(api_key_type.strip().lower())
     api_key = manager.create_api_key(expiration_seconds, api_key_type)
     return {"api_key": api_key}
 
@@ -73,7 +73,7 @@ async def set_key_type(
     api_key: str, key_type: str, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Set the type of an API key."""
-    key_type = key_type.strip().lower()
+    key_type = str(key_type.strip().lower())
     result = manager.set_api_key_type(api_key, key_type)
     return {"message": result}
 
