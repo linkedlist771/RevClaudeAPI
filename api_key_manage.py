@@ -75,7 +75,7 @@ class APIKeyManager:
         active_keys = []
         for key in self.redis.scan_iter("sj-*"):  # Assuming all keys start with 'sj-'
             if self.redis.ttl(key) > 0:  # Check if the key has not expired
-                active_keys.append(key.decode("utf-8"))
+                active_keys.append(key)
         return active_keys
 
 
