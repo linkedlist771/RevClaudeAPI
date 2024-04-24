@@ -36,7 +36,10 @@ router = APIRouter(dependencies=[Depends(validate_api_key)])
 def obtain_claude_client():
     from main import basic_clients, plus_clients
 
-    return basic_clients, plus_clients
+    return {
+        "basic_clients": basic_clients,
+        "plus_clients": plus_clients,
+    }
 
 
 async def patched_generate_data(original_generator, conversation_id):
@@ -64,11 +67,13 @@ async def list_models():
 async def chat(
     request: Request,
     claude_chat_request: ClaudeChatRequest,
-    basic_clients, plus_clients=Depends(obtain_claude_client),
+    clients=Depends(obtain_claude_client),
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     logger.info(f"headers: {request.headers}")
     api_key = request.headers.get("Authorization")
+    basic_clients = clients["basic_clients"]
+    plus_clients = clients["plus_clients"]
     client_idx = claude_chat_request.client_idx
     model = claude_chat_request.model
     if model not in [model.value for model in ClaudeModels]:
@@ -85,6 +90,9 @@ async def chat(
                     "error": f"API key is not a plus user, please upgrade your plant to access this model."
                 },
             )
+    #
+    client_type = claude_chat_request.client_type
+    if client_type == "plus":
         claude_client = plus_clients[client_idx]
     else:
         claude_client = basic_clients[client_idx]
