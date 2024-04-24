@@ -122,7 +122,7 @@ async def index():
     return FileResponse("frontui/index.html")
 
 
-@app.get("/api/v1/client_status")
+@app.get("/api/v1/clients_status")
 async def _get_client_status():
     return get_client_status(basic_clients, plus_clients)
 
