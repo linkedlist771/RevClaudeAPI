@@ -124,7 +124,7 @@ async def index():
 
 @app.get("/api/v1/client_status")
 async def get_client_status():
-    return get_client_status(basic_clients, plus_clients)
+    return get_cookie_manager(basic_clients, plus_clients)
 
 
 def start_server(port=args.port, host=args.host):
