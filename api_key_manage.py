@@ -70,6 +70,13 @@ class APIKeyManager:
         pipeline.delete(usage_key)
         pipeline.execute()
 
+    def add_api_key(self, api_key, expiration_seconds, api_key_type=APIKeyType.BASIC.value):
+        """Add an existing API key with a specific expiration time."""
+        self.redis.setex(api_key, expiration_seconds, "active")
+        self.redis.setex(f"{api_key}:usage", expiration_seconds, 0)
+        self.redis.setex(f"{api_key}:type", expiration_seconds, api_key_type)
+        return api_key
+
     def list_active_api_keys(self):
         """List all active API keys."""
         active_keys = []

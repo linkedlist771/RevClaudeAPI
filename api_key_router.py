@@ -84,3 +84,15 @@ async def get_key_type(
     """Get the type of an API key."""
     key_type = manager.get_api_key_type(api_key)
     return {"api_key": api_key, "key_type": key_type}
+
+@router.post("/add_key/{api_key}")
+async def add_key(
+    api_key: str,
+    expiration_seconds: int,
+    api_key_type: str,
+    manager: APIKeyManager = Depends(get_api_key_manager),
+):
+    """Add an existing API key with a specific expiration time."""
+    api_key_type = str(api_key_type.strip().lower())
+    api_key = manager.add_api_key(api_key, expiration_seconds, api_key_type)
+    return {"api_key": api_key}
