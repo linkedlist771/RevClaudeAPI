@@ -14,3 +14,4 @@ class ClaudeChatRequest(BaseChatRequest):
 
     stream: bool = True
     conversation_id: Union[str, None] = None
+    client_idx: int = 0
