@@ -12,7 +12,7 @@ class APIKeyType(Enum):
 class APIKeyManager:
     def __init__(self, host="localhost", port=6379, db=0):
         """Initialize the connection to Redis."""
-        self.redis = redis.StrictRedis(host=host, port=port, db=db, decode_responses=True)
+        self.redis = redis.StrictRedis(host=host, port=port, db=db)
 
     def create_api_key(self, expiration_seconds, api_key_type=APIKeyType.BASIC.value):
         """Create a new API key with a specific expiration time."""
