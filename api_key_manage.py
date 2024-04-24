@@ -16,6 +16,8 @@ class APIKeyManager:
 
     def create_api_key(self, expiration_seconds, api_key_type=APIKeyType.BASIC.value):
         """Create a new API key with a specific expiration time."""
+        if isinstance(api_key_type, bytes):
+            api_key_type = api_key_type.decode('utf-8')
         api_key = f"sj-{str(uuid.uuid4()).replace('-', '')}"
         self.redis.setex(api_key, expiration_seconds, "active")
         self.redis.setex(f"{api_key}:usage", expiration_seconds, 0)
@@ -54,6 +56,8 @@ class APIKeyManager:
     def set_api_key_type(self, api_key, _type):
         """Set the status of an API key."""
         type_key = f"{api_key}:type"
+        if isinstance(_type, bytes):
+            _type = _type.decode('utf-8')
         self.redis.set(type_key, _type)
         return f"API key {api_key} is now a {_type} user."
 
