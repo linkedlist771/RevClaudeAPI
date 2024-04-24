@@ -7,6 +7,7 @@ import sys
 import time
 import utility
 import urllib.parse
+import itertools
 
 # Third-Party Imports
 import fire
@@ -22,6 +23,7 @@ from anyio import Path
 from loguru import logger
 import claude
 from router import router
+from claude_cookie_manage import get_cookie_manager
 
 
 parser = argparse.ArgumentParser()
@@ -67,14 +69,33 @@ def ResponseModel():
 OpenAIResponseModel = ResponseModel()
 
 """ Initialization AI Models and Cookies """
-if args.pattern == "dev":
-    COOKIE_CLAUDE = None
-    CLAUDE_CLIENT = None
-else:
-    COOKIE_CLAUDE = utility.getClaudeCookieFromJson(
-        CLAUDE_COOKIE_JSON
-    )  # message.session_id
-    CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
+
+
+class ClientRoundRobin:
+    def __init__(self, basic_clients, plus_clients):
+        self.basic_clients = basic_clients
+        self.basic_cycle = itertools.cycle(self.basic_clients)
+        self.plus_clients = plus_clients
+        self.plus_cycle = itertools.cycle(self.plus_clients)
+
+    def get_next_basic_client(self):
+        return next(self.basic_cycle)
+    def get_next_plus_client(self):
+        return next(self.plus_cycle)
+# if args.pattern == "dev":
+#     COOKIE_CLAUDE = None
+#     CLAUDE_CLIENT = None
+# else:
+#     COOKIE_CLAUDE = utility.getClaudeCookieFromJson(
+#         CLAUDE_COOKIE_JSON
+#     )  # message.session_id
+#     CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
+cookie_manager = get_cookie_manager()
+basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
+client_round_robin = ClientRoundRobin(basic_clients, plus_clients)
+
+
+
 
 """FastAPI application instance."""
 

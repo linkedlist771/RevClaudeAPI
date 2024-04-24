@@ -27,15 +27,16 @@ async def validate_api_key(request: Request, manager: APIKeyManager = Depends(ge
     logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
         raise HTTPException(status_code=403, detail="Invalid or missing API key")
+    manager.increment_usage(api_key)
 
 
 router = APIRouter(dependencies=[Depends(validate_api_key)])
 
 
 def obtain_claude_client():
-    from main import CLAUDE_CLIENT
+    from main import client_round_robin
 
-    return CLAUDE_CLIENT
+    return client_round_robin
 
 
 async def patched_generate_data(original_generator, conversation_id):
@@ -46,11 +47,11 @@ async def patched_generate_data(original_generator, conversation_id):
     async for data in original_generator:
         yield data
 
-
-@router.get("/list_conversations")
-async def list_conversations(claude_client=Depends(obtain_claude_client)):
-    return claude_client.list_all_conversations()
-    # return {"message": "Hello World"}
+#
+# @router.get("/list_conversations")
+# async def list_conversations(claude_client=Depends(obtain_claude_client)):
+#     return claude_client.list_all_conversations()
+#     # return {"message": "Hello World"}
 
 
 @router.get("/list_models")
@@ -60,8 +61,13 @@ async def list_models():
 
 @router.post("/chat")
 async def chat(
-    claude_chat_request: ClaudeChatRequest, claude_client=Depends(obtain_claude_client)
+        request: Request,
+    claude_chat_request: ClaudeChatRequest, claude_clients_round_robin=Depends(obtain_claude_client)
+, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
+    logger.info(f"headers: {request.headers}")
+    api_key = request.headers.get("Authorization")
+
     model = claude_chat_request.model
     if model not in [model.value for model in ClaudeModels]:
         return JSONResponse(
@@ -69,6 +75,16 @@ async def chat(
             content={"error": f"Model not found."},
         )
     conversation_id = claude_chat_request.conversation_id
+    if ClaudeModels.model_is_plus(model):
+        if not manager.is_plus_user(api_key):
+            return JSONResponse(
+                status_code=403,
+                content={"error": f"API key is not a plus user, please upgrade your plant to access this model."},
+            )
+        claude_client = claude_clients_round_robin.get_next_plus_client()
+    else:
+        claude_client = claude_clients_round_robin.get_next_basic_client()
+    # claude_client
     # conversation_id = "test"
     max_retry = 3
     current_retry = 0

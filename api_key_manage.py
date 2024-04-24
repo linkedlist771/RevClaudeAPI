@@ -1,5 +1,11 @@
 import redis
 import uuid
+from enum import Enum
+
+
+class APIKeyType(Enum):
+    PLUS = "plus"
+    BASIC = "basic"
 
 
 class APIKeyManager:
@@ -7,10 +13,12 @@ class APIKeyManager:
         """Initialize the connection to Redis."""
         self.redis = redis.StrictRedis(host=host, port=port, db=db)
 
-    def create_api_key(self, expiration_seconds):
+    def create_api_key(self, expiration_seconds, api_key_type=APIKeyType.BASIC.value):
         """Create a new API key with a specific expiration time."""
         api_key = f"sj-{str(uuid.uuid4()).replace('-', '')}"
         self.redis.setex(api_key, expiration_seconds, "active")
+        self.redis.setex(f"{api_key}:usage", expiration_seconds, 0)
+        self.redis.setex(f"{api_key}:type", expiration_seconds, api_key_type)
         return api_key
 
     def is_api_key_valid(self, api_key):
@@ -27,6 +35,22 @@ class APIKeyManager:
         usage_key = f"{api_key}:usage"
         count = self.redis.get(usage_key)
         return int(count) if count else 0
+
+    # 这里设置还是用普通的字符串算了。
+    def get_api_key_type(self, api_key):
+        """Retrieve the status of an API key."""
+        type_key = f"{api_key}:type"
+        _type = self.redis.get(type_key)
+        return _type if _type else APIKeyType.BASIC.value
+
+    def is_plus_user(self, api_key) -> bool:
+        return self.get_api_key_type(api_key) == APIKeyType.PLUS.value
+
+    def set_api_key_type(self, api_key, _type):
+        """Set the status of an API key."""
+        type_key = f"{api_key}:type"
+        self.redis.set(type_key, _type)
+        return f"API key {api_key} is now a {_type} user."
 
     def delete_api_key(self, api_key):
         """Delete an API key and its associated usage count."""
