@@ -65,3 +65,20 @@ async def list_keys(manager: APIKeyManager = Depends(get_api_key_manager)):
     """List all active API keys."""
     api_keys = manager.list_active_api_keys()
     return {"api_keys": api_keys}
+
+
+@router.post("/set_key_type/{api_key}")
+async def set_key_type(
+    api_key: str, key_type: str, manager: APIKeyManager = Depends(get_api_key_manager)
+):
+    """Set the type of an API key."""
+    result = manager.set_api_key_type(api_key, key_type)
+    return {"message": result}
+
+@router.get("/get_key_type/{api_key}")
+async def get_key_type(
+    api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
+):
+    """Get the type of an API key."""
+    key_type = manager.get_api_key_type(api_key)
+    return {"api_key": api_key, "key_type": key_type}
