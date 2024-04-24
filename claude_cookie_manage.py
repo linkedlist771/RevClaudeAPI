@@ -83,6 +83,27 @@ class CookieManager:
 
         return cookies
 
+    def get_all_cookie_status(self):
+        pattern = f"*:type"
+        cursor = 0
+        cookies = []
+
+        while True:
+            cursor, keys = self.redis.scan(cursor, match=pattern, count=1000)
+            for key in keys:
+                actual_type = self.redis.get(key).decode("utf-8")
+                base_key = key.decode("utf-8").split(":type")[0]
+                cookie_value = self.redis.get(base_key)
+                account_key = self.get_cookie_account_key(base_key)
+                account = self.redis.get(account_key)
+                if cookie_value:
+                    cookies.append(f"{base_key}: \n type: {actual_type} \n account: {account}")
+
+            if cursor == 0:
+                break
+
+        return cookies
+
     # 还是重启一下比较好哎。
     def get_all_basic_and_plus_client(self) -> Tuple[List[Client], List[Client]]:
         _basic_cookies = self.get_all_cookies(CookieKeyType.BASIC.value)
