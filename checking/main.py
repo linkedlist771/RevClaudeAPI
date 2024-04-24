@@ -14,36 +14,17 @@ def stream_response(url, payload, headers):
 
 
 # 你的API URL
-url = "http://198.23.176.34:6238/api/v1/claude/chat"
+url = "http://127.0.0.1:6238/api/v1/claude/chat"
 
 # 你的请求头
-headers = {"accept": "application/json", "Content-Type": "application/json"}
+headers = {"accept": "application/json", "Content-Type": "application/json", "Authorization": "sj-d14e0d00770545f9b97f22f202ee6d02"}
 
 # 你的请求体
 data = {
     "message": "Hello, how are you? Doyou",
-    "model": "claude-3-sonnet-20240229",
-    "conversation_id": "411a9cff-fa7d-49be-9043-9471a29ad7fd",
+    "model": "claude-3-opus-20240229",
     "stream": True,
 }
 
 # 调用函数
 stream_response(url, data, headers)
-#
-# import requests
-#
-# def fetch_stream(url):
-#     """请求流式API并逐块处理数据"""
-#     with requests.post(url, stream=True) as response:
-#         try:
-#             for line in response.iter_lines():
-#                 if line:
-#                     decoded_line = line.decode('utf-8')
-#                     print(decoded_line, end=',\n')
-#         except KeyboardInterrupt:
-#             print("Stream stopped by user.")
-#
-# if __name__ == "__main__":
-#     # 替换以下URL为你的FastAPI流式端点的实际URL
-#     stream_url = 'http://127.0.0.1:8848/stream'
-#     fetch_stream(stream_url)

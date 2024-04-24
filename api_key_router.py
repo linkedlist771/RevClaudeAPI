@@ -12,7 +12,9 @@ router = APIRouter()
 # TODO: add the level to justify whether the api key is the plus user.
 @router.post("/create_key")
 async def create_key(
-    expiration_seconds: int, api_key_type: str, manager: APIKeyManager = Depends(get_api_key_manager)
+    expiration_seconds: int,
+    api_key_type: str,
+    manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     """Create an API key with a set expiration time."""
     api_key = manager.create_api_key(expiration_seconds, api_key_type)
@@ -56,6 +58,7 @@ async def delete_key(
     """Delete an API key and its usage count."""
     manager.delete_api_key(api_key)
     return JSONResponse(status_code=204)
+
 
 @router.get("/list_keys")
 async def list_keys(manager: APIKeyManager = Depends(get_api_key_manager)):

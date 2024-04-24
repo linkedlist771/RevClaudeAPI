@@ -43,6 +43,7 @@ CONFIG_FILE_NAME = "Config.conf"
 CLAUDE_COOKIE_JSON = "claude_config.json"
 CONFIG_FOLDER = os.getcwd()
 
+
 """Disable search on files cookie(fix 'PermissionError: [Errno 1] Operation not permitted') now used only for Claude"""
 ISCONFIGONLY = False
 
@@ -80,8 +81,11 @@ class ClientRoundRobin:
 
     def get_next_basic_client(self):
         return next(self.basic_cycle)
+
     def get_next_plus_client(self):
         return next(self.plus_cycle)
+
+
 # if args.pattern == "dev":
 #     COOKIE_CLAUDE = None
 #     CLAUDE_CLIENT = None
@@ -93,8 +97,6 @@ class ClientRoundRobin:
 cookie_manager = get_cookie_manager()
 basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
 client_round_robin = ClientRoundRobin(basic_clients, plus_clients)
-
-
 
 
 """FastAPI application instance."""

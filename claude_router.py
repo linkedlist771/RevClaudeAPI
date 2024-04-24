@@ -6,7 +6,6 @@ from fastapi import Header, HTTPException
 from api_key_manage import APIKeyManager, get_api_key_manager
 
 
-
 from schemas import ClaudeChatRequest
 from loguru import logger
 
@@ -18,7 +17,8 @@ from models import ClaudeModels
 # async def validate_api_key(
 #     api_key: str = Header(None), manager: APIKeyManager = Depends(get_api_key_manager)
 # ):
-async def validate_api_key(request: Request, manager: APIKeyManager = Depends(get_api_key_manager)
+async def validate_api_key(
+    request: Request, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     # return
     # Authorization
@@ -47,6 +47,7 @@ async def patched_generate_data(original_generator, conversation_id):
     async for data in original_generator:
         yield data
 
+
 #
 # @router.get("/list_conversations")
 # async def list_conversations(claude_client=Depends(obtain_claude_client)):
@@ -61,9 +62,10 @@ async def list_models():
 
 @router.post("/chat")
 async def chat(
-        request: Request,
-    claude_chat_request: ClaudeChatRequest, claude_clients_round_robin=Depends(obtain_claude_client)
-, manager: APIKeyManager = Depends(get_api_key_manager)
+    request: Request,
+    claude_chat_request: ClaudeChatRequest,
+    claude_clients_round_robin=Depends(obtain_claude_client),
+    manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     logger.info(f"headers: {request.headers}")
     api_key = request.headers.get("Authorization")
@@ -79,7 +81,9 @@ async def chat(
         if not manager.is_plus_user(api_key):
             return JSONResponse(
                 status_code=403,
-                content={"error": f"API key is not a plus user, please upgrade your plant to access this model."},
+                content={
+                    "error": f"API key is not a plus user, please upgrade your plant to access this model."
+                },
             )
         claude_client = claude_clients_round_robin.get_next_plus_client()
     else:
@@ -102,9 +106,13 @@ async def chat(
                     break  # 成功创建对话后跳出循环
                 except Exception as e:
                     current_retry += 1
-                    logger.error(f"Failed to create conversation. Retry {current_retry}/{max_retry}. Error: {e}")
+                    logger.error(
+                        f"Failed to create conversation. Retry {current_retry}/{max_retry}. Error: {e}"
+                    )
                     if current_retry == max_retry:
-                        logger.error(f"Failed to create conversation after {max_retry} retries.")
+                        logger.error(
+                            f"Failed to create conversation after {max_retry} retries."
+                        )
                         return ("error: ", e)
                     else:
                         logger.info("Retrying in 1 second...")
@@ -115,8 +123,6 @@ async def chat(
         except Exception as e:
             logger.error(f"Meet an error: {e}")
             return ("error: ", e)
-
-
 
     message = claude_chat_request.message
     is_stream = claude_chat_request.stream

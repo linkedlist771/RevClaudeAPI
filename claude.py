@@ -262,9 +262,7 @@ class Client:
                     f"Failed to stream message. Retry {current_retry}/{max_retry}. Error: {e}"
                 )
                 if current_retry == max_retry:
-                    logger.error(
-                        f"Failed to stream message after {max_retry} retries."
-                    )
+                    logger.error(f"Failed to stream message after {max_retry} retries.")
                     yield ("error: ", e)
                 else:
                     logger.info("Retrying in 3 second...")
@@ -341,7 +339,7 @@ class Client:
             "DNT": "1",
             "Connection": "keep-alive",
             "Cookie": self.cookie,
-            "Sec-CH-Ua-Mobile": "\"Linux\"",
+            "Sec-CH-Ua-Mobile": '"Linux"',
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",

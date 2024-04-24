@@ -6,6 +6,7 @@ from loguru import logger
 from claude import Client
 from tqdm import tqdm
 
+
 class CookieKeyType(Enum):
     PLUS = "plus"
     BASIC = "basic"
@@ -23,11 +24,13 @@ class CookieManager:
 
     def get_cookie_account_key(self, cookie_key):
         return f"{cookie_key}:account"
+
     # 这里设置一下账号和cookie的type方便后面检索。
 
-
     # 暂时不设置过期时间，因为我也不知道过期时间是啥时候
-    def upload_cookie(self, cookie: str, cookie_type=CookieKeyType.BASIC.value, account=""):
+    def upload_cookie(
+        self, cookie: str, cookie_type=CookieKeyType.BASIC.value, account=""
+    ):
         """Upload a new cookie with a specific expiration time."""
         cookie_key = f"cookie-{str(uuid.uuid4()).replace('-', '')}"
         self.redis.set(cookie_key, cookie)
@@ -37,13 +40,11 @@ class CookieManager:
         self.redis.set(account_key, account)
         return cookie_key
 
-
     def update_cookie(self, cookie_key: str, cookie: str, account: str = ""):
         self.redis.set(cookie_key, cookie)
         account_key = self.get_cookie_account_key(cookie_key)
         self.redis.set(account_key, account)
         return f"Cookie {cookie_key} has been updated."
-
 
     def delete_cookie(self, cookie_key: str):
         """Delete a cookie."""
@@ -53,7 +54,6 @@ class CookieManager:
         account_key = self.get_cookie_account_key(cookie_key)
         self.redis.delete(account_key)
         return f"Cookie {cookie_key} has been deleted."
-
 
     def get_cookie_status(self, cookie_key: str):
         type_key = self.get_cookie_type_key(cookie_key)
@@ -71,12 +71,12 @@ class CookieManager:
         while True:
             cursor, keys = self.redis.scan(cursor, match=pattern, count=1000)
             for key in keys:
-                actual_type = self.redis.get(key).decode('utf-8')
+                actual_type = self.redis.get(key).decode("utf-8")
                 if actual_type == cookie_type:
-                    base_key = key.decode('utf-8').split(':type')[0]
+                    base_key = key.decode("utf-8").split(":type")[0]
                     cookie_value = self.redis.get(base_key)
                     if cookie_value:
-                        cookies.append(cookie_value.decode('utf-8'))
+                        cookies.append(cookie_value.decode("utf-8"))
 
             if cursor == 0:
                 break
@@ -108,6 +108,7 @@ class CookieManager:
 
         _basic_clients.extend(_plus_clients)
         return _basic_clients, _plus_clients
+
 
 def get_cookie_manager():
     return CookieManager()

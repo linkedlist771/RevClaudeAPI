@@ -10,7 +10,7 @@ async def upload_cookie(
     cookie: str,
     cookie_type: CookieKeyType = CookieKeyType.BASIC.value,
     account: str = "",
-    manager: CookieManager = Depends(get_cookie_manager)
+    manager: CookieManager = Depends(get_cookie_manager),
 ):
     """Upload a new cookie."""
     cookie_key = manager.upload_cookie(cookie, cookie_type.value, account)
@@ -22,7 +22,7 @@ async def update_cookie(
     cookie_key: str,
     cookie: str,
     account: str = "",
-    manager: CookieManager = Depends(get_cookie_manager)
+    manager: CookieManager = Depends(get_cookie_manager),
 ):
     """Update an existing cookie."""
     try:
@@ -34,8 +34,7 @@ async def update_cookie(
 
 @router.delete("/delete_cookie/{cookie_key}")
 async def delete_cookie(
-    cookie_key: str,
-    manager: CookieManager = Depends(get_cookie_manager)
+    cookie_key: str, manager: CookieManager = Depends(get_cookie_manager)
 ):
     """Delete a cookie."""
     try:
@@ -47,8 +46,7 @@ async def delete_cookie(
 
 @router.get("/cookie_status/{cookie_key}")
 async def get_cookie_status(
-    cookie_key: str,
-    manager: CookieManager = Depends(get_cookie_manager)
+    cookie_key: str, manager: CookieManager = Depends(get_cookie_manager)
 ):
     """Get the status of a cookie."""
     status = manager.get_cookie_status(cookie_key)
@@ -57,8 +55,7 @@ async def get_cookie_status(
 
 @router.get("/all_cookies/{cookie_type}")
 async def get_all_cookies(
-    cookie_type: str,
-    manager: CookieManager = Depends(get_cookie_manager)
+    cookie_type: str, manager: CookieManager = Depends(get_cookie_manager)
 ):
     """Get all cookies of a specific type."""
     cookies = manager.get_all_cookies(cookie_type)
