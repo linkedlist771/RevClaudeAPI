@@ -107,6 +107,27 @@ class CookieManager:
                 logger.error(f"Failed to register the plus client: {e}")
         return _basic_clients, _plus_clients
 
+    def get_all_cookie_status(self):
+        pattern = f"*:type"
+        cursor = 0
+        cookies = []
+
+        while True:
+            cursor, keys = self.redis.scan(cursor, match=pattern, count=1000)
+            for key in keys:
+                actual_type = self.redis.get(key).decode("utf-8")
+                base_key = key.decode("utf-8").split(":type")[0]
+                cookie_value = self.redis.get(base_key)
+                account_key = self.get_cookie_account_key(base_key)
+                account = self.redis.get(account_key)
+                if cookie_value:
+                    cookies.append(f"{base_key}: \n type: {actual_type} \n account: {account}")
+
+            if cursor == 0:
+                break
+
+        return cookies
+
 
 def get_cookie_manager():
     return CookieManager()
