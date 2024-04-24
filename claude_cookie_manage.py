@@ -105,8 +105,6 @@ class CookieManager:
                 logger.info(f"Register the plus client: {plus_client}")
             except Exception as e:
                 logger.error(f"Failed to register the plus client: {e}")
-
-        _basic_clients.extend(_plus_clients)
         return _basic_clients, _plus_clients
 
 

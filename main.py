@@ -24,7 +24,7 @@ from loguru import logger
 import claude
 from router import router
 from claude_cookie_manage import get_cookie_manager
-
+from utility import get_client_status
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="0.0.0.0", help="host")
@@ -122,9 +122,9 @@ async def index():
     return FileResponse("frontui/index.html")
 
 
-@app.get("client_numbers")
-async def get_client_numbers():
-    return {"basic_clients": len(basic_clients), "plus_clients": len(plus_clients)}
+@app.get("/api/v1/client_status")
+async def get_client_status():
+    return get_client_status(basic_clients, plus_clients)
 
 
 def start_server(port=args.port, host=args.host):

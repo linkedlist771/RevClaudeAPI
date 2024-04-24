@@ -3,6 +3,64 @@ import time
 import configparser
 import json
 from typing import Literal
+from claude import Client
+from typing import Tuple, List
+from enum import Enum
+from pydantic import  BaseModel
+from uuid import uuid4
+
+def base62_encode(num, alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'):
+    """Encode a number in Base62."""
+    if num == 0:
+        return alphabet[0]
+    arr = []
+    base = len(alphabet)
+    while num:
+        num, rem = divmod(num, base)
+        arr.append(alphabet[rem])
+    arr.reverse()
+    return ''.join(arr)
+
+def get_short_uuid():
+    # Generate a UUID
+    uuid_num = uuid4().int
+    # Take just a portion to keep it short, e.g., the last 9 digits, which reduces collision probability
+    short_num = uuid_num % (62**6)
+    # Encode this number in base62
+    return base62_encode(short_num)
+
+
+class ClientStatus(Enum):
+    ACTIVE = "active"
+    ERROR = "error"
+    BUSY = "busy"
+
+
+
+class ClientsStatus(BaseModel):
+    id: str
+    status: str
+    type: str
+    idx: int
+
+
+
+
+def get_client_status(basic_clients: List[Client], plus_clients: List[Client]) -> List[ClientsStatus]:
+    # 目前不做区分， 后面再加
+    clients_status = []
+    for idx, client in enumerate(basic_clients):
+        status = ClientsStatus(id=get_short_uuid(), status=ClientStatus.ACTIVE.value, type="normal", idx=idx)
+        clients_status.append(status)
+    for idx, client in enumerate(plus_clients):
+        status = ClientsStatus(id=get_short_uuid(), status=ClientStatus.ACTIVE.value, type="plus", idx=idx)
+        clients_status.append(status)
+
+    return clients_status
+
+
+
+
 
 _cookies = {}
 
