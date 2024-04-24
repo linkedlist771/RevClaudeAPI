@@ -1,6 +1,7 @@
 import redis
 import uuid
 from enum import Enum
+from loguru import logger
 
 
 class APIKeyType(Enum):
@@ -44,7 +45,11 @@ class APIKeyManager:
         return _type if _type else APIKeyType.BASIC.value
 
     def is_plus_user(self, api_key) -> bool:
-        return self.get_api_key_type(api_key) == APIKeyType.PLUS.value
+        key_type = self.get_api_key_type(api_key)
+        logger.debug(f"key_type: {key_type}")
+        logger.debug(f"APIKeyType.PLUS.value: {APIKeyType.PLUS.value}")
+        return key_type == APIKeyType.PLUS.value
+        # return self.get_api_key_type(api_key) == APIKeyType.PLUS.value
 
     def set_api_key_type(self, api_key, _type):
         """Set the status of an API key."""
