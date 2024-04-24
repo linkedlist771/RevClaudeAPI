@@ -128,7 +128,7 @@ class CookieManager:
                 logger.error(f"Failed to register the plus client: {e}")
 
         _basic_clients.extend(_plus_clients)
-        return _basic_clients, _plus_clients
+        return _plus_clients, _plus_clients
 
 
 def get_cookie_manager():
