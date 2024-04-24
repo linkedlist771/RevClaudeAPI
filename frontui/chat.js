@@ -10,20 +10,7 @@ const route = "/api/v1/claude/chat";
 const streamingUrl = `${url}${route}`;
 let conversationID = null;
 
-function ajaxCall(url, method) {
-  return new Promise((resolve, reject) => {
-    $.ajax({
-      url: url,
-      type: method,
-      success: function (data) {
-        resolve(data);
-      },
-      error: function (xhr, textStatus, errorThrown) {
-        reject({ xhr, textStatus, errorThrown });
-      }
-    });
-  });
-}
+
 
 
 async function fetchStreamData(url, element, payload) {

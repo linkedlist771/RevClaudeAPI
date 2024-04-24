@@ -9,6 +9,7 @@ router = APIRouter()
 # 假设 APIKeyManager 类已被定义，我们现在创建一个依赖项
 
 
+# TODO: add the level to justify whether the api key is the plus user.
 @router.post("/create_key")
 async def create_key(
     expiration_seconds: int, manager: APIKeyManager = Depends(get_api_key_manager)

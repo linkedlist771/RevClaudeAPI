@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Full-width input fields */
+    input[type=text],
+    input[type=password] {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    /* Set a style for all buttons */
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 14px 20px;
+      margin: 8px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      opacity: 0.8;
+    }
+
+    /* Extra styles for the cancel button */
+    .cancelbtn {
+      width: auto;
+      padding: 10px 18px;
+      background-color: #f44336;
+    }
+
+    /* Center the image and position the close button */
+    .imgcontainer {
+      text-align: center;
+      margin: 0;
+      position: relative;
+    }
+
+    img.avatar {
+      width: 25%;
+      border-radius: 50%;
+    }
+
+    .container {
+      padding: 10px;
+    }
+
+    span.psw {
+      float: right;
+      padding-top: 16px;
+    }
+
+    /* The Modal (background) */
+    .modal {
+      display: none;
+      /* Hidden by default */
+      position: fixed;
+      /* Stay in place */
+      z-index: 1;
+      /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%;
+      /* Full width */
+      height: 100%;
+      /* Full height */
+      overflow: auto;
+      /* Enable scroll if needed */
+      background-color: rgb(0, 0, 0);
+      /* Fallback color */
+      background-color: rgba(0, 0, 0, 0.4);
+      /* Black w/ opacity */
+      padding-top: 60px;
+    }
+
+    /* Modal Content/Box */
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto 15% auto;
+      /* 5% from the top, 15% from the bottom and centered */
+      border: 1px solid #888;
+      width: 30%;
+      /* Could be more or less, depending on screen size */
+    }
+
+    /* The Close Button (x) */
+    .close {
+      position: absolute;
+      right: 25px;
+      top: 0;
+      color: #000;
+      font-size: 35px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: red;
+      cursor: pointer;
+    }
+
+    /* Add Zoom Animation */
+    .animate {
+      -webkit-animation: animatezoom 0.6s;
+      animation: animatezoom 0.6s
+    }
+
+    @-webkit-keyframes animatezoom {
+      from {
+        -webkit-transform: scale(0)
+      }
+
+      to {
+        -webkit-transform: scale(1)
+      }
+    }
+
+    @keyframes animatezoom {
+      from {
+        transform: scale(0)
+      }
+
+      to {
+        transform: scale(1)
+      }
+    }
+
+    #id01 {
+      display: black;
+    }
+
+    /* Change styles for span and cancel button on extra small screens */
+    @media screen and (max-width: 890px) {
+      span.psw {
+        display: block;
+        float: none;
+      }
+
+      .cancelbtn {
+        width: 100%;
+      }
+
+      .modal-content {
+        width: 80%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!--<h2>Modal Login Form</h2>
+
+<button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button>-->
+
+  <div id="id01" class="modal">
+
+  <form class="modal-content animate" onsubmit="validateApiKey(event)">
+      <div class="imgcontainer">
+        <!--<span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>-->
+        <img src="user.png" alt="Avatar" class="avatar">
+      </div>
+
+      <div class="container">
+        <label for="apiKey"><b>API Key</b></label>
+        <input type="text" placeholder="Enter API Key" name="apiKeyInput" required>
+
+<!--        <label for="psw"><b>Password</b></label>-->
+<!--        <input type="password" placeholder="Enter Password" name="psw" required>-->
+
+        <button type="submit">Submit</button>
+        <!--<label>
+        <input type="checkbox" checked="checked" name="remember"> Remember me
+      </label>-->
+      </div>
+
+      <div class="container" style="background-color:#f1f1f1;height:30px;">
+        <!--<button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>-->
+      </div>
+    </form>
+  </div>
+
+<!--  <script>-->
+<!--    // Get the modal-->
+<!--    document.getElementById('id01').style.display = 'block';-->
+<!--    var modal = document.getElementById('id01');-->
+
+<!--// When the user clicks anywhere outside of the modal, close it-->
+<!--    /*window.onclick = function(event) {-->
+<!--        if (event.target == modal) {-->
+<!--            modal.style.display = "none";-->
+<!--        }-->
+<!--    }*/-->
+<!--  </script>-->
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.js"></script>
+
+<script>
+// Function to simulate API Key validation (replace with real validation logic)
+
+function isValidApiKey(apiKey) {
+  // API endpoint
+  const url = `https://claude3.edu.cn.ucas.life/api/v1/api_key/validate_key/${apiKey}`;
+
+  // Use the Fetch API to make the GET request
+  fetch(url, {
+    method: 'GET',
+    headers: {
+      'accept': 'application/json',
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    // If the API key is valid, save it and redirect the user
+    if (data.is_valid) {
+      localStorage.setItem('SJ_API_KEY', apiKey);
+      navigateToPage();
+    } else {alert('API Key is incorrect. Try again.');
+
+      // If the API key is not valid, show an error and keep the modal open
+    }
+  })
+  .catch(error => {
+    // Handle any errors here
+    console.error('Error validating API key:', error);
+  });
+}
+
+function navigateToPage() {
+  // Placeholder for navigation
+  window.location.href = 'http://www.example.com';
+}
+
+// Validation and Local Storage logic
+function validateApiKey(event) {
+  event.preventDefault();
+  // 获取input filed
+  var apiKey = $('input[name="apiKeyInput"]').val();
+  if (isValidApiKey(apiKey)) {
+    localStorage.setItem('SJ_API_KEY', apiKey);
+    navigateToPage();
+  } else {
+    // The modal will stay open allowing the user to try again
+  }
+}
+
+// Checking LocalStorage for API Key
+window.onload = function() {
+  var apiKey = localStorage.getItem('SJ_API_KEY');
+  if (!apiKey || !isValidApiKey(apiKey)) {
+    document.getElementById('id01').style.display = 'block';
+  } else {
+    navigateToPage();
+  }
+};
+
+// // Optional: Close modal on outside click
+// window.onclick = function(event) {
+//   if (event.target == modal) {
+//     modal.style.display = "none";
+//   }
+// }
+</script>
+
+</body>
+
+</html>
