@@ -287,6 +287,7 @@ class Client:
                                 start_time = int(refresh_time) - 8 * 3600
                                 client_manager = ClientsStatusManager()
                                 client_manager.set_client_limited(client_type, client_idx, start_time)
+                            logger.error(f"exceeded_limit : {text}")
                             yield "Error: Exceeded limit. Please try again later. 超出限制，请稍后再试。"
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                             break
