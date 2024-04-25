@@ -256,6 +256,7 @@ class Client:
         max_retry = 3
         current_retry = 0
         response_text = ""
+        client_manager = ClientsStatusManager()
         while current_retry < max_retry:
             try:
                 with httpx.stream("POST", url, headers=headers, data=payload) as r:
@@ -267,7 +268,6 @@ class Client:
                             # ClientsStatusManager
                         if "exceeded_limit" in text:
                             # 对于plus用户只opus model才设置
-                            client_manager = ClientsStatusManager()
 
                             if client_type == "plus":
                                 if "opus" in model:
@@ -287,10 +287,14 @@ class Client:
                                 start_time = int(refresh_time) - 8 * 3600
                                 client_manager = ClientsStatusManager()
                                 client_manager.set_client_limited(client_type, client_idx, start_time)
+                            yield "Error: Exceeded limit. Please try again later. 超出限制，请稍后再试。"
+                            await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                            break
 
                         response_parse_text = await parse_text(text)
                         # logger.info(f"parsed text: {response_parse_text}")
                         if response_parse_text:
+                            client_manager.set_client_status(client_type, client_idx, "active")
                             resp_text = "".join(response_parse_text)
                             response_text += resp_text
                             yield resp_text
