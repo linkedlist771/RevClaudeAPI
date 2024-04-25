@@ -456,7 +456,8 @@ class Client:
         if response.status_code == 200:
             return response.json()
         else:
-            logger.error(f"Failed to convert file, response: {response}")
+            logger.error(f"Failed to convert file, response: {response.json()}")
+
             return {"error": "Failed to convert file", "status_code": response.status_code}
 
     def upload_attachment(self, file_path):
