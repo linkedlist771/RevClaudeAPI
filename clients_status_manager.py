@@ -85,7 +85,7 @@ class ClientsStatusManager:
         if status == ClientStatus.CD.value:
             client_status_start_time_key = self.get_client_status_start_time_key(client_type, client_idx)
             current_time = time.time()
-            passed_time = current_time - self.redis.get(client_status_start_time_key)
+            passed_time = current_time - float(self.redis.get(client_status_start_time_key))
             if passed_time > 8 * 3600:
                 self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
                 return True
