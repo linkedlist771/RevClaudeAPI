@@ -185,7 +185,10 @@ class Client:
                     # raise Exception(error_message)
                     # ClientsStatusManager
                     if "exceeded_limit" in text:
-                        refresh_time = json.loads(text)['error']['message']['resetsAt']
+                        dict_res = json.loads(text)
+                        error_message = dict_res['error']
+                        resetAt = int(json.loads(error_message['message'])['resetsAt'])
+                        refresh_time = resetAt
                         start_time = int(refresh_time) - 8 * 3600
                         client_manager = ClientsStatusManager()
                         client_manager.set_client_limited(client_type, client_idx, start_time)
@@ -270,19 +273,18 @@ class Client:
                             if client_type == "plus":
                                 if "opus" in model:
                                     #  "resetsAt": 1714053600
-                                    refresh_time = json.loads(text)['error']['message']['resetsAt']
+                                    dict_res = json.loads(text)
+                                    error_message = dict_res['error']
+                                    resetAt = int(json.loads(error_message['message'])['resetsAt'])
+                                    refresh_time = resetAt
                                     start_time = int(refresh_time) - 8 * 3600
                                     client_manager = ClientsStatusManager()
                                     client_manager.set_client_limited(client_type, client_idx, start_time)
                             else:
                                 dict_res = json.loads(text)
-                                logger.info(f"dict_res: {dict_res}")
                                 error_message = dict_res['error']
-                                logger.error(f"error_message: {error_message}")
-                                resetAt = error_message['message']['resetsAt']
-                                logger.info(f"resetAt: {resetAt}")
-
-                                refresh_time = ['error']['message']['resetsAt']
+                                resetAt = int(json.loads(error_message['message'])['resetsAt'])
+                                refresh_time = resetAt
                                 start_time = int(refresh_time) - 8 * 3600
                                 client_manager = ClientsStatusManager()
                                 client_manager.set_client_limited(client_type, client_idx, start_time)
