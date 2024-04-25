@@ -256,8 +256,12 @@ class Client:
                     for text in r.iter_text():
                         # logger.info(f"raw text: {text}")
                         if "permission_error" in text:
-                            logger.error(f"meet error: {text}")
-                            raise Exception("Permission Error")
+                            logger.error(f"permission_error : {text}")
+                            # raise Exception(error_message)
+                            # ClientsStatusManager
+                        if text["message"]["type"] == "exceeded_limit":
+                            client_manager = ClientsStatusManager()
+                            client_manager.set_client_limited(client_type, client_idx)
                         response_parse_text = await parse_text(text)
                         # logger.info(f"parsed text: {response_parse_text}")
                         if response_parse_text:
