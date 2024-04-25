@@ -20,6 +20,8 @@ from fastapi.staticfiles import StaticFiles
 from h11 import Response
 from pydantic import BaseModel
 from anyio import Path
+from asyncio import Lock
+
 from loguru import logger
 import claude
 from router import router
@@ -100,6 +102,7 @@ basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
 
 
 """FastAPI application instance."""
+reload_lock = Lock()
 
 app = FastAPI()
 
@@ -125,6 +128,19 @@ async def index():
 @app.get("/api/v1/clients_status")
 async def _get_client_status():
     return get_client_status(basic_clients, plus_clients)
+
+
+@app.get("/api/v1/reload_clients")
+async def reload_clients():
+    global basic_clients, plus_clients, cookie_manager
+    async with reload_lock:
+        try:
+            cookie_manager = get_cookie_manager()
+            basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
+            return JSONResponse(status_code=200, content={"message": "Reloaded clients successfully.", "data": get_client_status(basic_clients, plus_clients)})
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
 
 
 def start_server(port=args.port, host=args.host):
