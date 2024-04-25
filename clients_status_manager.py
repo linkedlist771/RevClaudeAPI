@@ -72,6 +72,10 @@ class ClientsStatusManager:
         client_status_key = self.get_client_status_key(client_type, client_idx)
         # 设置键值对
         client_status_start_time_key = self.get_client_status_start_time_key(client_type, client_idx)
+        # 首先判断这个是不是已经是cd状态了。
+        if self.redis.get(client_status_key) == ClientStatus.CD.value:
+            return
+
         self.redis.set(client_status_key, ClientStatus.CD.value)
         self.redis.set(client_status_start_time_key, time.time())
 

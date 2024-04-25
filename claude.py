@@ -183,7 +183,7 @@ class Client:
                     logger.error(f"Error Message: {parsed_response}")
                     # raise Exception(error_message)
                     # ClientsStatusManager
-                    if error_message["type"] == "exceeded_limit":
+                    if "exceeded_limit" in text:
                         client_manager = ClientsStatusManager()
                         client_manager.set_client_limited(client_type, client_idx)
 
