@@ -11,6 +11,7 @@ import time
 from loguru import logger
 from clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
+from fastapi.responses import JSONResponse
 
 
 class Client:
@@ -413,6 +414,19 @@ class Client:
 
     async def upload_attachment_for_fastapi(self, file: UploadFile):
         # 从 UploadFile 对象读取文件内容
+        # 直接try to read
+        try:
+            file_contents = await file.read()
+            file_size = len(file_contents)  # 由于是在内存中读取，用 len 获取大小
+            return JSONResponse(content={
+                "file_name": file.filename,
+                "file_type": file.content_type,
+                "file_size": file_size,
+                "extracted_content": file_contents.decode("utf-8")  # 假设文件编码为 UTF-8
+            })
+        except Exception as e:
+            logger.error(f"Failed to read file directly: {e}")
+
         file_content = await file.read()
         content_type = file.content_type
         url = f"https://claude.ai/api/organizations/{self.organization_id}/convert_document"
