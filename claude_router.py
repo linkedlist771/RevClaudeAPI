@@ -71,6 +71,7 @@ async def chat(
     clients=Depends(obtain_claude_client),
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
+    logger.info(f"Got a chat request: {claude_chat_request}")
     logger.info(f"headers: {request.headers}")
     api_key = request.headers.get("Authorization")
     basic_clients = clients["basic_clients"]
@@ -80,8 +81,8 @@ async def chat(
     if model not in [model.value for model in ClaudeModels]:
         return JSONResponse(
             status_code=400,
-            content={"error": f"Model:{model} not found.\n"
-                              f"未找到模型:{model}。"},
+            content={"error": f"Model: not found.\n"
+                              f"未找到模型:"},
         )
     conversation_id = claude_chat_request.conversation_id
     if ClaudeModels.model_is_plus(model):

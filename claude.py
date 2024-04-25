@@ -179,7 +179,7 @@ class Client:
                 if "error" in parsed_response:
                     error_message = parsed_response["error"]["message"]
                     # print("Error Message:", error_message)
-                    print(parsed_response)
+                    logger.error(f"Error Message: {error_message}")
             except json.JSONDecodeError:
                 events = []
                 lines = text.split("\n")
@@ -241,20 +241,23 @@ class Client:
         }
         max_retry = 3
         current_retry = 0
+        response_text = ""
         while current_retry < max_retry:
             try:
                 with httpx.stream("POST", url, headers=headers, data=payload) as r:
                     for text in r.iter_text():
                         # logger.info(f"raw text: {text}")
                         if "permission_error" in text:
+                            logger.error(f"meet error: {text}")
                             raise Exception("Permission Error")
                         response_parse_text = await parse_text(text)
-
                         # logger.info(f"parsed text: {response_parse_text}")
                         if response_parse_text:
                             resp_text = "".join(response_parse_text)
+                            response_text += text
                             yield resp_text
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                logger.info(f"Response text:\n {response_text}")
                 break
             except Exception as e:
                 current_retry += 1
