@@ -259,7 +259,7 @@ class Client:
                             logger.error(f"permission_error : {text}")
                             # raise Exception(error_message)
                             # ClientsStatusManager
-                        if text["message"]["type"] == "exceeded_limit":
+                        if "exceeded_limit" in text:
                             client_manager = ClientsStatusManager()
                             client_manager.set_client_limited(client_type, client_idx)
                         response_parse_text = await parse_text(text)
