@@ -254,7 +254,7 @@ class Client:
                         # logger.info(f"parsed text: {response_parse_text}")
                         if response_parse_text:
                             resp_text = "".join(response_parse_text)
-                            response_text += text
+                            response_text += resp_text
                             yield resp_text
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                 logger.info(f"Response text:\n {response_text}")
