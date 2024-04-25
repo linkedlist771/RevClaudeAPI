@@ -26,7 +26,8 @@ async def validate_api_key(
     api_key = request.headers.get("Authorization")
     logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
-        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+        raise HTTPException(status_code=403, detail="Invalid or missing API key, please try to login through base url\n"
+                                                    "无效或缺失的 API key, 请尝试通过原始链接登录。")
     manager.increment_usage(api_key)
 
 
@@ -79,7 +80,8 @@ async def chat(
     if model not in [model.value for model in ClaudeModels]:
         return JSONResponse(
             status_code=400,
-            content={"error": f"Model not found."},
+            content={"error": f"Model:{model} not found.\n"
+                              f"未找到模型:{model}。"},
         )
     conversation_id = claude_chat_request.conversation_id
     if ClaudeModels.model_is_plus(model):
@@ -87,7 +89,8 @@ async def chat(
             return JSONResponse(
                 status_code=403,
                 content={
-                    "error": f"API key is not a plus user, please upgrade your plant to access this model."
+                    "error": f"API key is not a plus user, please upgrade your plant to access this model.\n"
+                             f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此模型。"
                 },
             )
     #
