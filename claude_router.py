@@ -67,12 +67,13 @@ async def list_models():
 @router.post("/convert_document")
 async def convert_document(
         file: UploadFile,
-        file_conversion_request: FileConversionRequest,
+        client_type: str,
+        client_idx: int,
                            clients=Depends(obtain_claude_client),
                            ):
     """上传文件接口"""
-    client_type = file_conversion_request.client_type
-    client_idx = file_conversion_request.client_idx
+    client_type = client_type
+    client_idx = client_idx
     basic_clients = clients["basic_clients"]
     plus_clients = clients["plus_clients"]
     if client_type == "plus":
