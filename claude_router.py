@@ -85,18 +85,18 @@ async def chat(
                               f"未找到模型:"},
         )
     conversation_id = claude_chat_request.conversation_id
-    if ClaudeModels.model_is_plus(model):
-        if not manager.is_plus_user(api_key):
-            return JSONResponse(
-                status_code=403,
-                content={
-                    "error": f"API key is not a plus user, please upgrade your plant to access this model.\n"
-                             f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此模型。"
-                },
-            )
-    #
+
     client_type = claude_chat_request.client_type
     client_type = "plus" if client_type == "plus" else "basic"
+    if (not manager.is_plus_user(api_key)) and (client_type == "plus"):
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": f"API key is not a plus user, please upgrade your plant to access this account.\n"
+                         f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
+            },
+        )
+
     if client_type == "plus":
         claude_client = plus_clients[client_idx]
     else:

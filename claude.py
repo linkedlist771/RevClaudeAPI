@@ -260,8 +260,15 @@ class Client:
                             # raise Exception(error_message)
                             # ClientsStatusManager
                         if "exceeded_limit" in text:
+                            # 对于plus用户只opus model才设置
                             client_manager = ClientsStatusManager()
-                            client_manager.set_client_limited(client_type, client_idx)
+
+                            if client_type == "plus":
+                                if "opus" in model:
+                                    client_manager.set_client_limited(client_type, client_idx)
+                            else:
+                                client_manager.set_client_limited(client_type, client_idx)
+
                         response_parse_text = await parse_text(text)
                         # logger.info(f"parsed text: {response_parse_text}")
                         if response_parse_text:
