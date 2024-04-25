@@ -275,7 +275,14 @@ class Client:
                                     client_manager = ClientsStatusManager()
                                     client_manager.set_client_limited(client_type, client_idx, start_time)
                             else:
-                                refresh_time = json.loads(text)['error']['message']['resetsAt']
+                                dict_res = json.loads(text)
+                                logger.info(f"dict_res: {dict_res}")
+                                error_message = dict_res['error']
+                                logger.error(f"error_message: {error_message}")
+                                resetAt = error_message['message']['resetsAt']
+                                logger.info(f"resetAt: {resetAt}")
+
+                                refresh_time = ['error']['message']['resetsAt']
                                 start_time = int(refresh_time) - 8 * 3600
                                 client_manager = ClientsStatusManager()
                                 client_manager.set_client_limited(client_type, client_idx, start_time)
