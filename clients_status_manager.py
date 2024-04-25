@@ -62,7 +62,7 @@ class ClientsStatusManager:
 
     def get_limited_message(self, start_time):
         current_time = time.time()
-        time_passed = current_time - start_time
+        time_passed = current_time - float(start_time)
         remaining_time = 8 * 3600 - time_passed
         return f"还需等待{remaining_time}秒刷新。"
 
