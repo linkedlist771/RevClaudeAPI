@@ -96,9 +96,20 @@ class ClientsStatusManager:
         else:
             return False
 
+    def create_if_not_exist(self, client_type, client_idx):
+        client_status_key = self.get_client_status_key(client_type, client_idx)
+        if not self.redis.exists(client_status_key):
+            self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
+            self.redis.set(self.get_client_status_start_time_key(client_type, client_idx), time.time())
+
+
+
     def get_all_clients_status(self, basic_clients, plus_clients):
         clients_status = []
         for idx, client in enumerate(basic_clients):
+            # 首先判断这两个key是否存在？ 如果不存在， 就设置。
+            self.create_if_not_exist("basic", idx)
+
             is_active = self.set_client_active_when_cd("basic", idx)
             if is_active:
                 _status = ClientStatus.ACTIVE.value
@@ -109,6 +120,7 @@ class ClientsStatusManager:
             status = ClientsStatus(id=get_short_uuid(), status=_status, type="normal", idx=idx, message=_message)
             clients_status.append(status)
         for idx, client in enumerate(plus_clients):
+            self.create_if_not_exist("plus", idx)
             is_active = self.set_client_active_when_cd("plus", idx)
             if is_active:
                 _status = ClientStatus.ACTIVE.value
