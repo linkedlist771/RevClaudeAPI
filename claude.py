@@ -442,17 +442,17 @@ class Client:
             "Cookie": self.cookie,
             "TE": "trailers",
         }
+        data = {
+            "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
+        }
         files = {
             "file": (file.filename, file_content, content_type),
-            "orgUuid": (None, self.organization_id),
         }
-
 
         await file.close()
         async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(url, headers=headers, files=files)
+            response = await client.post(url, headers=headers, data=data, files=files)
 
-        await file.close()
         if response.status_code == 200:
             return response.json()
         else:
