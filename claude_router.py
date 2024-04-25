@@ -2,7 +2,7 @@ import asyncio
 
 from fastapi import APIRouter, Depends, Query, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
-from fastapi import Header, HTTPException, File, UploadFile
+from fastapi import Header, HTTPException, File, UploadFile, Form
 from api_key_manage import APIKeyManager, get_api_key_manager
 
 
@@ -66,9 +66,9 @@ async def list_models():
 
 @router.post("/convert_document")
 async def convert_document(
-        file: UploadFile,
-        client_type: str,
-        client_idx: int,
+        file: UploadFile = File(...),
+        client_type: str = Form(...),  # Specify that it's a form field
+        client_idx: int = Form(...),  # Specify that it's a form field
                            clients=Depends(obtain_claude_client),
                            ):
     """上传文件接口"""
