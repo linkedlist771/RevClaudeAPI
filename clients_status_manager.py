@@ -65,6 +65,7 @@ class ClientsStatusManager:
         print(f"current_time: {current_time}, start_time: {start_time}")
         time_passed = current_time - float(start_time)
         remaining_time = 8 * 3600 - time_passed
+        remaining_time = int(remaining_time)
         return f"还需等待{remaining_time}秒刷新。"
 
     def set_client_limited(self, client_type, client_idx):
