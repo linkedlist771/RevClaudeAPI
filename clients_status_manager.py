@@ -68,7 +68,7 @@ class ClientsStatusManager:
         remaining_time = int(remaining_time)
         return f"还需等待{remaining_time}秒恢复使用。"
 
-    def set_client_limited(self, client_type, client_idx):
+    def set_client_limited(self, client_type, client_idx, start_time):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         # 设置键值对
         client_status_start_time_key = self.get_client_status_start_time_key(client_type, client_idx)

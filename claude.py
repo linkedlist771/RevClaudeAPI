@@ -7,6 +7,7 @@ import re
 from datetime import datetime
 import httpx
 import asyncio
+import time
 from loguru import logger
 from clients_status_manager import ClientsStatusManager
 
@@ -178,14 +179,16 @@ class Client:
             try:
                 parsed_response = json.loads(text)
                 if "error" in parsed_response:
-                    error_message = parsed_response["error"]["message"]
+
                     # print("Error Message:", error_message)
                     logger.error(f"Error Message: {parsed_response}")
                     # raise Exception(error_message)
                     # ClientsStatusManager
                     if "exceeded_limit" in text:
+                        refresh_time = json.loads(text)['error']['message']['resetsAt']
+                        start_time = int(refresh_time) - 8 * 3600
                         client_manager = ClientsStatusManager()
-                        client_manager.set_client_limited(client_type, client_idx)
+                        client_manager.set_client_limited(client_type, client_idx, start_time)
 
             except json.JSONDecodeError:
                 events = []
@@ -265,9 +268,16 @@ class Client:
 
                             if client_type == "plus":
                                 if "opus" in model:
-                                    client_manager.set_client_limited(client_type, client_idx)
+                                    #  "resetsAt": 1714053600
+                                    refresh_time = json.loads(text)['error']['message']['resetsAt']
+                                    start_time = int(refresh_time) - 8 * 3600
+                                    client_manager = ClientsStatusManager()
+                                    client_manager.set_client_limited(client_type, client_idx, start_time)
                             else:
-                                client_manager.set_client_limited(client_type, client_idx)
+                                refresh_time = json.loads(text)['error']['message']['resetsAt']
+                                start_time = int(refresh_time) - 8 * 3600
+                                client_manager = ClientsStatusManager()
+                                client_manager.set_client_limited(client_type, client_idx, start_time)
 
                         response_parse_text = await parse_text(text)
                         # logger.info(f"parsed text: {response_parse_text}")
