@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Union
+from fastapi import UploadFile
 
 
 class BaseChatRequest(BaseModel):
@@ -16,3 +17,12 @@ class ClaudeChatRequest(BaseChatRequest):
     conversation_id: Union[str, None] = None
     client_idx: int = 0
     client_type: str
+
+
+class FileConversionRequest(BaseModel):
+    client_idx: int
+    client_type: str
+    file: UploadFile  # 新增上传文件的字段
+
+
+

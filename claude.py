@@ -10,6 +10,7 @@ import asyncio
 import time
 from loguru import logger
 from clients_status_manager import ClientsStatusManager
+from fastapi import UploadFile
 
 
 class Client:
@@ -224,9 +225,9 @@ class Client:
             else:
                 yield {"Error: Invalid file format. Please try again."}
 
-        # Ensure attachments is an empty list when no attachment is provided
-        if not attachment:
-            attachments = []
+        # # Ensure attachments is an empty list when no attachment is provided
+        # if not attachment:
+        #     attachments = []
 
         payload = json.dumps(
             {
@@ -409,6 +410,39 @@ class Client:
 
         return True
 
+
+    async def upload_attachment_for_fastapi(self, file: UploadFile):
+        # 从 UploadFile 对象读取文件内容
+        file_content = await file.read()
+        content_type = file.content_type
+        file_name = file.filename
+        url = f"https://claude.ai/api/organizations/{self.organization_id}/convert_document"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Referer": "https://claude.ai/chats",
+            "Origin": "https://claude.ai",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "Connection": "keep-alive",
+            "Cookie": self.cookie,
+            "TE": "trailers",
+        }
+        files = {
+            "file": (file.filename, file_content, content_type),
+            "orgUuid": (None, self.organization_id),
+        }
+
+        response = requests.post(url, headers=headers, files=files)
+
+        await file.close()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": "Failed to convert file", "status_code": response.status_code}
+
+
     def upload_attachment(self, file_path):
         if file_path.endswith(".txt"):
             file_name = os.path.basename(file_path)
@@ -445,7 +479,7 @@ class Client:
             "orgUuid": (None, self.organization_id),
         }
 
-        response = req.post(url, headers=headers, files=files)
+        response = requests.post(url, headers=headers, files=files)
         if response.status_code == 200:
             return response.json()
         else:

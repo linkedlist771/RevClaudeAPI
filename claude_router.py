@@ -2,11 +2,11 @@ import asyncio
 
 from fastapi import APIRouter, Depends, Query, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, File, UploadFile
 from api_key_manage import APIKeyManager, get_api_key_manager
 
 
-from schemas import ClaudeChatRequest
+from schemas import ClaudeChatRequest, FileConversionRequest
 from loguru import logger
 
 from models import ClaudeModels
@@ -62,6 +62,24 @@ async def patched_generate_data(original_generator, conversation_id):
 @router.get("/list_models")
 async def list_models():
     return [model.value for model in ClaudeModels]
+
+
+@app.post("/convert_document")
+async def convert_document(file_conversion_request: FileConversionRequest,
+                           clients=Depends(obtain_claude_client),
+                           ):
+    """上传文件接口"""
+    client_type = file_conversion_request.client_type
+    client_idx = file_conversion_request.client_idx
+    basic_clients = clients["basic_clients"]
+    plus_clients = clients["plus_clients"]
+    if client_type == "plus":
+        claude_client = plus_clients[client_idx]
+    else:
+        claude_client = basic_clients[client_idx]
+
+    response = await claude_client.upload_attachment_for_fastapi(file_conversion_request.file)
+    return response
 
 
 @router.post("/chat")
