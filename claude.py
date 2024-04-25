@@ -433,7 +433,6 @@ class Client:
             "orgUuid": (None, self.organization_id),
         }
 
-        response = requests.post(url, headers=headers, files=files)
 
         await file.close()
         async with httpx.AsyncClient(timeout=30) as client:
