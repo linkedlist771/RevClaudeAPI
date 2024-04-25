@@ -50,6 +50,10 @@ ISCONFIGONLY = False
 # CONFIG_FOLDER = os.path.expanduser("~/.config")
 # CONFIG_FOLDER = Path(CONFIG_FOLDER) / "WebAI_to_API"
 
+# init logger
+logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
+
+
 
 FixConfigPath = lambda: (
     Path(CONFIG_FOLDER) / CONFIG_FILE_NAME
