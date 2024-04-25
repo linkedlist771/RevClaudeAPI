@@ -64,7 +64,7 @@ async def list_models():
     return [model.value for model in ClaudeModels]
 
 
-@app.post("/convert_document")
+@router.post("/convert_document")
 async def convert_document(file_conversion_request: FileConversionRequest,
                            clients=Depends(obtain_claude_client),
                            ):
