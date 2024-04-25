@@ -260,7 +260,6 @@ class Client:
             try:
                 with httpx.stream("POST", url, headers=headers, data=payload) as r:
                     for text in r.iter_text():
-                        logger.info(f"raw text: {text}")
                         # logger.info(f"raw text: {text}")
                         if "permission_error" in text:
                             logger.error(f"permission_error : {text}")
