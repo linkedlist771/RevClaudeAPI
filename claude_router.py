@@ -96,10 +96,12 @@ async def chat(
             )
     #
     client_type = claude_chat_request.client_type
+    client_type = "plus" if client_type == "plus" else "basic"
     if client_type == "plus":
         claude_client = plus_clients[client_idx]
     else:
         claude_client = basic_clients[client_idx]
+
     # claude_client
     # conversation_id = "test"
     max_retry = 3
@@ -140,7 +142,7 @@ async def chat(
     is_stream = claude_chat_request.stream
 
     if is_stream:
-        streaming_res = claude_client.stream_message(message, conversation_id, model)
+        streaming_res = claude_client.stream_message(message, conversation_id, model, client_type=client_type, client_idx=client_idx)
         streaming_res = patched_generate_data(streaming_res, conversation_id)
         return StreamingResponse(
             streaming_res,

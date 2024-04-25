@@ -8,6 +8,7 @@ from datetime import datetime
 import httpx
 import asyncio
 from loguru import logger
+from clients_status_manager import ClientsStatusManager
 
 
 class Client:
@@ -170,7 +171,7 @@ class Client:
 
     # Send and Response Stream Message to Claude
     async def stream_message(
-        self, prompt, conversation_id, model, attachment=None, timeout=120
+        self, prompt, conversation_id, model, client_type, client_idx, attachment=None, timeout=120,
     ):
 
         async def parse_text(text):
@@ -181,6 +182,11 @@ class Client:
                     # print("Error Message:", error_message)
                     logger.error(f"Error Message: {parsed_response}")
                     # raise Exception(error_message)
+                    # ClientsStatusManager
+                    if error_message["type"] == "exceeded_limit":
+                        client_manager = ClientsStatusManager()
+                        client_manager.set_client_limited(client_type, client_idx)
+
             except json.JSONDecodeError:
                 events = []
                 lines = text.split("\n")
