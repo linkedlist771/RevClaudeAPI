@@ -77,8 +77,9 @@ async def convert_document(file_conversion_request: FileConversionRequest,
         claude_client = plus_clients[client_idx]
     else:
         claude_client = basic_clients[client_idx]
-
+    logger.debug(f"Uploading file: {file_conversion_request.file.filename}")
     response = await claude_client.upload_attachment_for_fastapi(file_conversion_request.file)
+    logger.debug(f"upload response: {response}")
     return response
 
 

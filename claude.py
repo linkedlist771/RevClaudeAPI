@@ -415,7 +415,6 @@ class Client:
         # 从 UploadFile 对象读取文件内容
         file_content = await file.read()
         content_type = file.content_type
-        file_name = file.filename
         url = f"https://claude.ai/api/organizations/{self.organization_id}/convert_document"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
