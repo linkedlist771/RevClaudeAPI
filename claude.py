@@ -87,7 +87,7 @@ class Client:
         def parse_text(text):
 
             try:
-                # print(text)
+                # TODO: 目前不会修复， 我是笨蛋， 呜呜呜， 怎么办，我好笨。 放弃吧， 我是猪脑子，呜呜呜。
                 parsed_response = json.loads(text)
                 if "error" in parsed_response:
                     error_message = parsed_response["error"]["message"]
@@ -179,7 +179,8 @@ class Client:
                 if "error" in parsed_response:
                     error_message = parsed_response["error"]["message"]
                     # print("Error Message:", error_message)
-                    logger.error(f"Error Message: {error_message}")
+                    logger.error(f"Error Message: {parsed_response}")
+                    # raise Exception(error_message)
             except json.JSONDecodeError:
                 events = []
                 lines = text.split("\n")
@@ -195,6 +196,7 @@ class Client:
                                     events.append(event_data["completion"])
                                 except json.JSONDecodeError:
                                     print("CLAUDE STREAM ERROR: ", data)
+
 
                 # print(events)
                 return events
