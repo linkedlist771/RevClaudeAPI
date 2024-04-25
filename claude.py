@@ -436,11 +436,14 @@ class Client:
         response = requests.post(url, headers=headers, files=files)
 
         await file.close()
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(url, headers=headers, files=files)
+
+        await file.close()
         if response.status_code == 200:
             return response.json()
         else:
             return {"error": "Failed to convert file", "status_code": response.status_code}
-
 
     def upload_attachment(self, file_path):
         if file_path.endswith(".txt"):
