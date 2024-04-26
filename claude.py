@@ -454,7 +454,7 @@ class Client:
             "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
         }
         files = {
-            "file": (file.filename, open(file_path, "rb"), content_type)
+            "file": (file.filename, open(file.filename, "rb"), content_type)
         }
         logger.info(f"Uploading file: {file.filename}")
         logger.info(f"context type: {content_type}")
