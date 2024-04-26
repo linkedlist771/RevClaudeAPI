@@ -20,9 +20,7 @@ from models import ClaudeModels
 async def validate_api_key(
     request: Request, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
-    return
-    # return
-    # Authorization
+
     logger.info(f"headers: {request.headers}")
     api_key = request.headers.get("Authorization")
     logger.info(f"checking api key: {api_key}")
