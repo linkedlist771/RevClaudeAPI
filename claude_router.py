@@ -118,6 +118,15 @@ async def chat(
             },
         )
 
+    if (client_type == "basic") and ClaudeModels.model_is_plus(model):
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": f"Client is a basic user, but the model is a Plus model, please switch to a Plus client.\n"
+                            f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
+            },
+        )
+
     if client_type == "plus":
         claude_client = plus_clients[client_idx]
     else:
