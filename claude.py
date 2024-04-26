@@ -440,7 +440,6 @@ class Client:
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
             "Connection": "keep-alive",
-            "Content-Type": "multipart/form-data",
             "Cookie": self.cookie,
             "TE": "trailers",
         }
