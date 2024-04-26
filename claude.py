@@ -12,7 +12,7 @@ from loguru import logger
 from clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
-from utility import process_pdf
+from file_utils import process_pdf
 
 
 class Client:
