@@ -427,9 +427,12 @@ class Client:
         except Exception as e:
             # return JSONResponse(status_code=400, content={"message": "目前只支持文本文件上传"})
             logger.error(f"Failed to read file directly: {e}")
-
-        file_content = await file.read()
         content_type = file.content_type
+
+        # 先保存文件
+        with open(file.filename, "wb") as f:
+            f.write(await file.read())
+        # file_content = await file.read()
         url = f"https://claude.ai/api/convert_document"
         headers = {
 
@@ -451,7 +454,7 @@ class Client:
             "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
         }
         files = {
-            "file": (file.filename, file_content, content_type)
+            "file": (file.filename, open(file_path, "rb"), content_type)
         }
         logger.info(f"Uploading file: {file.filename}")
         logger.info(f"context type: {content_type}")
