@@ -425,8 +425,8 @@ class Client:
                 "extracted_content": file_contents.decode("utf-8")  # 假设文件编码为 UTF-8
             })
         except Exception as e:
-            return JSONResponse(status_code=400, content={"message": "目前只支持文本文件上传"})
-            # logger.error(f"Failed to read file directly: {e}")
+            # return JSONResponse(status_code=400, content={"message": "目前只支持文本文件上传"})
+            logger.error(f"Failed to read file directly: {e}")
 
         file_content = await file.read()
         content_type = file.content_type
