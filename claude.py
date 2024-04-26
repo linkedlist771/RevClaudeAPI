@@ -447,7 +447,7 @@ class Client:
             "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
         }
         files = {
-            "file": (file.filename, file_content, content_type),
+            "file": file_content,
         }
 
         await file.close()
