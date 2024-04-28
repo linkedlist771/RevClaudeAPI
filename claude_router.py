@@ -25,8 +25,11 @@ async def validate_api_key(
     api_key = request.headers.get("Authorization")
     logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
-        raise HTTPException(status_code=403, detail="Invalid or missing API key, please try to login through base url\n"
-                                                    "无效或缺失的 API key, 请尝试通过原始链接登录。")
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid or missing API key, please try to login through base url\n"
+            "无效或缺失的 API key, 请尝试通过原始链接登录。",
+        )
     manager.increment_usage(api_key)
 
 
@@ -65,11 +68,11 @@ async def list_models():
 
 @router.post("/convert_document")
 async def convert_document(
-        file: UploadFile = File(...),
-        client_type: str = Form(...),  # Specify that it's a form field
-        client_idx: int = Form(...),  # Specify that it's a form field
-                           clients=Depends(obtain_claude_client),
-                           ):
+    file: UploadFile = File(...),
+    client_type: str = Form(...),  # Specify that it's a form field
+    client_idx: int = Form(...),  # Specify that it's a form field
+    clients=Depends(obtain_claude_client),
+):
     """上传文件接口"""
     client_type = client_type
     client_idx = client_idx
@@ -102,8 +105,7 @@ async def chat(
     if model not in [model.value for model in ClaudeModels]:
         return JSONResponse(
             status_code=400,
-            content={"error": f"Model: not found.\n"
-                              f"未找到模型:"},
+            content={"error": f"Model: not found.\n" f"未找到模型:"},
         )
     conversation_id = claude_chat_request.conversation_id
 
@@ -114,7 +116,7 @@ async def chat(
             status_code=403,
             content={
                 "error": f"API key is not a plus user, please upgrade your plant to access this account.\n"
-                         f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
+                f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
             },
         )
 
@@ -123,7 +125,7 @@ async def chat(
             status_code=403,
             content={
                 "error": f"Client is a basic user, but the model is a Plus model, please switch to a Plus client.\n"
-                            f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
+                f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
             },
         )
 
@@ -172,7 +174,13 @@ async def chat(
     is_stream = claude_chat_request.stream
 
     if is_stream:
-        streaming_res = claude_client.stream_message(message, conversation_id, model, client_type=client_type, client_idx=client_idx)
+        streaming_res = claude_client.stream_message(
+            message,
+            conversation_id,
+            model,
+            client_type=client_type,
+            client_idx=client_idx,
+        )
         streaming_res = patched_generate_data(streaming_res, conversation_id)
         return StreamingResponse(
             streaming_res,

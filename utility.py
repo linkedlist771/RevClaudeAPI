@@ -11,14 +11,11 @@ from uuid import uuid4
 from clients_status_manager import ClientStatus, ClientsStatus, ClientsStatusManager
 
 
-
-
-def get_client_status(basic_clients: List[Client], plus_clients: List[Client]) -> List[ClientsStatus]:
+def get_client_status(
+    basic_clients: List[Client], plus_clients: List[Client]
+) -> List[ClientsStatus]:
     clients_status_manager = ClientsStatusManager()
     return clients_status_manager.get_all_clients_status(basic_clients, plus_clients)
-
-
-
 
 
 _cookies = {}

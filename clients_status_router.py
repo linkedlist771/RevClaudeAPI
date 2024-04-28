@@ -19,6 +19,3 @@ async def update_cookie(
         return {"message": "Set client status successfully."}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
-
-
-

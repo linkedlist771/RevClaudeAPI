@@ -61,6 +61,7 @@ async def get_all_cookies(
     cookies = manager.get_all_cookies(cookie_type)
     return {"cookies": cookies}
 
+
 @router.get("/list_all_cookies")
 async def list_all_cookies(manager: CookieManager = Depends(get_cookie_manager)):
     """List all cookies."""

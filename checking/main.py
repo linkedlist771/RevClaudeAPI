@@ -18,7 +18,11 @@ url = "http://23.94.133.68:6238/api/v1/claude/chat"
 
 # 你的请求头
 
-headers = {"accept": "application/json", "Content-Type": "application/json", "Authorization": "sj-731ce22577ac49339dd0b6a5bc49a9b2"}
+headers = {
+    "accept": "application/json",
+    "Content-Type": "application/json",
+    "Authorization": "sj-731ce22577ac49339dd0b6a5bc49a9b2",
+}
 
 # 你的请求体
 data = {

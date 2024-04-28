@@ -6,7 +6,9 @@ import time
 from pydantic import BaseModel
 
 
-def base62_encode(num, alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'):
+def base62_encode(
+    num, alphabet="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+):
     """Encode a number in Base62."""
     if num == 0:
         return alphabet[0]
@@ -16,7 +18,8 @@ def base62_encode(num, alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijk
         num, rem = divmod(num, base)
         arr.append(alphabet[rem])
     arr.reverse()
-    return ''.join(arr)
+    return "".join(arr)
+
 
 def get_short_uuid():
     # Generate a UUID
@@ -33,6 +36,7 @@ class ClientStatus(Enum):
     BUSY = "busy"
     CD = "cd"  # 等待刷新中。
 
+
 class ClientsStatus(BaseModel):
     id: str
     status: str
@@ -45,14 +49,15 @@ class ClientsStatusManager:
 
     def __init__(self, host="localhost", port=6379, db=2):
         """Initialize the connection to Redis."""
-        self.redis = redis.StrictRedis(host=host, port=port, db=db, decode_responses=True)
-
+        self.redis = redis.StrictRedis(
+            host=host, port=port, db=db, decode_responses=True
+        )
 
     # 8 小时刷新一次。
-# 需要注意的是这里的键值对应该有几种呢？  应该有三种花键
-# 基本键值通过client类型[plus, basic]和idx[0,1,2,3,4,5,6,]来组装:
-#  client_status_key  = f"status-{client_type}-{client_idx}", 其值为ClientStatus
-#  client_status_start_time_key = f"{client_status_key}:start_time", 其值为时间戳, 记录当前状态的开始时间， 开始的时间。
+    # 需要注意的是这里的键值对应该有几种呢？  应该有三种花键
+    # 基本键值通过client类型[plus, basic]和idx[0,1,2,3,4,5,6,]来组装:
+    #  client_status_key  = f"status-{client_type}-{client_idx}", 其值为ClientStatus
+    #  client_status_start_time_key = f"{client_status_key}:start_time", 其值为时间戳, 记录当前状态的开始时间， 开始的时间。
 
     def get_client_status_key(self, client_type, client_idx):
         return f"status-{client_type}-{client_idx}"
@@ -71,7 +76,9 @@ class ClientsStatusManager:
     def set_client_limited(self, client_type, client_idx, start_time):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         # 设置键值对
-        client_status_start_time_key = self.get_client_status_start_time_key(client_type, client_idx)
+        client_status_start_time_key = self.get_client_status_start_time_key(
+            client_type, client_idx
+        )
         # 首先判断这个是不是已经是cd状态了。
         if self.redis.get(client_status_key) == ClientStatus.CD.value:
             return
@@ -88,14 +95,17 @@ class ClientsStatusManager:
         client_status_key = self.get_client_status_key(client_type, client_idx)
         self.redis.set(client_status_key, status)
 
-
     def set_client_active_when_cd(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         status = self.redis.get(client_status_key)
         if status == ClientStatus.CD.value:
-            client_status_start_time_key = self.get_client_status_start_time_key(client_type, client_idx)
+            client_status_start_time_key = self.get_client_status_start_time_key(
+                client_type, client_idx
+            )
             current_time = time.time()
-            passed_time = current_time - float(self.redis.get(client_status_start_time_key))
+            passed_time = current_time - float(
+                self.redis.get(client_status_start_time_key)
+            )
             if passed_time > 8 * 3600:
                 self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
                 return True
@@ -110,9 +120,10 @@ class ClientsStatusManager:
         client_status_key = self.get_client_status_key(client_type, client_idx)
         if not self.redis.exists(client_status_key):
             self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
-            self.redis.set(self.get_client_status_start_time_key(client_type, client_idx), time.time())
-
-
+            self.redis.set(
+                self.get_client_status_start_time_key(client_type, client_idx),
+                time.time(),
+            )
 
     def get_all_clients_status(self, basic_clients, plus_clients):
         clients_status = []
@@ -126,8 +137,16 @@ class ClientsStatusManager:
                 _message = "可用"
             else:
                 _status = ClientStatus.CD.value
-                _message = self.get_limited_message(self.redis.get(self.get_client_status_start_time_key("basic", idx)))
-            status = ClientsStatus(id=get_short_uuid(), status=_status, type="normal", idx=idx, message=_message)
+                _message = self.get_limited_message(
+                    self.redis.get(self.get_client_status_start_time_key("basic", idx))
+                )
+            status = ClientsStatus(
+                id=get_short_uuid(),
+                status=_status,
+                type="normal",
+                idx=idx,
+                message=_message,
+            )
             clients_status.append(status)
         for idx, client in enumerate(plus_clients):
             self.create_if_not_exist("plus", idx)
@@ -137,11 +156,16 @@ class ClientsStatusManager:
                 _message = "可用"
             else:
                 _status = ClientStatus.CD.value
-                _message = self.get_limited_message(self.redis.get(self.get_client_status_start_time_key("basic", idx)))
-            status = ClientsStatus(id=get_short_uuid(), status=_status, type="plus", idx=idx, message=_message)
+                _message = self.get_limited_message(
+                    self.redis.get(self.get_client_status_start_time_key("basic", idx))
+                )
+            status = ClientsStatus(
+                id=get_short_uuid(),
+                status=_status,
+                type="plus",
+                idx=idx,
+                message=_message,
+            )
             clients_status.append(status)
 
         return clients_status
-
-
-

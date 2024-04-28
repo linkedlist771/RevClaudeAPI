@@ -77,6 +77,7 @@ async def set_key_type(
     result = manager.set_api_key_type(api_key, key_type)
     return {"message": result}
 
+
 @router.get("/get_key_type/{api_key}")
 async def get_key_type(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
@@ -84,6 +85,7 @@ async def get_key_type(
     """Get the type of an API key."""
     key_type = manager.get_api_key_type(api_key)
     return {"api_key": api_key, "key_type": key_type}
+
 
 @router.post("/add_key/{api_key}")
 async def add_key(

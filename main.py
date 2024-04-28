@@ -54,7 +54,6 @@ ISCONFIGONLY = False
 logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
 
 
-
 FixConfigPath = lambda: (
     Path(CONFIG_FOLDER) / CONFIG_FILE_NAME
     if os.path.basename(CONFIG_FOLDER).lower() == "src"

@@ -5,35 +5,10 @@ import asyncio
 from pydantic import BaseModel
 from io import BytesIO
 from starlette.datastructures import UploadFile as StarletteUploadFile
+import pdfplumber
+from starlette.concurrency import run_in_threadpool
 
 
-
-
-async def process_pdf(file: UploadFile):
-    # return JSONResponse(content={
-    #     "file_name": file.filename,
-    #     "file_type": file.content_type,
-    #     "file_size": file_size,
-    #     "extracted_content": file_contents.decode("utf-8")  # 假设文件编码为 UTF-8
-    # })
-    file_name = file.filename
-    file_type = file.content_type
-    content = await file.read()
-    file_size = len(content)
-    pdf_bytes = BytesIO(content)
-    pdf_document = PyPDF2.PdfFileReader(pdf_bytes)
-    num_pages = pdf_document.getNumPages()
-    text = []
-    for page_num in range(num_pages):
-        page = pdf_document.getPage(page_num)
-        text.append(page.extract_text())
-    text = "\n".join(text)
-    return {
-        "file_name": file_name,
-        "file_type": file_type,
-        "file_size": file_size,
-        "extracted_content": text,
-    }
 
 
 class DocumentConvertedResponse(BaseModel):
@@ -53,21 +28,30 @@ class DocumentConverter:
         file_type = self.upload_file.content_type
         content = await self.upload_file.read()
         file_size = len(content)
-
         if self.is_text_file():
             extracted_content = await self.process_text(content)
-            return DocumentConvertedResponse(file_name=file_name,
-                                                file_type=file_type,
-                                                file_size=file_size,
-                                                extracted_content=extracted_content)
+            return DocumentConvertedResponse(
+                file_name=file_name,
+                file_type=file_type,
+                file_size=file_size,
+                extracted_content=extracted_content,
+            )
         # docx, pdf,
+        elif if self.is_pdf_file():
+
 
         else:
             return None
 
     def is_text_file(self):
         # 检查内容类型是否为文本类型
-        text_types = ["text/plain", "text/csv", "text/html", "application/json", "text/xml"]
+        text_types = [
+            "text/plain",
+            "text/csv",
+            "text/html",
+            "application/json",
+            "text/xml",
+        ]
         return self.upload_file.content_type in text_types
 
     def is_pdf_file(self):
@@ -76,14 +60,23 @@ class DocumentConverter:
 
     def is_docx_file(self):
         # 检查文件是否为DOCX
-        return self.upload_file.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        return (
+            self.upload_file.content_type
+            == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
 
     async def process_text(self, content):
         # 处理文本文件
         return content.decode("utf-8")
 
     async def process_pdf(self, content):
-        raise NotImplementedError
+        # Use run_in_threadpool to handle synchronous pdfplumber operations
+        def extract_text():
+            with pdfplumber.open(BytesIO(content)) as pdf:
+                pages = [page.extract_text() for page in pdf.pages]
+                return "\n".join(filter(None, pages))
+        return await run_in_threadpool(extract_text)
+
 
     async def process_docx(self, content):
         raise NotImplementedError
@@ -91,26 +84,36 @@ class DocumentConverter:
 
 
 
-
-# 本地文件路径
-file_path = 'example.txt'  # 更改为你的文件路径
-file_content = open(file_path, 'rb').read()
-
-# 创建 UploadFile 对象
-upload_file = StarletteUploadFile(filename='example.txt',
-                                  content_type='text/plain',
-                                  file=BytesIO(file_content))
-
-# 初始化 DocumentConverter
-converter = DocumentConverter(upload_file)
-
 # 使用 asyncio 运行转换方法
 import asyncio
 
+
 async def main():
-    result = await converter.convert()
-    # 处理转换后的结果，例如保存或打印
-    print(result.getvalue())
+    files_list = ["example.txt", "example.csv", "example.json", "Su_2023_Mach._Learn.__Sci._Technol._4_035010.pdf"]
+    files_list = [f"resources/{file}" for file in files_list]
+    files_type = ["text/plain", "text/csv", "application/json", "application/pdf"]
+
+    file_content_list = [open(file_path, "rb").read() for file_path in files_list]
+
+    upload_file_list = [
+        StarletteUploadFile(
+            filename=file_path,
+            file=BytesIO(file_content),
+            headers={"content-type": file_type},
+        )
+        for file_path, file_content, file_type in zip(
+            files_list, file_content_list, files_type
+        )
+    ]
+
+    # 初始化 DocumentConverter
+    converter_list = [DocumentConverter(upload_file) for upload_file in upload_file_list]
+
+    for converter in converter_list:
+        result = await converter.convert()
+        # 处理转换后的结果，例如保存或打印
+        print(result)
+
 
 # 运行主函数
 if __name__ == "__main__":

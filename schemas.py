@@ -22,6 +22,3 @@ class ClaudeChatRequest(BaseChatRequest):
 class FileConversionRequest(BaseModel):
     client_idx: int
     client_type: str
-
-
-

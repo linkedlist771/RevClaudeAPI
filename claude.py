@@ -12,7 +12,7 @@ from loguru import logger
 from clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
-from file_utils import process_pdf
+# from file_utils import process_pdf
 
 
 class Client:
@@ -175,7 +175,14 @@ class Client:
 
     # Send and Response Stream Message to Claude
     async def stream_message(
-        self, prompt, conversation_id, model, client_type, client_idx, attachment=None, timeout=120,
+        self,
+        prompt,
+        conversation_id,
+        model,
+        client_type,
+        client_idx,
+        attachment=None,
+        timeout=120,
     ):
 
         async def parse_text(text):
@@ -189,12 +196,14 @@ class Client:
                     # ClientsStatusManager
                     if "exceeded_limit" in text:
                         dict_res = json.loads(text)
-                        error_message = dict_res['error']
-                        resetAt = int(json.loads(error_message['message'])['resetsAt'])
+                        error_message = dict_res["error"]
+                        resetAt = int(json.loads(error_message["message"])["resetsAt"])
                         refresh_time = resetAt
                         start_time = int(refresh_time) - 8 * 3600
                         client_manager = ClientsStatusManager()
-                        client_manager.set_client_limited(client_type, client_idx, start_time)
+                        client_manager.set_client_limited(
+                            client_type, client_idx, start_time
+                        )
 
             except json.JSONDecodeError:
                 events = []
@@ -211,7 +220,6 @@ class Client:
                                     events.append(event_data["completion"])
                                 except json.JSONDecodeError:
                                     print("CLAUDE STREAM ERROR: ", data)
-
 
                 # print(events)
                 return events
@@ -276,20 +284,28 @@ class Client:
                                 if "opus" in model:
                                     #  "resetsAt": 1714053600
                                     dict_res = json.loads(text)
-                                    error_message = dict_res['error']
-                                    resetAt = int(json.loads(error_message['message'])['resetsAt'])
+                                    error_message = dict_res["error"]
+                                    resetAt = int(
+                                        json.loads(error_message["message"])["resetsAt"]
+                                    )
                                     refresh_time = resetAt
                                     start_time = int(refresh_time) - 8 * 3600
                                     client_manager = ClientsStatusManager()
-                                    client_manager.set_client_limited(client_type, client_idx, start_time)
+                                    client_manager.set_client_limited(
+                                        client_type, client_idx, start_time
+                                    )
                             else:
                                 dict_res = json.loads(text)
-                                error_message = dict_res['error']
-                                resetAt = int(json.loads(error_message['message'])['resetsAt'])
+                                error_message = dict_res["error"]
+                                resetAt = int(
+                                    json.loads(error_message["message"])["resetsAt"]
+                                )
                                 refresh_time = resetAt
                                 start_time = int(refresh_time) - 8 * 3600
                                 client_manager = ClientsStatusManager()
-                                client_manager.set_client_limited(client_type, client_idx, start_time)
+                                client_manager.set_client_limited(
+                                    client_type, client_idx, start_time
+                                )
                             logger.error(f"exceeded_limit : {text}")
                             yield "Error: Exceeded limit. Please try again later. 超出限制，请稍后再试。"
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
@@ -298,7 +314,9 @@ class Client:
                         response_parse_text = await parse_text(text)
                         # logger.info(f"parsed text: {response_parse_text}")
                         if response_parse_text:
-                            client_manager.set_client_status(client_type, client_idx, "active")
+                            client_manager.set_client_status(
+                                client_type, client_idx, "active"
+                            )
                             resp_text = "".join(response_parse_text)
                             response_text += resp_text
                             yield resp_text
@@ -412,19 +430,22 @@ class Client:
 
         return True
 
-
     async def upload_attachment_for_fastapi(self, file: UploadFile):
         # 从 UploadFile 对象读取文件内容
         # 直接try to read
         try:
             file_contents = await file.read()
             file_size = len(file_contents)  # 由于是在内存中读取，用 len 获取大小
-            return JSONResponse(content={
-                "file_name": file.filename,
-                "file_type": file.content_type,
-                "file_size": file_size,
-                "extracted_content": file_contents.decode("utf-8")  # 假设文件编码为 UTF-8
-            })
+            return JSONResponse(
+                content={
+                    "file_name": file.filename,
+                    "file_type": file.content_type,
+                    "file_size": file_size,
+                    "extracted_content": file_contents.decode(
+                        "utf-8"
+                    ),  # 假设文件编码为 UTF-8
+                }
+            )
         except Exception as e:
             logger.error(f"Failed to read file directly: {e}")
             if file.filename.endswith(".pdf"):
@@ -432,14 +453,14 @@ class Client:
 
                 return JSONResponse(content=content)
             else:
-                return JSONResponse(content={"error": "无法处理该文件类型"}, status_code=400)
-
+                return JSONResponse(
+                    content={"error": "无法处理该文件类型"}, status_code=400
+                )
 
         file_content = await file.read()
         content_type = file.content_type
         url = f"https://claude.ai/api/convert_document"
         headers = {
-
             "authority": "claude.ai",
             "path": f"/api/organizations/{self.organization_id}/convert_document",
             "scheme": "https",
@@ -457,9 +478,7 @@ class Client:
         data = {
             "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
         }
-        files = {
-            "file": (file.filename, file_content, content_type)
-        }
+        files = {"file": (file.filename, file_content, content_type)}
         logger.info(f"Uploading file: {file.filename}")
         logger.info(f"context type: {content_type}")
 
@@ -472,7 +491,10 @@ class Client:
         else:
             logger.error(f"Failed to convert file, response: {response.json()}")
 
-            return {"error": "Failed to convert file", "status_code": response.status_code}
+            return {
+                "error": "Failed to convert file",
+                "status_code": response.status_code,
+            }
 
     def upload_attachment(self, file_path):
         if file_path.endswith(".txt"):
