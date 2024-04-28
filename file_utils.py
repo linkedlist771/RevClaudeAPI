@@ -1,14 +1,11 @@
-import PyPDF2
-from io import BytesIO
+from docx import Document
 from fastapi import UploadFile
-import asyncio
 from pydantic import BaseModel
-from io import BytesIO
 from starlette.datastructures import UploadFile as StarletteUploadFile
-import pdfplumber
-from starlette.concurrency import run_in_threadpool
-
-
+from pdfminer.high_level import extract_text_to_fp
+from io import BytesIO, StringIO
+from pdfminer.layout import LAParams
+import asyncio
 
 
 class DocumentConvertedResponse(BaseModel):
@@ -37,8 +34,23 @@ class DocumentConverter:
                 extracted_content=extracted_content,
             )
         # docx, pdf,
-        elif if self.is_pdf_file():
+        elif self.is_pdf_file():
+            extracted_content = await self.process_pdf(content)
+            return DocumentConvertedResponse(
+                file_name=file_name,
+                file_type=file_type,
+                file_size=file_size,
+                extracted_content=extracted_content,
+            )
 
+        elif self.is_docx_file():
+            extracted_content = await self.process_docx(content)
+            return DocumentConvertedResponse(
+                file_name=file_name,
+                file_type=file_type,
+                file_size=file_size,
+                extracted_content=extracted_content,
+            )
 
         else:
             return None
@@ -71,27 +83,55 @@ class DocumentConverter:
 
     async def process_pdf(self, content):
         # Use run_in_threadpool to handle synchronous pdfplumber operations
-        def extract_text():
-            with pdfplumber.open(BytesIO(content)) as pdf:
-                pages = [page.extract_text() for page in pdf.pages]
-                return "\n".join(filter(None, pages))
-        return await run_in_threadpool(extract_text)
+        # Assuming 'content' is the PDF data read from a file-like object
+        pdf_content = BytesIO(content)  # Since content is already read as bytes
 
+        # Prepare an output buffer to capture the text
+        output_buffer = StringIO()
+
+        # Call the function
+        extract_text_to_fp(
+            inf=pdf_content, outfp=output_buffer, codec="utf-8", laparams=LAParams()
+        )
+
+        # Retrieve the extracted text from the output buffer
+        extracted_text = output_buffer.getvalue()
+        return extracted_text
 
     async def process_docx(self, content):
-        raise NotImplementedError
+        # Convert the binary content to a file-like object
+        docx_file = BytesIO(content)
 
+        # Load the DOCX file with python-docx
+        doc = Document(docx_file)
 
+        # Extract text from each paragraph in the document
+        extracted_text = "\n".join(
+            paragraph.text for paragraph in doc.paragraphs if paragraph.text
+        )
 
+        # Optionally, handle more complex structures like tables, headers, footers if needed
+        # For simplicity, this example focuses only on text in paragraphs
 
-# 使用 asyncio 运行转换方法
-import asyncio
+        return extracted_text
 
 
 async def main():
-    files_list = ["example.txt", "example.csv", "example.json", "Su_2023_Mach._Learn.__Sci._Technol._4_035010.pdf"]
+    files_list = [
+        "example.txt",
+        "example.csv",
+        "example.json",
+        "AI-agent.pdf",
+        "Sample_Document.docx",
+    ]
     files_list = [f"resources/{file}" for file in files_list]
-    files_type = ["text/plain", "text/csv", "application/json", "application/pdf"]
+    files_type = [
+        "text/plain",
+        "text/csv",
+        "application/json",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ]
 
     file_content_list = [open(file_path, "rb").read() for file_path in files_list]
 
@@ -107,7 +147,9 @@ async def main():
     ]
 
     # 初始化 DocumentConverter
-    converter_list = [DocumentConverter(upload_file) for upload_file in upload_file_list]
+    converter_list = [
+        DocumentConverter(upload_file) for upload_file in upload_file_list
+    ]
 
     for converter in converter_list:
         result = await converter.convert()

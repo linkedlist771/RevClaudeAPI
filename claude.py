@@ -12,7 +12,7 @@ from loguru import logger
 from clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
-# from file_utils import process_pdf
+from file_utils import DocumentConverter
 
 
 class Client:
@@ -434,67 +434,82 @@ class Client:
         # 从 UploadFile 对象读取文件内容
         # 直接try to read
         try:
-            file_contents = await file.read()
-            file_size = len(file_contents)  # 由于是在内存中读取，用 len 获取大小
-            return JSONResponse(
-                content={
-                    "file_name": file.filename,
-                    "file_type": file.content_type,
-                    "file_size": file_size,
-                    "extracted_content": file_contents.decode(
-                        "utf-8"
-                    ),  # 假设文件编码为 UTF-8
-                }
-            )
-        except Exception as e:
-            logger.error(f"Failed to read file directly: {e}")
-            if file.filename.endswith(".pdf"):
-                content = await process_pdf(file)
+            document_converter = DocumentConverter(upload_file=file)
+            result = await document_converter.convert()
 
-                return JSONResponse(content=content)
-            else:
+            if result is None:
+                logger.error(f"Unsupported file type: {file.filename}")
                 return JSONResponse(
                     content={"error": "无法处理该文件类型"}, status_code=400
                 )
 
-        file_content = await file.read()
-        content_type = file.content_type
-        url = f"https://claude.ai/api/convert_document"
-        headers = {
-            "authority": "claude.ai",
-            "path": f"/api/organizations/{self.organization_id}/convert_document",
-            "scheme": "https",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Referer": "https://claude.ai/chats",
-            "Origin": "https://claude.ai",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "Connection": "keep-alive",
-            "Cookie": self.cookie,
-            "TE": "trailers",
-        }
-        data = {
-            "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
-        }
-        files = {"file": (file.filename, file_content, content_type)}
-        logger.info(f"Uploading file: {file.filename}")
-        logger.info(f"context type: {content_type}")
+            return JSONResponse(content=result.model_dump())
 
-        await file.close()
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(url, headers=headers, data=data, files=files)
-
-        if response.status_code == 200:
-            return response.json()
-        else:
-            logger.error(f"Failed to convert file, response: {response.json()}")
-
-            return {
-                "error": "Failed to convert file",
-                "status_code": response.status_code,
-            }
+        except Exception as e:
+            logger.error(f"Meet Error when converting file to text: \n{e}")
+            return JSONResponse(content={"error": "处理上传文件报错"}, status_code=400)
+        # try:
+        #     file_contents = await file.read()
+        #     file_size = len(file_contents)  # 由于是在内存中读取，用 len 获取大小
+        #     return JSONResponse(
+        #         content={
+        #             "file_name": file.filename,
+        #             "file_type": file.content_type,
+        #             "file_size": file_size,
+        #             "extracted_content": file_contents.decode(
+        #                 "utf-8"
+        #             ),  # 假设文件编码为 UTF-8
+        #         }
+        #     )
+        # except Exception as e:
+        #     logger.error(f"Failed to read file directly: {e}")
+        #     if file.filename.endswith(".pdf"):
+        #         content = await process_pdf(file)
+        #
+        #         return JSONResponse(content=content)
+        #     else:
+        #         return JSONResponse(
+        #             content={"error": "无法处理该文件类型"}, status_code=400
+        #         )
+        #
+        # file_content = await file.read()
+        # content_type = file.content_type
+        # url = f"https://claude.ai/api/convert_document"
+        # headers = {
+        #     "authority": "claude.ai",
+        #     "path": f"/api/organizations/{self.organization_id}/convert_document",
+        #     "scheme": "https",
+        #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+        #     "Accept-Language": "en-US,en;q=0.5",
+        #     "Referer": "https://claude.ai/chats",
+        #     "Origin": "https://claude.ai",
+        #     "Sec-Fetch-Dest": "empty",
+        #     "Sec-Fetch-Mode": "cors",
+        #     "Sec-Fetch-Site": "same-origin",
+        #     "Connection": "keep-alive",
+        #     "Cookie": self.cookie,
+        #     "TE": "trailers",
+        # }
+        # data = {
+        #     "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
+        # }
+        # files = {"file": (file.filename, file_content, content_type)}
+        # logger.info(f"Uploading file: {file.filename}")
+        # logger.info(f"context type: {content_type}")
+        #
+        # await file.close()
+        # async with httpx.AsyncClient(timeout=30) as client:
+        #     response = await client.post(url, headers=headers, data=data, files=files)
+        #
+        # if response.status_code == 200:
+        #     return response.json()
+        # else:
+        #     logger.error(f"Failed to convert file, response: {response.json()}")
+        #
+        #     return {
+        #         "error": "Failed to convert file",
+        #         "status_code": response.status_code,
+        #     }
 
     def upload_attachment(self, file_path):
         if file_path.endswith(".txt"):
