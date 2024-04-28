@@ -15,6 +15,25 @@ from fastapi.responses import JSONResponse
 from file_utils import DocumentConverter
 
 
+async def upload_attachment_for_fastapi(file: UploadFile):
+    # 从 UploadFile 对象读取文件内容
+    # 直接try to read
+    try:
+        document_converter = DocumentConverter(upload_file=file)
+        result = await document_converter.convert()
+
+        if result is None:
+            logger.error(f"Unsupported file type: {file.filename}")
+            return JSONResponse(
+                content={"error": "无法处理该文件类型"}, status_code=400
+            )
+
+        return JSONResponse(content=result.model_dump())
+
+    except Exception as e:
+        logger.error(f"Meet Error when converting file to text: \n{e}")
+        return JSONResponse(content={"error": "处理上传文件报错"}, status_code=400)
+
 class Client:
     def fix_sessionKey(self, cookie):
         if "sessionKey=" not in cookie:
@@ -430,24 +449,7 @@ class Client:
 
         return True
 
-    async def upload_attachment_for_fastapi(self, file: UploadFile):
-        # 从 UploadFile 对象读取文件内容
-        # 直接try to read
-        try:
-            document_converter = DocumentConverter(upload_file=file)
-            result = await document_converter.convert()
 
-            if result is None:
-                logger.error(f"Unsupported file type: {file.filename}")
-                return JSONResponse(
-                    content={"error": "无法处理该文件类型"}, status_code=400
-                )
-
-            return JSONResponse(content=result.model_dump())
-
-        except Exception as e:
-            logger.error(f"Meet Error when converting file to text: \n{e}")
-            return JSONResponse(content={"error": "处理上传文件报错"}, status_code=400)
         # try:
         #     file_contents = await file.read()
         #     file_size = len(file_contents)  # 由于是在内存中读取，用 len 获取大小

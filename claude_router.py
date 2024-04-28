@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import Header, HTTPException, File, UploadFile, Form
 from api_key_manage import APIKeyManager, get_api_key_manager
 
-
+from claude import upload_attachment_for_fastapi
 from schemas import ClaudeChatRequest, FileConversionRequest
 from loguru import logger
 
@@ -69,21 +69,9 @@ async def list_models():
 @router.post("/convert_document")
 async def convert_document(
     file: UploadFile = File(...),
-    client_type: str = Form(...),  # Specify that it's a form field
-    client_idx: int = Form(...),  # Specify that it's a form field
-    clients=Depends(obtain_claude_client),
 ):
-    """上传文件接口"""
-    client_type = client_type
-    client_idx = client_idx
-    basic_clients = clients["basic_clients"]
-    plus_clients = clients["plus_clients"]
-    if client_type == "plus":
-        claude_client = plus_clients[client_idx]
-    else:
-        claude_client = basic_clients[client_idx]
     logger.debug(f"Uploading file: {file.filename}")
-    response = await claude_client.upload_attachment_for_fastapi(file)
+    response = await upload_attachment_for_fastapi(file)
     logger.debug(f"upload response: {response}")
     return response
 
