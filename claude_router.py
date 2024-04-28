@@ -72,7 +72,6 @@ async def convert_document(
 ):
     logger.debug(f"Uploading file: {file.filename}")
     response = await upload_attachment_for_fastapi(file)
-    logger.debug(f"upload response: {response}")
     return response
 
 

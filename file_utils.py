@@ -8,6 +8,7 @@ from pdfminer.layout import LAParams
 import asyncio
 from loguru import logger
 
+
 class DocumentConvertedResponse(BaseModel):
     file_name: str
     file_type: str
@@ -59,14 +60,26 @@ class DocumentConverter:
     def is_text_file(self):
         # 检查内容类型是否为文本类型
         text_types = [
-            "text/plain",
-            "text/csv",
-            "text/html",
-            "application/json",
-            "text/xml",
-            "application/octet-stream",
-
+            "text/plain",  # 普通文本
+            "text/csv",  # CSV 文件
+            "text/html",  # HTML 文档
+            "application/json",  # JSON 数据
+            "text/xml",  # XML 文档
+            "application/octet-stream",  # 通用二进制流（可能需要进一步处理来确定类型）
+            "text/yaml",  # YAML 文件
+            "application/xml",  # XML 文件（通常用于网络服务）
+            "text/markdown",  # Markdown 文本
+            "text/css",  # CSS 文件
+            "application/javascript",  # JavaScript 代码
+            "application/x-javascript",  # 也是 JavaScript 代码
+            "text/javascript",  # 过时的 JavaScript MIME 类型
+            "application/x-yaml",  # 另一种 YAML 类型标识
+            "application/x-latex",  # LaTeX 文档
+            "application/x-tex",  # TeX 文档
+            "text/sgml",  # SGML 文档
+            "application/sgml",  # SGML 应用程序类型
         ]
+
         return self.upload_file.content_type in text_types
 
     def is_pdf_file(self):

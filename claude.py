@@ -34,6 +34,7 @@ async def upload_attachment_for_fastapi(file: UploadFile):
         logger.error(f"Meet Error when converting file to text: \n{e}")
         return JSONResponse(content={"error": "处理上传文件报错"}, status_code=400)
 
+
 class Client:
     def fix_sessionKey(self, cookie):
         if "sessionKey=" not in cookie:
@@ -448,7 +449,6 @@ class Client:
             delete_id = self.delete_conversation(conversation_id)
 
         return True
-
 
         # try:
         #     file_contents = await file.read()
