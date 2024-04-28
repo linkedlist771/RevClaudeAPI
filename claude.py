@@ -434,45 +434,45 @@ class Client:
             else:
                 return JSONResponse(content={"error": "无法处理该文件类型"}, status_code=400)
 
-        #
-        # file_content = await file.read()
-        # content_type = file.content_type
-        # url = f"https://claude.ai/api/convert_document"
-        # headers = {
-        #
-        #     "authority": "claude.ai",
-        #     "path": f"/api/organizations/{self.organization_id}/convert_document",
-        #     "scheme": "https",
-        #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
-        #     "Accept-Language": "en-US,en;q=0.5",
-        #     "Referer": "https://claude.ai/chats",
-        #     "Origin": "https://claude.ai",
-        #     "Sec-Fetch-Dest": "empty",
-        #     "Sec-Fetch-Mode": "cors",
-        #     "Sec-Fetch-Site": "same-origin",
-        #     "Connection": "keep-alive",
-        #     "Cookie": self.cookie,
-        #     "TE": "trailers",
-        # }
-        # data = {
-        #     "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
-        # }
-        # files = {
-        #     "file": (file.filename, file_content, content_type)
-        # }
-        # logger.info(f"Uploading file: {file.filename}")
-        # logger.info(f"context type: {content_type}")
-        #
-        # await file.close()
-        # async with httpx.AsyncClient(timeout=30) as client:
-        #     response = await client.post(url, headers=headers, data=data, files=files)
-        #
-        # if response.status_code == 200:
-        #     return response.json()
-        # else:
-        #     logger.error(f"Failed to convert file, response: {response.json()}")
-        #
-        #     return {"error": "Failed to convert file", "status_code": response.status_code}
+
+        file_content = await file.read()
+        content_type = file.content_type
+        url = f"https://claude.ai/api/convert_document"
+        headers = {
+
+            "authority": "claude.ai",
+            "path": f"/api/organizations/{self.organization_id}/convert_document",
+            "scheme": "https",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Referer": "https://claude.ai/chats",
+            "Origin": "https://claude.ai",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "Connection": "keep-alive",
+            "Cookie": self.cookie,
+            "TE": "trailers",
+        }
+        data = {
+            "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
+        }
+        files = {
+            "file": (file.filename, file_content, content_type)
+        }
+        logger.info(f"Uploading file: {file.filename}")
+        logger.info(f"context type: {content_type}")
+
+        await file.close()
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(url, headers=headers, data=data, files=files)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.error(f"Failed to convert file, response: {response.json()}")
+
+            return {"error": "Failed to convert file", "status_code": response.status_code}
 
     def upload_attachment(self, file_path):
         if file_path.endswith(".txt"):
