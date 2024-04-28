@@ -64,6 +64,8 @@ class DocumentConverter:
             "text/html",
             "application/json",
             "text/xml",
+            "application/octet-stream",
+
         ]
         return self.upload_file.content_type in text_types
 
