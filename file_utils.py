@@ -6,7 +6,7 @@ from pdfminer.high_level import extract_text_to_fp
 from io import BytesIO, StringIO
 from pdfminer.layout import LAParams
 import asyncio
-
+from loguru import logger
 
 class DocumentConvertedResponse(BaseModel):
     file_name: str
@@ -25,6 +25,7 @@ class DocumentConverter:
         file_type = self.upload_file.content_type
         content = await self.upload_file.read()
         file_size = len(content)
+        logger.debug(f"file_type: {file_type}")
         if self.is_text_file():
             extracted_content = await self.process_text(content)
             return DocumentConvertedResponse(
