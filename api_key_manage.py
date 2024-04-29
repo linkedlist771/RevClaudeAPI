@@ -168,6 +168,21 @@ class APIKeyManager:
                 active_keys.append(key)
         return active_keys
 
+    def get_apikey_information(self, api_key):
+        usage = self.get_usage(api_key)
+        current_usage = self.get_current_usage(api_key)
+        last_usage_time = self.get_last_usage_time(api_key)
+        key_type = self.get_api_key_type(api_key)
+        # expire time
+        expire_time = self.redis.ttl(api_key)
+        return {
+            "usage": usage,
+            "current_usage": current_usage,
+            "last_usage_time": last_usage_time,
+            "key_type": key_type,
+            "expire_time": expire_time,
+        }
+
 
 def get_api_key_manager():
     return APIKeyManager()

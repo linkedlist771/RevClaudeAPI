@@ -43,13 +43,13 @@ async def increment_usage(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/get_usage/{api_key}")
-async def get_usage(
+@router.get("/get_information/{api_key}")
+async def get_information(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Get the usage count of an API key."""
-    usage = manager.get_usage(api_key)
-    return {"api_key": api_key, "usage_count": usage}
+    key_information = manager.get_apikey_information(api_key)
+    return key_information
 
 
 @router.delete("/delete_key/{api_key}")

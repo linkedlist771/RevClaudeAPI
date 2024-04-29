@@ -124,10 +124,7 @@ async def chat(
     has_reached_limit = manager.has_exceeded_limit(api_key)
     if has_reached_limit:
         message = manager.generate_exceed_message(api_key)
-        return JSONResponse(
-            status_code=403,
-            content=message
-        )
+        return JSONResponse(status_code=403, content=message)
 
     # claude_client
     # conversation_id = "test"
