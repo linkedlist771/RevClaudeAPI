@@ -2,6 +2,13 @@ import redis
 import uuid
 from enum import Enum
 from loguru import logger
+from utility import get_current_time
+from configs import (
+    BASIC_KEY_MAX_USAGE,
+    PLUS_KEY_MAX_USAGE,
+    API_KEY_REFRESH_INTERVAL,
+    API_KEY_REFRESH_INTERVAL_HOURS,
+)
 
 
 class APIKeyType(Enum):
@@ -33,13 +40,85 @@ class APIKeyManager:
     def increment_usage(self, api_key):
         """Increment the usage count for a given API key."""
         usage_key = f"{api_key}:usage"
-        return self.redis.incr(usage_key)
+        self.redis.incr(usage_key)
+        current_usage_key = f"{api_key}:current_usage"
+        self.redis.incr(current_usage_key)
+        return (
+            f"Usage count for API key {api_key} has been incremented.:\n"
+            f"usage: {self.get_usage(api_key)}\n"
+            f"current_usage: {self.get_current_usage(api_key)}"
+        )
 
     def get_usage(self, api_key):
         """Retrieve the current usage count of an API key."""
         usage_key = f"{api_key}:usage"
         count = self.redis.get(usage_key)
         return int(count) if count else 0
+
+    def get_current_usage(self, api_key):
+        current_usage_key = f"{api_key}:current_usage"
+        current_usage = self.redis.get(current_usage_key)
+        if current_usage is None:
+            self.redis.set(current_usage_key, 0)
+            return 0
+        return int(current_usage)
+
+    def get_last_usage_time(self, api_key):
+        """Retrieve the last usage time of an API key."""
+        last_usage_time_key = f"{api_key}:last_usage_time"
+        last_usage_time = self.redis.get(last_usage_time_key)
+        #
+        if last_usage_time is None:
+            # If the key does not exist, set it to the current timestamp
+            current_timestamp = get_current_time()
+            self.redis.set(last_usage_time_key, current_timestamp)
+            return current_timestamp
+        else:
+            # If the key exists, return the value
+            return int(last_usage_time)
+
+    def has_exceeded_limit(self, api_key) -> bool:
+        current_usage = self.get_current_usage(api_key)
+        key_type = self.get_api_key_type(api_key)
+        if key_type == APIKeyType.BASIC.value:
+            usage_limit = BASIC_KEY_MAX_USAGE
+        else:
+            usage_limit = PLUS_KEY_MAX_USAGE
+        if current_usage >= usage_limit:
+            # 判断当前时间和上次使用时间的时间差
+            last_usage_time = self.get_last_usage_time(api_key)
+            current_timestamp = get_current_time()
+            time_diff = current_timestamp - last_usage_time
+            if time_diff < API_KEY_REFRESH_INTERVAL:
+                return True
+            else:
+                # 超过时间间隔，重置当前使用次数
+                self.redis.set(f"{api_key}:current_usage", 0)
+                # 重置当前的使用时间
+                self.redis.set(f"{api_key}:last_usage_time", current_timestamp)
+                return False
+
+        else:
+            return False
+
+    def generate_exceed_message(self, api_key) -> str:
+        key_type = self.get_api_key_type(api_key)
+        if key_type == APIKeyType.BASIC.value:
+            usage_limit = BASIC_KEY_MAX_USAGE
+        else:
+            usage_limit = PLUS_KEY_MAX_USAGE
+        last_usage_time = self.get_last_usage_time(api_key)
+        current_timestamp = get_current_time()
+        time_diff = current_timestamp - last_usage_time
+        wait_time = max(0, API_KEY_REFRESH_INTERVAL - time_diff)  # 确保不显示负数
+
+        message = (
+            f"You api key is the {key_type} type, the usage limit is {usage_limit} times / {API_KEY_REFRESH_INTERVAL_HOURS} hours"
+            f"You need to wait {wait_time} seconds to use it again."
+            f"您的API密钥是{key_type}类型，使用限制是{usage_limit}次/{API_KEY_REFRESH_INTERVAL_HOURS}小时"
+            f"您需要等待{wait_time}秒后再次使用。"
+        )
+        return message
 
     # 这里设置还是用普通的字符串算了。
     def get_api_key_type(self, api_key):

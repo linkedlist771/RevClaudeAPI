@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from typing import Union, List, Dict
 
 
-
 class BaseChatRequest(BaseModel):
     """Base class for chat request models."""
 

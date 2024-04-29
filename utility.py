@@ -9,6 +9,11 @@ from enum import Enum
 from pydantic import BaseModel
 from uuid import uuid4
 from clients_status_manager import ClientStatus, ClientsStatus, ClientsStatusManager
+from time import time
+
+
+def get_current_time() -> int:
+    return int(time())
 
 
 def get_client_status(
