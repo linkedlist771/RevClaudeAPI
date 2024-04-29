@@ -201,7 +201,7 @@ class Client:
         model,
         client_type,
         client_idx,
-        attachment=None,
+        attachments=None,
         timeout=120,
     ):
 
@@ -247,21 +247,21 @@ class Client:
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
 
         # Upload attachment if provided
-        attachments = []
-        if attachment:
-            attachment_response = self.upload_attachment(attachment)
-            if attachment_response:
-                attachments = [attachment_response]
-            else:
-                yield {"Error: Invalid file format. Please try again."}
-
-        # # Ensure attachments is an empty list when no attachment is provided
-        # if not attachment:
-        #     attachments = []
+        # attachments = []
+        # if attachment:
+        #     attachment_response = self.upload_attachment(attachment)
+        #     if attachment_response:
+        #         attachments = [attachment_response]
+        #     else:
+        #         yield {"Error: Invalid file format. Please try again."}
+        #
+        # # # Ensure attachments is an empty list when no attachment is provided
+        # # if not attachment:
+        # #     attachments = []
 
         payload = json.dumps(
             {
-                "attachments": attachments,
+                "attachments": attachments,  # attachments is a list
                 "files": [],
                 "model": model,
                 "timezone": "Europe/London",

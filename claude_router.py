@@ -160,6 +160,11 @@ async def chat(
     message = claude_chat_request.message
     is_stream = claude_chat_request.stream
 
+    # 处理文件的部分
+    attachments = claude_chat_request.attachments
+    if attachments is None:
+        attachments = []
+
     if is_stream:
         streaming_res = claude_client.stream_message(
             message,
@@ -167,6 +172,7 @@ async def chat(
             model,
             client_type=client_type,
             client_idx=client_idx,
+            attachments=attachments,
         )
         streaming_res = patched_generate_data(streaming_res, conversation_id)
         return StreamingResponse(
