@@ -80,8 +80,11 @@ class DocumentConverter:
             "application/sgml",  # SGML 应用程序类型
         ]
 
-        return self.upload_file.content_type in text_types
+        bool_in_list = self.upload_file.content_type in text_types
+        bool_start_with_txt = self.upload_file.content_type.startswith("txt")
 
+        return bool_in_list or bool_start_with_txt
+    
     def is_pdf_file(self):
         # 检查文件是否为PDF
         return self.upload_file.content_type == "application/pdf"
