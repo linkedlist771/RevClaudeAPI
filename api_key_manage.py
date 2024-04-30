@@ -17,7 +17,7 @@ class APIKeyType(Enum):
 
 
 class APIKeyManager:
-    def __init__(self, host="localhost", port=6379, db=0):
+    def __init__(self, host="localhost", port=6379, db=10):
         """Initialize the connection to Redis."""
         self.redis = redis.StrictRedis(
             host=host, port=port, db=db, decode_responses=True

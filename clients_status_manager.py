@@ -47,7 +47,7 @@ class ClientsStatus(BaseModel):
 
 class ClientsStatusManager:
 
-    def __init__(self, host="localhost", port=6379, db=2):
+    def __init__(self, host="localhost", port=6379, db=12):
         """Initialize the connection to Redis."""
         self.redis = redis.StrictRedis(
             host=host, port=port, db=db, decode_responses=True
