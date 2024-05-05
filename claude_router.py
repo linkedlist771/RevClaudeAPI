@@ -189,7 +189,7 @@ async def chat(
         attachments = []
 
     files = claude_chat_request.files
-    if files is not None:
+    if files is None:
         files = []
 
     if is_stream:
