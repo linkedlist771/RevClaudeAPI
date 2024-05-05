@@ -75,6 +75,24 @@ async def convert_document(
     return response
 
 
+@router.post("/upload_image")
+async def upload_image(
+    file: UploadFile = File(...),
+    client_idx: int = Form(...),
+    client_type: str = Form(...),
+    clients=Depends(obtain_claude_client),
+):
+    logger.debug(f"Uploading file: {file.filename}")
+    basic_clients = clients["basic_clients"]
+    plus_clients = clients["plus_clients"]
+    if client_type == "plus":
+        claude_client = plus_clients[client_idx]
+    else:
+        claude_client = basic_clients[client_idx]
+    response = await claude_client.upload_images(file)
+    return response
+
+
 @router.post("/chat")
 async def chat(
     request: Request,

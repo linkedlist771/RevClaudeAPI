@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import json, os, uuid
+from typing import Union
+
 from curl_cffi import requests
 import re
 from datetime import datetime
@@ -554,6 +556,39 @@ class Client:
             return response.json()
         else:
             return False
+
+    async def upload_images(self, image_file: UploadFile):
+
+        url = f"https://claude.ai/api/{self.organization_id}/upload"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Referer": "https://claude.ai/chats",
+            "Origin": "https://claude.ai",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "Connection": "keep-alive",
+            "Cookie": self.cookie,
+            "TE": "trailers",
+        }
+        time_out = 10
+        try:
+            async with httpx.AsyncClient(timeout=time_out) as client:
+                response = await client.post(
+                    url,
+                    headers=headers,
+                    files={"file": (image_file.filename, image_file.file, image_file.content_type)},
+                )
+                logger.info(f"response: {response}")
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    return
+
+        except Exception as e:
+            logger.error(f"Failed to upload image: {e}")
+            return
 
     # Renames the chat conversation title
     def rename_chat(self, title, conversation_id):
