@@ -188,6 +188,10 @@ async def chat(
     if attachments is None:
         attachments = []
 
+    files = claude_chat_request.files
+    if files is not None:
+        files = []
+
     if is_stream:
         streaming_res = claude_client.stream_message(
             message,
@@ -196,6 +200,7 @@ async def chat(
             client_type=client_type,
             client_idx=client_idx,
             attachments=attachments,
+            files=files,
         )
         streaming_res = patched_generate_data(streaming_res, conversation_id)
         return StreamingResponse(

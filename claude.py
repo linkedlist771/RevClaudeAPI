@@ -204,6 +204,7 @@ class Client:
         client_type,
         client_idx,
         attachments=None,
+        files=None,
         timeout=120,
     ):
 
@@ -264,7 +265,7 @@ class Client:
         payload = json.dumps(
             {
                 "attachments": attachments,  # attachments is a list
-                "files": [],
+                "files": [] if files is None else files,
                 "model": model,
                 "timezone": "Europe/London",
                 "prompt": f"{prompt}",
@@ -557,6 +558,9 @@ class Client:
         else:
             return False
 
+
+
+
     async def upload_images(self, image_file: UploadFile):
 
         url = f"https://claude.ai/api/{self.organization_id}/upload"
@@ -582,14 +586,21 @@ class Client:
                 )
                 logger.info(f"response: {response}")
                 if response.status_code == 200:
-                    return response.json()
+                    res_json = response.json()
+                    return JSONResponse(content=res_json)
+
                 else:
-                    return
+                    return JSONResponse(
+                        content={"error": "Failed to upload image"},
+                        status_code=400,
+                    )
 
         except Exception as e:
             logger.error(f"Failed to upload image: {e}")
-            return
-
+            return JSONResponse(
+                content={"error": "Failed to upload image"},
+                status_code=400,
+            )
     # Renames the chat conversation title
     def rename_chat(self, title, conversation_id):
         url = "https://claude.ai/api/rename_chat"
