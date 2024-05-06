@@ -129,8 +129,7 @@ class APIKeyManager:
 
     def is_plus_user(self, api_key) -> bool:
         key_type = self.get_api_key_type(api_key)
-        logger.debug(f"key_type: {key_type}")
-        logger.debug(f"APIKeyType.PLUS.value: {APIKeyType.PLUS.value}")
+        logger.info(f"key_type: {key_type}")
         return key_type == APIKeyType.PLUS.value
         # return self.get_api_key_type(api_key) == APIKeyType.PLUS.value
 

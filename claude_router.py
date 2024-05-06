@@ -21,7 +21,6 @@ async def validate_api_key(
     request: Request, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
 
-    logger.info(f"headers: {request.headers}")
     api_key = request.headers.get("Authorization")
     logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
@@ -31,6 +30,7 @@ async def validate_api_key(
             "无效或缺失的 API key, 请尝试通过原始链接登录。",
         )
     manager.increment_usage(api_key)
+    logger.info(manager.get_apikey_information(api_key))
 
 
 router = APIRouter(dependencies=[Depends(validate_api_key)])
@@ -100,8 +100,8 @@ async def chat(
     clients=Depends(obtain_claude_client),
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
-    logger.info(f"Got a chat request: {claude_chat_request}")
-    logger.info(f"headers: {request.headers}")
+    logger.info(f"Input chat request request: \n{claude_chat_request.model_dump()}")
+    # logger.info(f"headers: {request.headers}")
     api_key = request.headers.get("Authorization")
     basic_clients = clients["basic_clients"]
     plus_clients = clients["plus_clients"]
