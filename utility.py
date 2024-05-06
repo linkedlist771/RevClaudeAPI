@@ -3,6 +3,25 @@ import time
 import configparser
 import json
 from typing import Literal
+from claude import Client
+from typing import Tuple, List
+from enum import Enum
+from pydantic import BaseModel
+from uuid import uuid4
+from clients_status_manager import ClientStatus, ClientsStatus, ClientsStatusManager
+from time import time
+
+
+def get_current_time() -> int:
+    return int(time())
+
+
+def get_client_status(
+    basic_clients: List[Client], plus_clients: List[Client]
+) -> List[ClientsStatus]:
+    clients_status_manager = ClientsStatusManager()
+    return clients_status_manager.get_all_clients_status(basic_clients, plus_clients)
+
 
 _cookies = {}
 

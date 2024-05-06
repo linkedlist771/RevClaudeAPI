@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件自动保存与上传</title>
+</head>
+<body>
+    <input type="file" id="fileInput">
+    <button id="uploadButton" disabled>上传文件</button>
+
+    <script>
+        let savedFile = null;
+
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const file = this.files[0]; // 获取选中的文件
+            if (file) {
+                savedFile = file;
+                document.getElementById('uploadButton').disabled = false; // 激活上传按钮
+                console.log('文件已保存');
+            } else {
+                document.getElementById('uploadButton').disabled = true; // 如果没有文件选中，禁用上传按钮
+                console.log('请选择文件');
+            }
+        });
+
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            if (savedFile) {
+                const formData = new FormData();
+                formData.append('file', savedFile);
+
+                fetch('http://0.0.0.0:8848/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => console.log('文件上传成功:', data))
+                .catch(error => console.error('上传出错:', error));
+            } else {
+                console.log('没有文件可上传');
+            }
+        });
+    </script>
+</body>
+</html>
+</title>
+</head>
+<body>
+
+
+</body>
+</html>

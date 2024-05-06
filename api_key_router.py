@@ -43,13 +43,13 @@ async def increment_usage(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/get_usage/{api_key}")
-async def get_usage(
+@router.get("/get_information/{api_key}")
+async def get_information(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Get the usage count of an API key."""
-    usage = manager.get_usage(api_key)
-    return {"api_key": api_key, "usage_count": usage}
+    key_information = manager.get_apikey_information(api_key)
+    return key_information
 
 
 @router.delete("/delete_key/{api_key}")
@@ -77,6 +77,7 @@ async def set_key_type(
     result = manager.set_api_key_type(api_key, key_type)
     return {"message": result}
 
+
 @router.get("/get_key_type/{api_key}")
 async def get_key_type(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
@@ -84,3 +85,16 @@ async def get_key_type(
     """Get the type of an API key."""
     key_type = manager.get_api_key_type(api_key)
     return {"api_key": api_key, "key_type": key_type}
+
+
+@router.post("/add_key/{api_key}")
+async def add_key(
+    api_key: str,
+    expiration_seconds: int,
+    api_key_type: str,
+    manager: APIKeyManager = Depends(get_api_key_manager),
+):
+    """Add an existing API key with a specific expiration time."""
+    api_key_type = str(api_key_type.strip().lower())
+    api_key = manager.add_api_key(api_key, expiration_seconds, api_key_type)
+    return {"api_key": api_key}

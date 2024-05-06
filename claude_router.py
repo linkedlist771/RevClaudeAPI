@@ -2,11 +2,11 @@ import asyncio
 
 from fastapi import APIRouter, Depends, Query, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, File, UploadFile, Form
 from api_key_manage import APIKeyManager, get_api_key_manager
 
-
-from schemas import ClaudeChatRequest
+from claude import upload_attachment_for_fastapi
+from schemas import ClaudeChatRequest, FileConversionRequest
 from loguru import logger
 
 from models import ClaudeModels
@@ -20,23 +20,29 @@ from models import ClaudeModels
 async def validate_api_key(
     request: Request, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
-    # return
-    # Authorization
-    logger.info(f"headers: {request.headers}")
+
     api_key = request.headers.get("Authorization")
     logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
-        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid or missing API key, please try to login through base url\n"
+            "无效或缺失的 API key, 请尝试通过原始链接登录。",
+        )
     manager.increment_usage(api_key)
+    logger.info(manager.get_apikey_information(api_key))
 
 
 router = APIRouter(dependencies=[Depends(validate_api_key)])
 
 
 def obtain_claude_client():
-    from main import client_round_robin
+    from main import basic_clients, plus_clients
 
-    return client_round_robin
+    return {
+        "basic_clients": basic_clients,
+        "plus_clients": plus_clients,
+    }
 
 
 async def patched_generate_data(original_generator, conversation_id):
@@ -60,34 +66,84 @@ async def list_models():
     return [model.value for model in ClaudeModels]
 
 
+@router.post("/convert_document")
+async def convert_document(
+    file: UploadFile = File(...),
+):
+    logger.debug(f"Uploading file: {file.filename}")
+    response = await upload_attachment_for_fastapi(file)
+    return response
+
+
+@router.post("/upload_image")
+async def upload_image(
+    file: UploadFile = File(...),
+    client_idx: int = Form(...),
+    client_type: str = Form(...),
+    clients=Depends(obtain_claude_client),
+):
+    logger.debug(f"Uploading file: {file.filename}")
+    basic_clients = clients["basic_clients"]
+    plus_clients = clients["plus_clients"]
+    if client_type == "plus":
+        claude_client = plus_clients[client_idx]
+    else:
+        claude_client = basic_clients[client_idx]
+    response = await claude_client.upload_images(file)
+    return response
+
+
 @router.post("/chat")
 async def chat(
     request: Request,
     claude_chat_request: ClaudeChatRequest,
-    claude_clients_round_robin=Depends(obtain_claude_client),
+    clients=Depends(obtain_claude_client),
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
-    logger.info(f"headers: {request.headers}")
+    logger.info(f"Input chat request request: \n{claude_chat_request.model_dump()}")
+    # logger.info(f"headers: {request.headers}")
     api_key = request.headers.get("Authorization")
-
+    basic_clients = clients["basic_clients"]
+    plus_clients = clients["plus_clients"]
+    client_idx = claude_chat_request.client_idx
     model = claude_chat_request.model
     if model not in [model.value for model in ClaudeModels]:
         return JSONResponse(
             status_code=400,
-            content={"error": f"Model not found."},
+            content={"error": f"Model: not found.\n" f"未找到模型:"},
         )
     conversation_id = claude_chat_request.conversation_id
-    if ClaudeModels.model_is_plus(model):
-        if not manager.is_plus_user(api_key):
-            return JSONResponse(
-                status_code=403,
-                content={
-                    "error": f"API key is not a plus user, please upgrade your plant to access this model."
-                },
-            )
-        claude_client = claude_clients_round_robin.get_next_plus_client()
+
+    client_type = claude_chat_request.client_type
+    client_type = "plus" if client_type == "plus" else "basic"
+    if (not manager.is_plus_user(api_key)) and (client_type == "plus"):
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": f"API key is not a plus user, please upgrade your plant to access this account.\n"
+                f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
+            },
+        )
+
+    if (client_type == "basic") and ClaudeModels.model_is_plus(model):
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": f"Client is a basic user, but the model is a Plus model, please switch to a Plus client.\n"
+                f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
+            },
+        )
+
+    if client_type == "plus":
+        claude_client = plus_clients[client_idx]
     else:
-        claude_client = claude_clients_round_robin.get_next_basic_client()
+        claude_client = basic_clients[client_idx]
+
+    has_reached_limit = manager.has_exceeded_limit(api_key)
+    if has_reached_limit:
+        message = manager.generate_exceed_message(api_key)
+        return JSONResponse(status_code=403, content=message)
+
     # claude_client
     # conversation_id = "test"
     max_retry = 3
@@ -127,8 +183,25 @@ async def chat(
     message = claude_chat_request.message
     is_stream = claude_chat_request.stream
 
+    # 处理文件的部分
+    attachments = claude_chat_request.attachments
+    if attachments is None:
+        attachments = []
+
+    files = claude_chat_request.files
+    if files is None:
+        files = []
+
     if is_stream:
-        streaming_res = claude_client.stream_message(message, conversation_id, model)
+        streaming_res = claude_client.stream_message(
+            message,
+            conversation_id,
+            model,
+            client_type=client_type,
+            client_idx=client_idx,
+            attachments=attachments,
+            files=files,
+        )
         streaming_res = patched_generate_data(streaming_res, conversation_id)
         return StreamingResponse(
             streaming_res,

@@ -24,7 +24,7 @@ from loguru import logger
 import claude
 from router import router
 from claude_cookie_manage import get_cookie_manager
-
+from utility import get_client_status
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="0.0.0.0", help="host")
@@ -49,6 +49,9 @@ ISCONFIGONLY = False
 
 # CONFIG_FOLDER = os.path.expanduser("~/.config")
 # CONFIG_FOLDER = Path(CONFIG_FOLDER) / "WebAI_to_API"
+
+# init logger
+logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
 
 
 FixConfigPath = lambda: (
@@ -96,7 +99,7 @@ class ClientRoundRobin:
 #     CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
 cookie_manager = get_cookie_manager()
 basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
-client_round_robin = ClientRoundRobin(basic_clients, plus_clients)
+# client_round_robin = ClientRoundRobin(basic_clients, plus_clients)
 
 
 """FastAPI application instance."""
@@ -120,6 +123,11 @@ app.mount("/static", StaticFiles(directory="frontui"), name="static")
 async def index():
     # use the index.html file in the frontui/ folder
     return FileResponse("frontui/index.html")
+
+
+@app.get("/api/v1/clients_status")
+async def _get_client_status():
+    return get_client_status(basic_clients, plus_clients)
 
 
 def start_server(port=args.port, host=args.host):
