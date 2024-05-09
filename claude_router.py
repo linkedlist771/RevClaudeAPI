@@ -208,7 +208,7 @@ async def chat(
     is_stream = claude_chat_request.stream
 
     conversation_history_request = ConversationHistoryRequestInput(
-        client_type=client_type,
+        conversation_type=client_type,
         api_key=api_key,
         client_idx=client_idx,
         conversation_id=conversation_id,
