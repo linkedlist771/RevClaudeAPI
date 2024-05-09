@@ -26,3 +26,10 @@ async def get_conversation_histories(
     histories = conversation_history_manager.get_conversation_histories(request)
     return histories
 
+@router.post("/delete_all_conversations")
+async def delete_all_conversations(
+    request: ConversationHistoryRequestInput,
+):
+    """Delete all conversations for the current client."""
+    conversation_history_manager.delete_all_conversations(request)
+    return {"message": "All conversations deleted successfully"}

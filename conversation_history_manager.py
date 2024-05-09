@@ -77,9 +77,14 @@ class ConversationHistoryManager:
             histories.append(history_data)
         return histories
 
+    def delete_all_conversations(self, request: ConversationHistoryRequestInput):
+        conversation_history_key = self.get_conversation_history_key(request)
+        self.redis.delete(conversation_history_key)
+
 
 def get_conversation_history_manager():
     return ConversationHistoryManager()
+
 
 conversation_history_manager = ConversationHistoryManager()
 
