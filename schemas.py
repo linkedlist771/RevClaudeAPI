@@ -17,6 +17,7 @@ class ClaudeChatRequest(BaseChatRequest):
     client_idx: int = 0
     client_type: str
     attachments: Union[List[Dict], None] = None
+    files: Union[List[str], None] = None
 
 
 class FileConversionRequest(BaseModel):

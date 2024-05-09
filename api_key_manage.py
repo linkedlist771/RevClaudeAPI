@@ -1,3 +1,5 @@
+import time
+
 import redis
 import uuid
 from enum import Enum
@@ -129,8 +131,7 @@ class APIKeyManager:
 
     def is_plus_user(self, api_key) -> bool:
         key_type = self.get_api_key_type(api_key)
-        logger.debug(f"key_type: {key_type}")
-        logger.debug(f"APIKeyType.PLUS.value: {APIKeyType.PLUS.value}")
+        logger.info(f"key_type: {key_type}")
         return key_type == APIKeyType.PLUS.value
         # return self.get_api_key_type(api_key) == APIKeyType.PLUS.value
 
@@ -175,6 +176,15 @@ class APIKeyManager:
         key_type = self.get_api_key_type(api_key)
         # expire time
         expire_time = self.redis.ttl(api_key)
+        # turn the last_usage_time to a readable format: time step => time
+        if last_usage_time is not None:
+            last_usage_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_usage_time))
+        else:
+            last_usage_time = 'Never used'
+        if expire_time == -1:
+            expire_time = 'Never expire'
+        else:
+            expire_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time() + expire_time))
         return {
             "usage": usage,
             "current_usage": current_usage,
