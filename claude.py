@@ -205,6 +205,7 @@ class Client:
         client_idx,
         attachments=None,
         files=None,
+        call_back=None,
         timeout=120,
     ):
 
@@ -345,6 +346,8 @@ class Client:
                             yield resp_text
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                 logger.info(f"Response text:\n {response_text}")
+                if call_back:
+                    await call_back(response_text)
                 break
             except Exception as e:
                 current_retry += 1
