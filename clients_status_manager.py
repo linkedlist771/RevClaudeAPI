@@ -157,7 +157,7 @@ class ClientsStatusManager:
             else:
                 _status = ClientStatus.CD.value
                 _message = self.get_limited_message(
-                    self.redis.get(self.get_client_status_start_time_key("basic", idx))
+                    self.redis.get(self.get_client_status_start_time_key("plus", idx))
                 )
             status = ClientsStatus(
                 id=get_short_uuid(),
