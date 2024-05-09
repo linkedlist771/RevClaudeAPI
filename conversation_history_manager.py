@@ -1,7 +1,7 @@
 import redis
 import uuid
 from enum import Enum
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Optional
 from loguru import logger
 from pydantic import BaseModel
 from api_key_manage import APIKeyType
@@ -31,8 +31,8 @@ class ConversationHistoryRequestInput(BaseModel):
     client_idx: int
     conversation_type: CookieKeyType
     api_key: str
-    conversation_id: Union[str, None]
-    model: Union[ClaudeModels, None]
+    conversation_id: Optional[str] = None
+    model: Optional[ClaudeModels] = None
 
 
 class ConversationHistoryManager:
