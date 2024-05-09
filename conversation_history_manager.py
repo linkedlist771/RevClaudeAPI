@@ -47,34 +47,29 @@ class ConversationHistoryManager:
 
     def push_message(self, request: ConversationHistoryRequestInput, messages: list[Message]):
         conversation_history_key = self.get_conversation_history_key(request)
-        conversation_histories = self.redis.lrange(conversation_history_key, 0, -1)
-        conversation_history = None
-        for history in conversation_histories:
-            history_data = ConversationHistory.model_validate_json(history)
-            if history_data.conversation_id == request.conversation_id:
-                conversation_history = history_data
-                break
-        if conversation_history:
-            # 如果对话历史存在,添加消息
+        conversation_history_data = self.redis.hget(conversation_history_key, request.conversation_id)
+
+        if conversation_history_data:
+            conversation_history = ConversationHistory.model_validate_json(conversation_history_data)
             conversation_history.messages.extend(messages)
-            self.redis.lrem(conversation_history_key, 1, conversation_history.json())
-            self.redis.rpush(conversation_history_key, conversation_history.json())
         else:
-            # 如果对话历史不存在,创建新的对话历史并添加消息
-            new_conversation_history = ConversationHistory(
+            conversation_history = ConversationHistory(
                 conversation_id=request.conversation_id,
                 messages=messages,
                 model=request.model
             )
-            self.redis.rpush(conversation_history_key, new_conversation_history.json())
+
+        self.redis.hset(conversation_history_key, request.conversation_id, conversation_history.model_dump_json())
 
     def get_conversation_histories(self, request: ConversationHistoryRequestInput) -> List[ConversationHistory]:
         conversation_history_key = self.get_conversation_history_key(request)
-        conversation_histories = self.redis.lrange(conversation_history_key, 0, -1)
+        conversation_histories_data = self.redis.hgetall(conversation_history_key)
         histories = []
-        for history in conversation_histories:
-            history_data = ConversationHistory.model_validate_json(history)
-            histories.append(history_data)
+
+        for conversation_id, history_data in conversation_histories_data.items():
+            history = ConversationHistory.model_validate_json(history_data)
+            histories.append(history)
+
         return histories
 
     def delete_all_conversations(self, request: ConversationHistoryRequestInput):
