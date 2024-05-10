@@ -12,20 +12,21 @@ from claude_cookie_manage import CookieKeyType
 from models import ClaudeModels
 
 
-
 class RoleType(Enum):
     ASSISTANT = "assistant"
     USER = "user"
 
 
-class  Message(BaseModel):
+class Message(BaseModel):
     content: str
     role: RoleType
+
 
 class ConversationHistory(BaseModel):
     conversation_id: str
     messages: List[Message]
     model: ClaudeModels
+
 
 class ConversationHistoryRequestInput(BaseModel):
     client_idx: int
@@ -41,27 +42,38 @@ class ConversationHistoryManager:
         """Initialize the connection to Redis."""
         self.redis = redis.StrictRedis(host=host, port=port, db=db)
 
-
     def get_conversation_history_key(self, request: ConversationHistoryRequestInput):
         return f"conversation_history-{request.api_key}-{request.client_idx}-{request.conversation_type.value}"
 
-    def push_message(self, request: ConversationHistoryRequestInput, messages: list[Message]):
+    def push_message(
+        self, request: ConversationHistoryRequestInput, messages: list[Message]
+    ):
         conversation_history_key = self.get_conversation_history_key(request)
-        conversation_history_data = self.redis.hget(conversation_history_key, request.conversation_id)
+        conversation_history_data = self.redis.hget(
+            conversation_history_key, request.conversation_id
+        )
 
         if conversation_history_data:
-            conversation_history = ConversationHistory.model_validate_json(conversation_history_data)
+            conversation_history = ConversationHistory.model_validate_json(
+                conversation_history_data
+            )
             conversation_history.messages.extend(messages)
         else:
             conversation_history = ConversationHistory(
                 conversation_id=request.conversation_id,
                 messages=messages,
-                model=request.model
+                model=request.model,
             )
 
-        self.redis.hset(conversation_history_key, request.conversation_id, conversation_history.model_dump_json())
+        self.redis.hset(
+            conversation_history_key,
+            request.conversation_id,
+            conversation_history.model_dump_json(),
+        )
 
-    def get_conversation_histories(self, request: ConversationHistoryRequestInput) -> List[ConversationHistory]:
+    def get_conversation_histories(
+        self, request: ConversationHistoryRequestInput
+    ) -> List[ConversationHistory]:
         conversation_history_key = self.get_conversation_history_key(request)
         conversation_histories_data = self.redis.hgetall(conversation_history_key)
         histories = []
@@ -84,7 +96,6 @@ def get_conversation_history_manager():
 conversation_history_manager = ConversationHistoryManager()
 
 
-
 # Example usage of the APIKeyManager
 if __name__ == "__main__":
     manager = ConversationHistoryManager()
@@ -93,5 +104,5 @@ if __name__ == "__main__":
         conversation_type=CookieKeyType.BASIC,
         api_key="sj-6d3f5d6",
         conversation_id="123",
-        model=ClaudeModels.CLAUDE
+        model=ClaudeModels.CLAUDE,
     )

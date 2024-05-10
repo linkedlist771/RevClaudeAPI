@@ -10,5 +10,11 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(claude_router, prefix="/claude", tags=["claude"])
 router.include_router(api_key_router, prefix="/api_key", tags=["api_key"])
 router.include_router(claude_cookie_router, prefix="/cookie", tags=["cookie"])
-router.include_router(clients_status_router, prefix="/clients_status", tags=["clients_status"])
-router.include_router(conversation_history_router, prefix="/conversation_history", tags=["conversation_history"])
+router.include_router(
+    clients_status_router, prefix="/clients_status", tags=["clients_status"]
+)
+router.include_router(
+    conversation_history_router,
+    prefix="/conversation_history",
+    tags=["conversation_history"],
+)

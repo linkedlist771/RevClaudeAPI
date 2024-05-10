@@ -178,13 +178,17 @@ class APIKeyManager:
         expire_time = self.redis.ttl(api_key)
         # turn the last_usage_time to a readable format: time step => time
         if last_usage_time is not None:
-            last_usage_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_usage_time))
+            last_usage_time = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.localtime(last_usage_time)
+            )
         else:
-            last_usage_time = 'Never used'
+            last_usage_time = "Never used"
         if expire_time == -1:
-            expire_time = 'Never expire'
+            expire_time = "Never expire"
         else:
-            expire_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time() + expire_time))
+            expire_time = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.localtime(time.time() + expire_time)
+            )
         return {
             "usage": usage,
             "current_usage": current_usage,

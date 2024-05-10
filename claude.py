@@ -561,9 +561,6 @@ class Client:
         else:
             return False
 
-
-
-
     async def upload_images(self, image_file: UploadFile):
 
         url = f"https://claude.ai/api/{self.organization_id}/upload"
@@ -585,7 +582,13 @@ class Client:
                 response = await client.post(
                     url,
                     headers=headers,
-                    files={"file": (image_file.filename, image_file.file, image_file.content_type)},
+                    files={
+                        "file": (
+                            image_file.filename,
+                            image_file.file,
+                            image_file.content_type,
+                        )
+                    },
                 )
                 logger.info(f"response: {response}")
                 if response.status_code == 200:
@@ -604,6 +607,7 @@ class Client:
                 content={"error": "Failed to upload image"},
                 status_code=400,
             )
+
     # Renames the chat conversation title
     def rename_chat(self, title, conversation_id):
         url = "https://claude.ai/api/rename_chat"

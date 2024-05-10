@@ -7,8 +7,12 @@ from fastapi import Header, HTTPException, File, UploadFile, Form
 from api_key_manage import APIKeyManager, get_api_key_manager
 
 from claude import upload_attachment_for_fastapi
-from conversation_history_manager import conversation_history_manager, ConversationHistoryRequestInput, Message, \
-    RoleType
+from conversation_history_manager import (
+    conversation_history_manager,
+    ConversationHistoryRequestInput,
+    Message,
+    RoleType,
+)
 from schemas import ClaudeChatRequest, FileConversionRequest
 from loguru import logger
 
@@ -97,7 +101,9 @@ async def upload_image(
 
 
 async def push_assistant_message_callback(
-    request: ConversationHistoryRequestInput, messages: list[Message], assistant_message: str
+    request: ConversationHistoryRequestInput,
+    messages: list[Message],
+    assistant_message: str,
 ):
     messages.append(
         Message(
@@ -107,6 +113,7 @@ async def push_assistant_message_callback(
     )
     conversation_history_manager.push_message(request, messages)
 
+
 @router.post("/chat")
 async def chat(
     request: Request,
@@ -114,7 +121,6 @@ async def chat(
     clients=Depends(obtain_claude_client),
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
-
 
     logger.info(f"Input chat request request: \n{claude_chat_request.model_dump()}")
     # logger.info(f"headers: {request.headers}")
@@ -160,13 +166,11 @@ async def chat(
         message = manager.generate_exceed_message(api_key)
         return JSONResponse(status_code=403, content=message)
 
-
     # client_type,
     # apikey,
     # client_idx,
     # conversation_id
     # model
-
 
     # claude_client
     # conversation_id = "test"
@@ -221,7 +225,9 @@ async def chat(
             role=RoleType.USER,
         )
     )
-    call_back = partial(push_assistant_message_callback, conversation_history_request, messages)
+    call_back = partial(
+        push_assistant_message_callback, conversation_history_request, messages
+    )
 
     # 处理文件的部分
     attachments = claude_chat_request.attachments
