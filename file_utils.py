@@ -60,6 +60,7 @@ class DocumentConverter:
     def is_text_file(self):
         # 检查内容类型是否为文本类型
         text_types = [
+
             "text/plain",  # 普通文本
             "text/csv",  # CSV 文件
             "text/html",  # HTML 文档

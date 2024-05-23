@@ -40,19 +40,18 @@ async def upload_file(file: UploadFile = File(...)):
     """上传文件接口"""
     # if file.filename.endswith(".txt"):
     if True:
-        file_contents = await file.read()
-        file_size = len(file_contents)  # 由于是在内存中读取，用 len 获取大小
         return JSONResponse(
             content={
                 "file_name": file.filename,
                 "file_type": file.content_type,
-                "file_size": file_size,
-                "extracted_content": file_contents.decode("unicode_escape"),
             }
         )
     else:
         return JSONResponse(status_code=400, content={"message": "只支持.txt文件"})
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 # cross origin
 from fastapi.middleware.cors import CORSMiddleware
