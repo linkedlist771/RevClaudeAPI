@@ -5,7 +5,7 @@ from enum import Enum
 import time
 from pydantic import BaseModel
 
-from claude_cookie_manage import get_cookie_manager
+# from claude_cookie_manage import get_cookie_manager
 
 
 def base62_encode(
@@ -134,6 +134,8 @@ class ClientsStatusManager:
         #         account_key = self.get_cookie_account_key(cookie_key)
         #         _type = self.redis.get(type_key)
         #         account = self.redis.get(account_key)
+        from claude_cookie_manage import get_cookie_manager
+
         cookie_manager = get_cookie_manager()
         for idx, client in enumerate(basic_clients):
             # 首先判断这两个key是否存在？ 如果不存在， 就设置。

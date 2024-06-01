@@ -5,7 +5,6 @@ import json
 import os
 import sys
 import time
-import utility
 import urllib.parse
 import itertools
 
