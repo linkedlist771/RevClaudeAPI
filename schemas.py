@@ -1,6 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Union, List, Dict
-
+from enum import Enum
+class APIKeyType(Enum):
+    PLUS = "plus"
+    BASIC = "basic"
 
 class BaseChatRequest(BaseModel):
     """Base class for chat request models."""
@@ -23,3 +26,9 @@ class ClaudeChatRequest(BaseChatRequest):
 class FileConversionRequest(BaseModel):
     client_idx: int
     client_type: str
+
+
+class CreateAPIKeyRequest(BaseModel):
+    expiration_days: int = Field(..., description="多少天后过期")
+    key_type: APIKeyType = Field(..., description="API key 类型")
+    key_number: int = Field(..., description="生成多少个API key")

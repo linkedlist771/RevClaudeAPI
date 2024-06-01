@@ -119,10 +119,10 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="frontui"), name="static")
 
 
-@app.get("/")
-async def index():
-    # use the index.html file in the frontui/ folder
-    return FileResponse("frontui/index.html")
+# @app.get("/")
+# async def index():
+#     # use the index.html file in the frontui/ folder
+#     return FileResponse("frontui/index.html")
 
 
 @app.get("/api/v1/clients_status")

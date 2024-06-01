@@ -2,6 +2,7 @@ from api_key_manage import APIKeyManager, get_api_key_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
+from schemas import CreateAPIKeyRequest
 
 router = APIRouter()
 
@@ -12,14 +13,17 @@ router = APIRouter()
 # TODO: add the level to justify whether the api key is the plus user.
 @router.post("/create_key")
 async def create_key(
-    expiration_seconds: int,
-    api_key_type: str,
+    create_apikey_request: CreateAPIKeyRequest,
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     """Create an API key with a set expiration time."""
-    api_key_type = str(api_key_type.strip().lower())
-    api_key = manager.create_api_key(expiration_seconds, api_key_type)
-    return {"api_key": api_key}
+    api_key_type = str(create_apikey_request.key_type)
+    expiration_seconds = create_apikey_request.expiration_days * 24 * 60 * 60
+    api_keys = []
+    for i in range(create_apikey_request.number):
+        api_key = manager.create_api_key(expiration_seconds, api_key_type)
+        api_keys.append(api_key)
+    return {"api_key": api_keys}
 
 
 @router.get("/validate_key/{api_key}")
