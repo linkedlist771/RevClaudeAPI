@@ -128,8 +128,8 @@ class CookieManager:
             except Exception as e:
                 logger.error(f"Failed to register the basic client: {e}")
         for plus_cookie, plus_cookie_key in tqdm(zip(_plus_cookies, _plus_cookie_keys)):
-            logger.info(f"plus_cookie: {plus_cookie}")
-            logger.info(f"plus_cookie_key: {plus_cookie_key}")
+            # logger.info(f"plus_cookie: {plus_cookie}")
+            # logger.info(f"plus_cookie_key: {plus_cookie_key}")
             try:
                 plus_client = Client(plus_cookie, plus_cookie_key)
                 _plus_clients.append(plus_client)
