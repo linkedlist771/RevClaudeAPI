@@ -43,9 +43,8 @@ class Client:
             cookie = "sessionKey=" + cookie
         return cookie
 
-    def __init__(self, cookie, cookie_key=None):
+    def __init__(self, cookie):
         self.cookie = self.fix_sessionKey(cookie)
-        self.cookie_key = cookie_key
         self.organization_id = self.get_organization_id()
 
     def get_organization_id(self):

@@ -62,16 +62,11 @@ class CookieManager:
         account = self.redis.get(account_key)
         return f"{cookie_key}: \n type: {_type} \n account: {account}"
 
-    def get_account(self, cookie_key: str):
-        account_key = self.get_cookie_account_key(cookie_key)
-        return self.redis.get(account_key)
-
-    def get_all_cookies(self, cookie_type: str):
+    def get_all_cookies(self, cookie_type: str) -> list[str]:
         """Retrieve all cookies of a specified type."""
         pattern = f"*:type"
         cursor = 0
         cookies = []
-        cookies_keys = []
 
         while True:
             cursor, keys = self.redis.scan(cursor, match=pattern, count=1000)
@@ -82,12 +77,11 @@ class CookieManager:
                     cookie_value = self.redis.get(base_key)
                     if cookie_value:
                         cookies.append(cookie_value.decode("utf-8"))
-                        cookies_keys.append(base_key)
 
             if cursor == 0:
                 break
 
-        return cookies, cookies_keys
+        return cookies
 
     def get_all_cookie_status(self):
         pattern = f"*:type"
@@ -114,22 +108,22 @@ class CookieManager:
 
     # 还是重启一下比较好哎。
     def get_all_basic_and_plus_client(self) -> Tuple[List[Client], List[Client]]:
-        _basic_cookies, _basic_cookie_keys = self.get_all_cookies(CookieKeyType.BASIC.value)
-        _plus_cookies, _plus_cookie_keys = self.get_all_cookies(CookieKeyType.PLUS.value)
+        _basic_cookies = self.get_all_cookies(CookieKeyType.BASIC.value)
+        _plus_cookies = self.get_all_cookies(CookieKeyType.PLUS.value)
         _basic_clients = []
         _plus_clients = []
 
         logger.info("Begin register the client.....")
-        for basic_cookie, basic_cookie_key in tqdm(zip(_basic_cookies, _basic_cookie_keys)):
+        for basic_cookie in tqdm(_basic_cookies):
             try:
-                basic_client = Client(basic_cookie, basic_cookie_key)
+                basic_client = Client(basic_cookie)
                 _basic_clients.append(basic_client)
                 logger.info(f"Register the basic client: {basic_client}")
             except Exception as e:
                 logger.error(f"Failed to register the basic client: {e}")
-        for plus_cookie, plus_cookie_key in tqdm(zip(_plus_cookies, _plus_cookie_keys)):
+        for plus_cookie in tqdm(_plus_cookies):
             try:
-                plus_client = Client(plus_cookie, plus_cookie_key)
+                plus_client = Client(plus_cookie)
                 _plus_clients.append(plus_client)
                 logger.info(f"Register the plus client: {plus_client}")
             except Exception as e:
