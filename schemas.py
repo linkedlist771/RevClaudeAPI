@@ -28,7 +28,8 @@ class FileConversionRequest(BaseModel):
     client_type: str
 
 
+
 class CreateAPIKeyRequest(BaseModel):
-    expiration_days: int = Field(..., default=1, description="多少天后过期, 默认1天")
+    expiration_days: int = Field(default=1, description="多少天后过期, 默认1天")
     key_type: APIKeyType = Field(..., description="API key 类型")
-    key_number: int = Field(...,  default=1, description="生成多少个key，默认1个")
+    key_number: int = Field(default=1, description="生成多少个key，默认1个")
