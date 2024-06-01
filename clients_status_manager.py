@@ -5,6 +5,8 @@ from enum import Enum
 import time
 from pydantic import BaseModel
 
+from claude_cookie_manage import get_cookie_manager
+
 
 def base62_encode(
     num, alphabet="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -127,10 +129,16 @@ class ClientsStatusManager:
 
     def get_all_clients_status(self, basic_clients, plus_clients):
         clients_status = []
+        #     def get_cookie_status(self, cookie_key: str):
+        #         type_key = self.get_cookie_type_key(cookie_key)
+        #         account_key = self.get_cookie_account_key(cookie_key)
+        #         _type = self.redis.get(type_key)
+        #         account = self.redis.get(account_key)
+        cookie_manager = get_cookie_manager()
         for idx, client in enumerate(basic_clients):
             # 首先判断这两个key是否存在？ 如果不存在， 就设置。
             self.create_if_not_exist("basic", idx)
-
+            account = cookie_manager.get_account(client.cookie_key)
             is_active = self.set_client_active_when_cd("basic", idx)
             if is_active:
                 _status = ClientStatus.ACTIVE.value
@@ -141,7 +149,7 @@ class ClientsStatusManager:
                     self.redis.get(self.get_client_status_start_time_key("basic", idx))
                 )
             status = ClientsStatus(
-                id=get_short_uuid(),
+                id=account,
                 status=_status,
                 type="normal",
                 idx=idx,
@@ -149,6 +157,8 @@ class ClientsStatusManager:
             )
             clients_status.append(status)
         for idx, client in enumerate(plus_clients):
+            account = cookie_manager.get_account(client.cookie_key)
+
             self.create_if_not_exist("plus", idx)
             is_active = self.set_client_active_when_cd("plus", idx)
             if is_active:
@@ -160,7 +170,7 @@ class ClientsStatusManager:
                     self.redis.get(self.get_client_status_start_time_key("plus", idx))
                 )
             status = ClientsStatus(
-                id=get_short_uuid(),
+                id=account, 
                 status=_status,
                 type="plus",
                 idx=idx,
