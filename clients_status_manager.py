@@ -170,7 +170,7 @@ class ClientsStatusManager:
                     self.redis.get(self.get_client_status_start_time_key("plus", idx))
                 )
             status = ClientsStatus(
-                id=account, 
+                id=account,
                 status=_status,
                 type="plus",
                 idx=idx,
