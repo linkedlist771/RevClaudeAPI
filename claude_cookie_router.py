@@ -58,8 +58,8 @@ async def get_all_cookies(
     cookie_type: str, manager: CookieManager = Depends(get_cookie_manager)
 ):
     """Get all cookies of a specific type."""
-    cookies = manager.get_all_cookies(cookie_type)
-    return {"cookies": cookies}
+    cookies,cookie_keys = manager.get_all_cookies(cookie_type)
+    return {"cookies": cookies, "cookie_keys": cookie_keys}
 
 
 @router.get("/list_all_cookies")
