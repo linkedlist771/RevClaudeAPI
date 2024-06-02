@@ -11,6 +11,7 @@ class CookieKeyType(Enum):
     PLUS = "plus"
     BASIC = "basic"
     TEST = "test"
+    NORMAL = "normal"
 
 
 class CookieManager:
