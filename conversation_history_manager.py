@@ -43,6 +43,8 @@ class ConversationHistoryManager:
         self.redis = redis.StrictRedis(host=host, port=port, db=db)
 
     def get_conversation_history_key(self, request: ConversationHistoryRequestInput):
+        if request.conversation_type.value == "normal":
+            return f"conversation_history-{request.api_key}-{request.client_idx}-basic"
         return f"conversation_history-{request.api_key}-{request.client_idx}-{request.conversation_type.value}"
 
     def push_message(
