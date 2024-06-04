@@ -1,26 +1,13 @@
 # Standard Library Imports
 import argparse
-import configparser
-import json
-import os
-import sys
-import time
-import urllib.parse
 import itertools
 
 # Third-Party Imports
 import fire
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request, APIRouter
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.responses import JSONResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from h11 import Response
-from pydantic import BaseModel
-from anyio import Path
 from loguru import logger
-import claude
 from router import router
 from claude_cookie_manage import get_cookie_manager
 from utility import get_client_status
@@ -30,46 +17,9 @@ parser.add_argument("--host", default="0.0.0.0", help="host")
 parser.add_argument("--port", default=6238, help="port")
 parser.add_argument("--pattern", default="dev", help="pattern")
 args = parser.parse_args()
-
-
-#############################################
-####                                     ####
-#####          Global Initilize         #####
-####                                     ####
-
-"""Config file name and paths for chatbot API configuration."""
-CONFIG_FILE_NAME = "Config.conf"
-CLAUDE_COOKIE_JSON = "claude_config.json"
-CONFIG_FOLDER = os.getcwd()
-
-
-"""Disable search on files cookie(fix 'PermissionError: [Errno 1] Operation not permitted') now used only for Claude"""
-ISCONFIGONLY = False
-
-# CONFIG_FOLDER = os.path.expanduser("~/.config")
-# CONFIG_FOLDER = Path(CONFIG_FOLDER) / "WebAI_to_API"
-
 # init logger
 logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
 
-
-FixConfigPath = lambda: (
-    Path(CONFIG_FOLDER) / CONFIG_FILE_NAME
-    if os.path.basename(CONFIG_FOLDER).lower() == "src"
-    else Path(CONFIG_FOLDER) / "src" / CONFIG_FILE_NAME
-)
-
-"""Path to API configuration file."""
-CONFIG_FILE_PATH = FixConfigPath()
-
-
-def ResponseModel():
-    config = configparser.ConfigParser()
-    config.read(filenames=CONFIG_FILE_PATH)
-    return config.get("Main", "Model", fallback="Claude")
-
-
-OpenAIResponseModel = ResponseModel()
 
 """ Initialization AI Models and Cookies """
 
@@ -88,17 +38,8 @@ class ClientRoundRobin:
         return next(self.plus_cycle)
 
 
-# if args.pattern == "dev":
-#     COOKIE_CLAUDE = None
-#     CLAUDE_CLIENT = None
-# else:
-#     COOKIE_CLAUDE = utility.getClaudeCookieFromJson(
-#         CLAUDE_COOKIE_JSON
-#     )  # message.session_id
-#     CLAUDE_CLIENT = claude.Client(COOKIE_CLAUDE)
 cookie_manager = get_cookie_manager()
 basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
-# client_round_robin = ClientRoundRobin(basic_clients, plus_clients)
 
 
 """FastAPI application instance."""
@@ -115,13 +56,8 @@ app.add_middleware(
 )
 
 # add index route
-app.mount("/static", StaticFiles(directory="frontui"), name="static")
+# app.mount("/static", StaticFiles(directory="frontui"), name="static")
 
-
-# @app.get("/")
-# async def index():
-#     # use the index.html file in the frontui/ folder
-#     return FileResponse("frontui/index.html")
 
 
 @app.get("/api/v1/clients_status")
