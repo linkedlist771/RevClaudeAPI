@@ -226,6 +226,15 @@ class Client:
                         client_manager.set_client_limited(
                             client_type, client_idx, start_time
                         )
+                    elif "Invalid model" in text:
+                        dict_res = json.loads(text)
+                        resetAt = 99999999
+                        refresh_time = resetAt
+                        start_time = int(refresh_time) - 8 * 3600
+                        client_manager = ClientsStatusManager()
+                        client_manager.set_client_limited(
+                            client_type, client_idx, start_time
+                        )
 
             except json.JSONDecodeError:
                 events = []
