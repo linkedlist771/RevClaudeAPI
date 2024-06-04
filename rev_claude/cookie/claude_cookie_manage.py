@@ -94,7 +94,6 @@ class CookieManager:
         pattern = f"*:type"
         cursor = 0
         cookies = []
-
         while True:
             cursor, keys = self.redis.scan(cursor, match=pattern, count=1000)
             for key in keys:
@@ -107,7 +106,6 @@ class CookieManager:
                     cookies.append(
                         f"{base_key}: \n type: {actual_type} \n account: {account}"
                     )
-
             if cursor == 0:
                 break
 
@@ -119,7 +117,6 @@ class CookieManager:
         _plus_cookies, _plus_cookie_keys = self.get_all_cookies(CookieKeyType.PLUS.value)
         _basic_clients = []
         _plus_clients = []
-
         logger.info("Begin register the client.....")
         for basic_cookie, basic_cookie_key in tqdm(zip(_basic_cookies, _basic_cookie_keys)):
             try:
@@ -129,8 +126,6 @@ class CookieManager:
             except Exception as e:
                 logger.error(f"Failed to register the basic client: {e}")
         for plus_cookie, plus_cookie_key in tqdm(zip(_plus_cookies, _plus_cookie_keys)):
-            # logger.info(f"plus_cookie: {plus_cookie}")
-            # logger.info(f"plus_cookie_key: {plus_cookie_key}")
             try:
                 plus_client = Client(plus_cookie, plus_cookie_key)
                 _plus_clients.append(plus_client)

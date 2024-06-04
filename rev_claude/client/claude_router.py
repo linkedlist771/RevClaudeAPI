@@ -7,6 +7,7 @@ from fastapi import HTTPException, File, UploadFile, Form
 from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 
 from rev_claude.client.claude import upload_attachment_for_fastapi
+from rev_claude.client.client_manager import ClientManager
 from rev_claude.history.conversation_history_manager import (
     conversation_history_manager,
     ConversationHistoryRequestInput,
@@ -44,7 +45,8 @@ router = APIRouter(dependencies=[Depends(validate_api_key)])
 
 
 def obtain_claude_client():
-    from main import basic_clients, plus_clients
+
+    basic_clients, plus_clients = ClientManager().get_clients()
 
     return {
         "basic_clients": basic_clients,
@@ -60,12 +62,6 @@ async def patched_generate_data(original_generator, conversation_id):
     async for data in original_generator:
         yield data
 
-
-#
-# @router.get("/list_conversations")
-# async def list_conversations(claude_client=Depends(obtain_claude_client)):
-#     return claude_client.list_all_conversations()
-#     # return {"message": "Hello World"}
 
 
 @router.get("/list_models")

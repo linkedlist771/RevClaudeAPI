@@ -9,7 +9,7 @@ __pycache__/
 claude_config.json
 
 Config.conf
-
+log_file.log
 # Distribution / packaging
 .Python
 build/

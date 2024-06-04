@@ -1,8 +1,28 @@
+from rev_claude.client.client_manager import ClientManager
 from rev_claude.cookie.claude_cookie_manage import CookieManager, CookieKeyType, get_cookie_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
 router = APIRouter()
+
+def get_cookie_counts():
+    basic_clients, plus_clients = ClientManager().get_clients()
+    data = {
+        "basic_clients_count": len(basic_clients),
+        "plus_clients_count": len(plus_clients),
+    }
+    return data
+
+@router.get("/get_cookies_count")
+async def get_cookies_count():
+    data = get_cookie_counts()
+    return JSONResponse(content={"message": "Clients count retrieved successfully.", "data": data})
+
+@router.get("/refresh_cookies")
+async def refresh_cookies():
+    ClientManager().load_clients()
+    data = get_cookie_counts()
+    return JSONResponse(content={"message": "Clients refreshed successfully.", "data": data})
 
 
 @router.post("/upload_cookie")

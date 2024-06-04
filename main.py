@@ -8,6 +8,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+
+from rev_claude.client.client_manager import ClientManager
+from rev_claude.lifespan import lifespan
 from rev_claude.router import router
 from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 from utility import get_client_status
@@ -38,13 +41,15 @@ class ClientRoundRobin:
         return next(self.plus_cycle)
 
 
-cookie_manager = get_cookie_manager()
-basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
-
 
 """FastAPI application instance."""
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
+
+# cookie_manager = get_cookie_manager()
+# basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
+
+
 
 # Add CORS middleware to allow all origins, credentials, methods, and headers.
 app.add_middleware(
@@ -58,10 +63,9 @@ app.add_middleware(
 # add index route
 # app.mount("/static", StaticFiles(directory="frontui"), name="static")
 
-
-
 @app.get("/api/v1/clients_status")
 async def _get_client_status():
+    basic_clients, plus_clients = ClientManager().get_clients()
     return get_client_status(basic_clients, plus_clients)
 
 
