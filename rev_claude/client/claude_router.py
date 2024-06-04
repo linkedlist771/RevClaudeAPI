@@ -151,6 +151,7 @@ async def chat(
                 f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
             },
         )
+    logger.info(f"plus_clients: {plus_clients}")
 
     if client_type == "plus":
         claude_client = plus_clients[client_idx]
