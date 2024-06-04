@@ -12,7 +12,6 @@ from loguru import logger
 from rev_claude.client.client_manager import ClientManager
 from rev_claude.lifespan import lifespan
 from rev_claude.router import router
-from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 from utility import get_client_status
 
 parser = argparse.ArgumentParser()
