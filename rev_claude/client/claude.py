@@ -207,6 +207,7 @@ class Client:
     ):
 
         async def parse_text(text):
+            # TODO: add error handling for invalid model.
             try:
                 parsed_response = json.loads(text)
                 if "error" in parsed_response:
