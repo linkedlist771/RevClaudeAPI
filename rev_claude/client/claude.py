@@ -227,8 +227,9 @@ class Client:
                             client_type, client_idx, start_time
                         )
                     elif "Invalid model" in text:
+                        logger.error(f"Invalid model in text")
                         dict_res = json.loads(text)
-                        resetAt = 99999999
+                        resetAt = 99999999999
                         refresh_time = resetAt
                         start_time = int(refresh_time) - 8 * 3600
                         client_manager = ClientsStatusManager()
