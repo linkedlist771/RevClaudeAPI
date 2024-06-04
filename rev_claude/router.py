@@ -4,7 +4,9 @@ from rev_claude.client.claude_router import router as claude_router
 from rev_claude.api_key.api_key_router import router as api_key_router
 from rev_claude.cookie.claude_cookie_router import router as claude_cookie_router
 from rev_claude.status.clients_status_router import router as clients_status_router
-from rev_claude.history.conversation_history_router import router as conversation_history_router
+from rev_claude.history.conversation_history_router import (
+    router as conversation_history_router,
+)
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(claude_router, prefix="/claude", tags=["claude"])

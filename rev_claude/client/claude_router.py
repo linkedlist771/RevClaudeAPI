@@ -63,7 +63,6 @@ async def patched_generate_data(original_generator, conversation_id):
         yield data
 
 
-
 @router.get("/list_models")
 async def list_models():
     return [model.value for model in ClaudeModels]
@@ -119,7 +118,6 @@ async def chat(
 ):
 
     logger.info(f"Input chat request request: \n{claude_chat_request.model_dump()}")
-    # logger.info(f"headers: {request.headers}")
     api_key = request.headers.get("Authorization")
     basic_clients = clients["basic_clients"]
     plus_clients = clients["plus_clients"]
@@ -155,7 +153,6 @@ async def chat(
     logger.info(f"basic_clients: {basic_clients.keys()}")
 
     logger.info(f"client_idx: {client_idx}, client_idx type: {type(client_idx)}")
-
 
     if client_type == "plus":
         claude_client = plus_clients[client_idx]

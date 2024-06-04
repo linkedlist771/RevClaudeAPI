@@ -130,6 +130,7 @@ class ClientsStatusManager:
     def get_all_clients_status(self, basic_clients, plus_clients):
         clients_status = []
         from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
+
         cookie_manager = get_cookie_manager()
         for idx, client in basic_clients.items():
             # 首先判断这两个key是否存在？ 如果不存在， 就设置。

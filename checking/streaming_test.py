@@ -49,9 +49,11 @@ async def upload_file(file: UploadFile = File(...)):
     else:
         return JSONResponse(status_code=400, content={"message": "只支持.txt文件"})
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
 
 # cross origin
 from fastapi.middleware.cors import CORSMiddleware

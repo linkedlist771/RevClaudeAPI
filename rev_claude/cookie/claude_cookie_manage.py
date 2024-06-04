@@ -113,12 +113,18 @@ class CookieManager:
 
     # 还是重启一下比较好哎。
     def get_all_basic_and_plus_client(self) -> Tuple[List[Client], List[Client]]:
-        _basic_cookies, _basic_cookie_keys = self.get_all_cookies(CookieKeyType.BASIC.value)
-        _plus_cookies, _plus_cookie_keys = self.get_all_cookies(CookieKeyType.PLUS.value)
+        _basic_cookies, _basic_cookie_keys = self.get_all_cookies(
+            CookieKeyType.BASIC.value
+        )
+        _plus_cookies, _plus_cookie_keys = self.get_all_cookies(
+            CookieKeyType.PLUS.value
+        )
         _basic_clients = []
         _plus_clients = []
         logger.info("Begin register the client.....")
-        for basic_cookie, basic_cookie_key in tqdm(zip(_basic_cookies, _basic_cookie_keys)):
+        for basic_cookie, basic_cookie_key in tqdm(
+            zip(_basic_cookies, _basic_cookie_keys)
+        ):
             try:
                 basic_client = Client(basic_cookie, basic_cookie_key)
                 _basic_clients.append(basic_client)

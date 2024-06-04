@@ -41,14 +41,12 @@ class ClientRoundRobin:
         return next(self.plus_cycle)
 
 
-
 """FastAPI application instance."""
 
 app = FastAPI(lifespan=lifespan)
 
 # cookie_manager = get_cookie_manager()
 # basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
-
 
 
 # Add CORS middleware to allow all origins, credentials, methods, and headers.
@@ -62,6 +60,7 @@ app.add_middleware(
 
 # add index route
 # app.mount("/static", StaticFiles(directory="frontui"), name="static")
+
 
 @app.get("/api/v1/clients_status")
 async def _get_client_status():

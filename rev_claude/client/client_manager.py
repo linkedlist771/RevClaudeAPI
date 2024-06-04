@@ -2,11 +2,10 @@ from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 
 HASH_MODULE = 1e6
 
+
 class ClientManager:
-    basic_clients:  dict = {}
+    basic_clients: dict = {}
     plus_clients: dict = {}
-
-
 
     def load_clients(self):
         cookie_manager = get_cookie_manager()
