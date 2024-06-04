@@ -228,14 +228,12 @@ class Client:
                         )
                     elif "Invalid model" in text:
                         logger.error(f"Invalid model in text")
-                        dict_res = json.loads(text)
-                        resetAt = 99999999999
-                        refresh_time = resetAt
-                        start_time = refresh_time
+
                         client_manager = ClientsStatusManager()
-                        client_manager.set_client_limited(
-                            client_type, client_idx, start_time
+                        client_manager.set_client_error(
+                            client_type, client_idx
                         )
+                        logger.error(f"设置账号状态为error")
 
             except json.JSONDecodeError:
                 events = []

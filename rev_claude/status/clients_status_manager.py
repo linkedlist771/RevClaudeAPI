@@ -67,7 +67,14 @@ class ClientsStatusManager:
     def get_client_status_start_time_key(self, client_type, client_idx):
         return f"{self.get_client_status_key(client_type, client_idx)}:start_time"
 
-    def get_limited_message(self, start_time):
+    def get_limited_message(self, start_time, type, idx):
+        # 获取账号状态
+        client_status_key = self.get_client_status_key(type, idx)
+        status = self.redis.get(client_status_key)
+        if status == ClientStatus.ERROR.value:
+            return "账号异常"
+
+
         current_time = time.time()
         print(f"current_time: {current_time}, start_time: {start_time}")
         time_passed = current_time - float(start_time)
@@ -87,6 +94,10 @@ class ClientsStatusManager:
 
         self.redis.set(client_status_key, ClientStatus.CD.value)
         self.redis.set(client_status_start_time_key, start_time)
+
+    def set_client_error(self, client_type, client_idx):
+        client_status_key = self.get_client_status_key(client_type, client_idx)
+        self.redis.set(client_status_key, ClientStatus.ERROR.value)
 
     def set_client_active(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
@@ -140,10 +151,12 @@ class ClientsStatusManager:
             if is_active:
                 _status = ClientStatus.ACTIVE.value
                 _message = "可用"
+
             else:
                 _status = ClientStatus.CD.value
+                key = self.get_client_status_start_time_key("basic", idx)
                 _message = self.get_limited_message(
-                    self.redis.get(self.get_client_status_start_time_key("basic", idx))
+                    self.redis.get(key), "basic", idx
                 )
             status = ClientsStatus(
                 id=account,
@@ -163,8 +176,9 @@ class ClientsStatusManager:
                 _message = "可用"
             else:
                 _status = ClientStatus.CD.value
+                key = self.get_client_status_start_time_key("plus", idx)
                 _message = self.get_limited_message(
-                    self.redis.get(self.get_client_status_start_time_key("plus", idx))
+                    self.redis.get(key), "plus", idx
                 )
             status = ClientsStatus(
                 id=account,
