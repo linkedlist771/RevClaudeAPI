@@ -16,8 +16,8 @@ class ClientManager:
         ClientManager.plus_clients = {
             int(hash(client.cookie_key) % HASH_MODULE): client for client in plus_clients
         }
-        logger.info(f"basic_clients: {basic_clients}")
-        logger.info(f"plus_clients: {plus_clients}")
+        logger.info(f"basic_clients: {basic_clients.keys()}")
+        logger.info(f"plus_clients: {plus_clients.keys()}")
 
     def get_clients(self):
         return ClientManager.basic_clients, ClientManager.plus_clients
