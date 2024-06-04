@@ -122,6 +122,7 @@ class CookieManager:
         _basic_clients = []
         _plus_clients = []
         logger.info("Begin register the client.....")
+        # TODO: make the a async process.
         for basic_cookie, basic_cookie_key in tqdm(
             zip(_basic_cookies, _basic_cookie_keys)
         ):
