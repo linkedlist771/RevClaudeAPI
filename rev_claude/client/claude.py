@@ -231,7 +231,7 @@ class Client:
                         dict_res = json.loads(text)
                         resetAt = 99999999999
                         refresh_time = resetAt
-                        start_time = int(refresh_time) - 8 * 3600
+                        start_time = refresh_time
                         client_manager = ClientsStatusManager()
                         client_manager.set_client_limited(
                             client_type, client_idx, start_time
