@@ -134,7 +134,7 @@ class ClientsStatusManager:
         #         account_key = self.get_cookie_account_key(cookie_key)
         #         _type = self.redis.get(type_key)
         #         account = self.redis.get(account_key)
-        from claude_cookie_manage import get_cookie_manager
+        from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 
         cookie_manager = get_cookie_manager()
         for idx, client in enumerate(basic_clients):

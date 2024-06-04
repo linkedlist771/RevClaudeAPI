@@ -8,8 +8,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from router import router
-from claude_cookie_manage import get_cookie_manager
+from rev_claude.router import router
+from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 from utility import get_client_status
 
 parser = argparse.ArgumentParser()

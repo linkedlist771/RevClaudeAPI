@@ -1,4 +1,4 @@
-from clients_status_manager import ClientsStatusManager
+from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 

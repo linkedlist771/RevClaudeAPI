@@ -2,19 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import json, os, uuid
-from typing import Union
 
 from curl_cffi import requests
-import re
-from datetime import datetime
 import httpx
 import asyncio
-import time
 from loguru import logger
-from clients_status_manager import ClientsStatusManager
+from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
-from file_utils import DocumentConverter
+from rev_claude.utils.file_utils import DocumentConverter
 
 
 async def upload_attachment_for_fastapi(file: UploadFile):

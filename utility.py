@@ -3,12 +3,9 @@ import time
 import configparser
 import json
 from typing import Literal
-from claude import Client
-from typing import Tuple, List
-from enum import Enum
-from pydantic import BaseModel
-from uuid import uuid4
-from clients_status_manager import ClientStatus, ClientsStatus, ClientsStatusManager
+from rev_claude.client.claude import Client
+from typing import List
+from rev_claude.status.clients_status_manager import ClientsStatus, ClientsStatusManager
 from time import time
 
 

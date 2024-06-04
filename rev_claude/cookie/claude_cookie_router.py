@@ -1,4 +1,4 @@
-from claude_cookie_manage import CookieManager, CookieKeyType, get_cookie_manager
+from rev_claude.cookie.claude_cookie_manage import CookieManager, CookieKeyType, get_cookie_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 

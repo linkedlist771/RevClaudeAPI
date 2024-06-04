@@ -1,9 +1,9 @@
 import redis
 import uuid
 from enum import Enum
-from typing import Union, Tuple, List
+from typing import Tuple, List
 from loguru import logger
-from claude import Client
+from rev_claude.client.claude import Client
 from tqdm import tqdm
 
 

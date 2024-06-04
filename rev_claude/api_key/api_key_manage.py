@@ -5,7 +5,7 @@ import uuid
 from enum import Enum
 from loguru import logger
 from utility import get_current_time
-from configs import (
+from rev_claude.configs import (
     BASIC_KEY_MAX_USAGE,
     PLUS_KEY_MAX_USAGE,
     API_KEY_REFRESH_INTERVAL,

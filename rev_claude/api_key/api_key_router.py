@@ -1,8 +1,8 @@
-from api_key_manage import APIKeyManager, get_api_key_manager
+from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
-from schemas import CreateAPIKeyRequest
+from rev_claude.schemas import CreateAPIKeyRequest
 
 router = APIRouter()
 
