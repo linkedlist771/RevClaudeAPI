@@ -14,7 +14,7 @@ def get_current_time() -> int:
 
 
 def get_client_status(
-    basic_clients: List[Client], plus_clients: List[Client]
+    basic_clients, plus_clients
 ) -> List[ClientsStatus]:
     clients_status_manager = ClientsStatusManager()
     return clients_status_manager.get_all_clients_status(basic_clients, plus_clients)

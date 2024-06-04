@@ -131,7 +131,7 @@ class ClientsStatusManager:
         clients_status = []
         from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
         cookie_manager = get_cookie_manager()
-        for idx, client in enumerate(basic_clients):
+        for idx, client in basic_clients.items():
             # 首先判断这两个key是否存在？ 如果不存在， 就设置。
             self.create_if_not_exist("basic", idx)
             account = cookie_manager.get_account(client.cookie_key)
@@ -152,7 +152,7 @@ class ClientsStatusManager:
                 message=_message,
             )
             clients_status.append(status)
-        for idx, client in enumerate(plus_clients):
+        for idx, client in plus_clients.items():
             account = cookie_manager.get_account(client.cookie_key)
 
             self.create_if_not_exist("plus", idx)
