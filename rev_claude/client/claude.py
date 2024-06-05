@@ -344,9 +344,12 @@ class Client:
                                     client_type, client_idx, start_time
                                 )
                             logger.error(f"exceeded_limit : {text}")
-                            yield "Error: Exceeded limit. Please try again later. 超出限制，请稍后再试。"
+                            yield "当前账户该模型已经超出限额，请等待账号模型刷新。"
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                             break
+                        elif 'prompt is too long' in text:
+                            yield "您输入的文本过长(附加文件文本和输入文本), 请减少文本长度。"
+                            await asyncio.sleep(0)  # 模拟异步操作, 让出权限
 
                         response_parse_text = await parse_text(text)
                         # logger.info(f"parsed text: {response_parse_text}")
