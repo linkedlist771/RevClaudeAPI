@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import json, os, uuid
+import re
 
 from curl_cffi import requests
 import httpx
 import asyncio
 from loguru import logger
 
+from rev_claude.REMINDING_MESSAGE import NO_EMPTY_PROMPT_MESSAGE, PROMPT_TOO_LONG_MESSAGE, EXCEED_LIMIT_MESSAGE
 from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
@@ -253,8 +255,17 @@ class Client:
                                     event_data = json.loads(data)
                                     events.append(event_data["completion"])
                                 except json.JSONDecodeError:
-                                    logger.info(f"CLAUDE STREAM ERROR: {data}")
-
+                                    logger.error(f"CLAUDE STREAM ERROR: {data}")
+                                    # try to use the regex to extract the completion
+                                    # {"type":"completion","id":"chatcompl_0145sxQa4jPmpPFChuBqc1dw","completion":"","stop_reason":"stop_sequence","model":"claude-3-sonnet-20240625","stop":"\n\nHuman:","log_id":"chatcompl_0145sxQa4jPmpPFChuBqc1dw","messageLimit":{"type":"approaching_limit","resetsAt":1717610400,"remaining":2,"perModelLimit":false
+                                    pattern = r'"completion":"(.*?)(?<!\\)"'
+                                    match = re.search(pattern, data)
+                                    if match:
+                                        completion_content = match.group(1)  # 提取第一个捕获组的内容
+                                        events.append(completion_content)
+                                        logger.info(f"regex catch completion: {completion_content}")
+                                except Exception as e:
+                                    logger.error(f"Error: {e}")
                 # print(events)
                 return events
 
@@ -302,6 +313,11 @@ class Client:
         current_retry = 0
         response_text = ""
         client_manager = ClientsStatusManager()
+        if len(prompt) <= 0:
+            yield NO_EMPTY_PROMPT_MESSAGE
+            return
+            # 这里要return吗
+
         while current_retry < max_retry:
             try:
                 with httpx.stream("POST", url, headers=headers, data=payload, timeout=STREAM_TIMEOUT) as r:
@@ -344,11 +360,11 @@ class Client:
                                     client_type, client_idx, start_time
                                 )
                             logger.error(f"exceeded_limit : {text}")
-                            yield "当前账户该模型已经超出限额，请等待账号模型刷新。"
+                            yield EXCEED_LIMIT_MESSAGE
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                             break
                         elif 'prompt is too long' in text:
-                            yield "您输入的文本过长(附加文件文本和输入文本), 请减少文本长度。"
+                            yield PROMPT_TOO_LONG_MESSAGE
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
 
                         response_parse_text = await parse_text(text)
@@ -373,7 +389,7 @@ class Client:
                 )
                 if current_retry == max_retry:
                     logger.error(f"Failed to stream message after {max_retry} retries.")
-                    yield ("error: ", e)
+                    yield "error: " + str(e)
                 else:
                     logger.info("Retrying in 3 second...")
                     await asyncio.sleep(3)
@@ -381,7 +397,6 @@ class Client:
     # Deletes the conversation
     def delete_conversation(self, conversation_id):
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}"
-
         payload = json.dumps(f"{conversation_id}")
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
@@ -472,69 +487,6 @@ class Client:
             delete_id = self.delete_conversation(conversation_id)
 
         return True
-
-        # try:
-        #     file_contents = await file.read()
-        #     file_size = len(file_contents)  # 由于是在内存中读取，用 len 获取大小
-        #     return JSONResponse(
-        #         content={
-        #             "file_name": file.filename,
-        #             "file_type": file.content_type,
-        #             "file_size": file_size,
-        #             "extracted_content": file_contents.decode(
-        #                 "utf-8"
-        #             ),  # 假设文件编码为 UTF-8
-        #         }
-        #     )
-        # except Exception as e:
-        #     logger.error(f"Failed to read file directly: {e}")
-        #     if file.filename.endswith(".pdf"):
-        #         content = await process_pdf(file)
-        #
-        #         return JSONResponse(content=content)
-        #     else:
-        #         return JSONResponse(
-        #             content={"error": "无法处理该文件类型"}, status_code=400
-        #         )
-        #
-        # file_content = await file.read()
-        # content_type = file.content_type
-        # url = f"https://claude.ai/api/convert_document"
-        # headers = {
-        #     "authority": "claude.ai",
-        #     "path": f"/api/organizations/{self.organization_id}/convert_document",
-        #     "scheme": "https",
-        #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
-        #     "Accept-Language": "en-US,en;q=0.5",
-        #     "Referer": "https://claude.ai/chats",
-        #     "Origin": "https://claude.ai",
-        #     "Sec-Fetch-Dest": "empty",
-        #     "Sec-Fetch-Mode": "cors",
-        #     "Sec-Fetch-Site": "same-origin",
-        #     "Connection": "keep-alive",
-        #     "Cookie": self.cookie,
-        #     "TE": "trailers",
-        # }
-        # data = {
-        #     "orgUuid": self.organization_id,  # Assuming this is the correct value for orgUuid
-        # }
-        # files = {"file": (file.filename, file_content, content_type)}
-        # logger.info(f"Uploading file: {file.filename}")
-        # logger.info(f"context type: {content_type}")
-        #
-        # await file.close()
-        # async with httpx.AsyncClient(timeout=30) as client:
-        #     response = await client.post(url, headers=headers, data=data, files=files)
-        #
-        # if response.status_code == 200:
-        #     return response.json()
-        # else:
-        #     logger.error(f"Failed to convert file, response: {response.json()}")
-        #
-        #     return {
-        #         "error": "Failed to convert file",
-        #         "status_code": response.status_code,
-        #     }
 
     def upload_attachment(self, file_path):
         if file_path.endswith(".txt"):
