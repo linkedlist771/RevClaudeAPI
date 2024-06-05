@@ -226,6 +226,8 @@ class Client:
                         client_manager.set_client_limited(
                             client_type, client_idx, start_time
                         )
+
+
                     elif "permission" in text:
                         logger.error(f"permission_error : {text}")
 
@@ -249,7 +251,7 @@ class Client:
                                     event_data = json.loads(data)
                                     events.append(event_data["completion"])
                                 except json.JSONDecodeError:
-                                    print("CLAUDE STREAM ERROR: ", data)
+                                    logger.info("CLAUDE STREAM ERROR: ", data)
 
                 # print(events)
                 return events
@@ -359,9 +361,10 @@ class Client:
                     await call_back(response_text)
                 break
             except Exception as e:
+                import traceback
                 current_retry += 1
                 logger.error(
-                    f"Failed to stream message. Retry {current_retry}/{max_retry}. Error: {e}"
+                    f"Failed to stream message. Retry {current_retry}/{max_retry}. Error: {traceback.format_exc()}"
                 )
                 if current_retry == max_retry:
                     logger.error(f"Failed to stream message after {max_retry} retries.")
