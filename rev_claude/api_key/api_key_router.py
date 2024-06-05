@@ -62,7 +62,7 @@ async def delete_key(
 ):
     """Delete an API key and its usage count."""
     manager.delete_api_key(api_key)
-    return JSONResponse(status_code=204)
+    return {"message": f"API key {api_key} has been deleted."}
 
 
 @router.get("/list_keys")
