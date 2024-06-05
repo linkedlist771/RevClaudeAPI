@@ -97,4 +97,4 @@ async def get_all_cookies(
 async def list_all_cookies(manager: CookieManager = Depends(get_cookie_manager)):
     """List all cookies."""
     cookies = manager.get_all_cookie_status()
-    return {"cookies": cookies}
+    return cookies
