@@ -8,7 +8,7 @@ import httpx
 import asyncio
 from loguru import logger
 
-from rev_claude.configs import STREAM_CONNECTION_TIME_OUT
+from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
@@ -304,7 +304,7 @@ class Client:
         client_manager = ClientsStatusManager()
         while current_retry < max_retry:
             try:
-                with httpx.stream("POST", url, headers=headers, data=payload, timeout=httpx.Timeout(connect=STREAM_CONNECTION_TIME_OUT)) as r:
+                with httpx.stream("POST", url, headers=headers, data=payload, timeout=STREAM_TIMEOUT) as r:
                     logger.debug(f"url: {url}")
                     logger.debug(f"headers: {headers}")
                     logger.debug(f"payload: {payload}")
