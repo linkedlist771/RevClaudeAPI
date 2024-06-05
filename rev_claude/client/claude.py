@@ -226,8 +226,8 @@ class Client:
                         client_manager.set_client_limited(
                             client_type, client_idx, start_time
                         )
-                    elif "Invalid model" in text:
-                        logger.error(f"Invalid model in text")
+                    elif "permission" in text:
+                        logger.error(f"permission_error : {text}")
 
                         client_manager = ClientsStatusManager()
                         client_manager.set_client_error(
@@ -273,7 +273,7 @@ class Client:
             {
                 "attachments": attachments,  # attachments is a list
                 "files": [] if files is None else files,
-                "model": model,
+                # "model": model,
                 "timezone": "Europe/London",
                 "prompt": f"{prompt}",
             }
