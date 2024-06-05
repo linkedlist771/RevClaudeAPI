@@ -84,7 +84,7 @@ class ClientsStatusManager:
             return
 
         self.redis.set(client_status_key, ClientStatus.CD.value)
-        self.redis.set(client_status_start_time_key, time.time())
+        self.redis.set(client_status_start_time_key, start_time)
 
     def set_client_active(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
