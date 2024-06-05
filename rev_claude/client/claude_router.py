@@ -30,13 +30,14 @@ async def validate_api_key(
 ):
 
     api_key = request.headers.get("Authorization")
-    logger.info(f"checking api key: {api_key}")
+    # logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
         raise HTTPException(
             status_code=403,
             detail= "APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。"
         )
     manager.increment_usage(api_key)
+    logger.info(f"API key, {api_key}:")
     logger.info(manager.get_apikey_information(api_key))
 
 
@@ -71,7 +72,7 @@ async def list_models():
 async def convert_document(
     file: UploadFile = File(...),
 ):
-    logger.debug(f"Uploading file: {file.filename}")
+    logger.info(f"Uploading file: {file.filename}")
     response = await upload_attachment_for_fastapi(file)
     return response
 
@@ -83,7 +84,7 @@ async def upload_image(
     client_type: str = Form(...),
     clients=Depends(obtain_claude_client),
 ):
-    logger.debug(f"Uploading file: {file.filename}")
+    logger.info(f"Uploading file: {file.filename}")
     basic_clients = clients["basic_clients"]
     plus_clients = clients["plus_clients"]
     if client_type == "plus":
@@ -148,9 +149,6 @@ async def chat(
                 f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
             },
         )
-    logger.info(f"plus_clients: {plus_clients.keys()}")
-    logger.info(f"basic_clients: {basic_clients.keys()}")
-
     logger.info(f"client_idx: {client_idx}, client_idx type: {type(client_idx)}")
 
     if client_type == "plus":
@@ -181,7 +179,6 @@ async def chat(
             if not conversation_id:
                 try:
                     conversation = claude_client.create_new_chat(model=model)
-                    logger.info(f"Created new conversation: {conversation}")
                     conversation_id = conversation["uuid"]
                     logger.info(f"Created new conversation with id: {conversation_id}")
                     break  # 成功创建对话后跳出循环

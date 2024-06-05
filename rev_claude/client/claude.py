@@ -321,9 +321,9 @@ class Client:
         while current_retry < max_retry:
             try:
                 with httpx.stream("POST", url, headers=headers, data=payload, timeout=STREAM_TIMEOUT) as r:
-                    logger.debug(f"url: {url}")
-                    logger.debug(f"headers: {headers}")
-                    logger.debug(f"payload: {payload}")
+                    # logger.debug(f"url: {url}")
+                    # logger.debug(f"headers: {headers}")
+                    # logger.debug(f"payload: {payload}")
                     for text in r.iter_text():
                         # logger.info(f"raw text: {text}")
                         if "permission_error" in text:
