@@ -253,7 +253,7 @@ class Client:
                                     event_data = json.loads(data)
                                     events.append(event_data["completion"])
                                 except json.JSONDecodeError:
-                                    logger.info("CLAUDE STREAM ERROR: ", data)
+                                    logger.info(f"CLAUDE STREAM ERROR: {data}")
 
                 # print(events)
                 return events
