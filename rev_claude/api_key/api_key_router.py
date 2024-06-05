@@ -69,6 +69,7 @@ async def delete_key(
 async def list_keys(manager: APIKeyManager = Depends(get_api_key_manager)):
     """List all active API keys."""
     api_keys = manager.list_active_api_keys()
+    api_keys = [i.split(":")[0] for i in api_keys]
     key_information = {}
     for key in api_keys:
         key_information[key] = manager.get_apikey_information(key)
