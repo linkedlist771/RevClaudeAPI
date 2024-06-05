@@ -115,9 +115,7 @@ class APIKeyManager:
         wait_time = max(0, API_KEY_REFRESH_INTERVAL - time_diff)  # 确保不显示负数
 
         message = (
-            f"You api key is the {key_type} type, the usage limit is {usage_limit} times / {API_KEY_REFRESH_INTERVAL_HOURS} hours"
-            f"You need to wait {wait_time} seconds to use it again."
-            f"您的API密钥是{key_type}类型，使用限制是{usage_limit}次/{API_KEY_REFRESH_INTERVAL_HOURS}小时"
+            f"您的账户是{key_type}类型，使用限制是{usage_limit}次/{API_KEY_REFRESH_INTERVAL_HOURS}小时"
             f"您需要等待{wait_time}秒后再次使用。"
         )
         return message

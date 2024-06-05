@@ -34,8 +34,7 @@ async def validate_api_key(
     if api_key is None or not manager.is_api_key_valid(api_key):
         raise HTTPException(
             status_code=403,
-            detail="Invalid or missing API key, please try to login through base url\n"
-            "无效或缺失的 API key, 请尝试通过原始链接登录。",
+            detail= "APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。"
         )
     manager.increment_usage(api_key)
     logger.info(manager.get_apikey_information(api_key))
@@ -136,7 +135,7 @@ async def chat(
         return JSONResponse(
             status_code=403,
             content={
-                "error": f"API key is not a plus user, please upgrade your plant to access this account.\n"
+                "error":
                 f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
             },
         )
@@ -145,7 +144,7 @@ async def chat(
         return JSONResponse(
             status_code=403,
             content={
-                "error": f"Client is a basic user, but the model is a Plus model, please switch to a Plus client.\n"
+                "error":
                 f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
             },
         )
