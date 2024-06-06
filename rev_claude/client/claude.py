@@ -256,6 +256,8 @@ class Client:
                                     events.append(event_data["completion"])
                                 except json.JSONDecodeError:
                                     logger.error(f"CLAUDE STREAM ERROR: {data}")
+                                    if not data.endswith('"'):
+                                        data = data + '"'
                                     # try to use the regex to extract the completion
                                     # {"type":"completion","id":"chatcompl_0145sxQa4jPmpPFChuBqc1dw","completion":"","stop_reason":"stop_sequence","model":"claude-3-sonnet-20240625","stop":"\n\nHuman:","log_id":"chatcompl_0145sxQa4jPmpPFChuBqc1dw","messageLimit":{"type":"approaching_limit","resetsAt":1717610400,"remaining":2,"perModelLimit":false
                                     pattern = r'"completion":"(.*?)(?<!\\)"'
