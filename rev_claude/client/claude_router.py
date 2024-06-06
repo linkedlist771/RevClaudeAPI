@@ -180,7 +180,7 @@ async def chat(
                 try:
                     conversation = claude_client.create_new_chat(model=model)
                     conversation_id = conversation["uuid"]
-                    logger.info(f"Created new conversation with id: {conversation_id}")
+                    logger.debug(f"Created new conversation with response: \n{conversation}")
                     break  # 成功创建对话后跳出循环
                 except Exception as e:
                     current_retry += 1
