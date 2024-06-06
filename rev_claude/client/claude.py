@@ -135,6 +135,7 @@ class Client:
                             if data != "completion" and data != "ping":
                                 event_data = json.loads(data)
                                 events.append(event_data["completion"])
+                                logger.debug(event_data)
 
                 return events
 
