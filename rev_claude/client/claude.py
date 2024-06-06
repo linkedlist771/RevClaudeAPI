@@ -255,6 +255,8 @@ class Client:
                                 try:
                                     event_data = json.loads(data)
                                     events.append(event_data["completion"])
+                                    logger.debug(event_data)
+
                                 except json.JSONDecodeError:
                                     logger.error(f"CLAUDE STREAM ERROR: {data}")
                                     if not data.endswith('"'):
