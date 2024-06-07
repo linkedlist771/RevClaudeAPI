@@ -8,14 +8,16 @@ BASIC_KEY_MAX_USAGE = 100
 PLUS_KEY_MAX_USAGE = 40
 
 
-STREAM_CONNECTION_TIME_OUT = 10
 
+STREAM_CONNECTION_TIME_OUT = 10
+STREAM_READ_TIME_OUT = 5
+STREAM_POOL_TIME_OUT = 10 * 60
 
 
 # 设置连接超时为你的 STREAM_CONNECTION_TIME_OUT，其他超时设置为无限
 STREAM_TIMEOUT = Timeout(
     connect=STREAM_CONNECTION_TIME_OUT,  # 例如设为 10 秒
-    read=None,
+    read=STREAM_READ_TIME_OUT,  # 例如设为 5 秒
     write=None,
-    pool=None  # pool是用于控制从连接池中获取连接的超时时间
+    pool=STREAM_POOL_TIME_OUT,  # 例如设为 10 分钟
 )

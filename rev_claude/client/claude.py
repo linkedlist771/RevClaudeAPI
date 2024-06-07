@@ -318,7 +318,11 @@ class Client:
                     # logger.debug(f"headers: {headers}")
                     # logger.debug(f"payload: {payload}")
                     # for text in r.iter_text():
-                async for text in async_stream("POST", httpx.URL(url), headers=headers, data=payload, timeout=STREAM_TIMEOUT):
+                async for text in async_stream("POST",
+                                               httpx.URL(url),
+                                               headers=headers,
+                                               data=payload,
+                                               timeout=STREAM_TIMEOUT):
                         # logger.info(f"raw text: {text}")
                         # convert a byte string to a string
                         text = text.decode("utf-8")
@@ -329,7 +333,6 @@ class Client:
                             # ClientsStatusManager
                         if "exceeded_limit" in text:
                             # 对于plus用户只opus model才设置
-
                             if client_type == "plus":
                                 if "opus" in model:
                                     dict_res = json.loads(text)
