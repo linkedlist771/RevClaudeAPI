@@ -293,14 +293,17 @@ class Client:
         timeout=120,
     ):
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
-        payload = json.dumps(
-            {
+        __payload =         {
                 "attachments": attachments,  # attachments is a list
                 "files": [] if files is None else files,
                 "model": model,
                 "timezone": "Europe/London",
                 "prompt": f"{prompt}",
             }
+        if client_type != "plus":
+            __payload.pop("model")
+        payload = json.dumps(
+            __payload
         )
 
         headers = self.build_stream_headers()
