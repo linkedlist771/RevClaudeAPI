@@ -58,8 +58,6 @@ def obtain_claude_client():
 
 async def patched_generate_data(original_generator, conversation_id):
     # 首先发送 conversation_id
-
-    yield build_sse_data(message=f"<{conversation_id}>", id=conversation_id)
     # 然后，对原始生成器进行迭代，产生剩余的数据
     async for data in original_generator:
         yield build_sse_data(message=data, id=conversation_id)
