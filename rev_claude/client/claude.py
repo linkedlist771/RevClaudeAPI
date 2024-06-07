@@ -15,6 +15,7 @@ from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from rev_claude.utils.file_utils import DocumentConverter
+from rev_claude.utils.httpx_utils import async_stream
 
 
 async def upload_attachment_for_fastapi(file: UploadFile):
@@ -275,20 +276,6 @@ class Client:
                 return events
 
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
-
-        # Upload attachment if provided
-        # attachments = []
-        # if attachment:
-        #     attachment_response = self.upload_attachment(attachment)
-        #     if attachment_response:
-        #         attachments = [attachment_response]
-        #     else:
-        #         yield {"Error: Invalid file format. Please try again."}
-        #
-        # # # Ensure attachments is an empty list when no attachment is provided
-        # # if not attachment:
-        # #     attachments = []
-
         payload = json.dumps(
             {
                 "attachments": attachments,  # attachments is a list
@@ -325,11 +312,13 @@ class Client:
 
         while current_retry < max_retry:
             try:
-                with httpx.stream("POST", url, headers=headers, data=payload, timeout=STREAM_TIMEOUT) as r:
+                # with httpx.stream("POST", url, headers=headers, data=payload, timeout=STREAM_TIMEOUT) as r:
+
                     # logger.debug(f"url: {url}")
                     # logger.debug(f"headers: {headers}")
                     # logger.debug(f"payload: {payload}")
-                    for text in r.iter_text():
+                    # for text in r.iter_text():
+                async for text in async_stream("POST", httpx.URL(url), headers=headers, data=payload, timeout=STREAM_TIMEOUT):
                         # logger.info(f"raw text: {text}")
                         if "permission_error" in text:
                             logger.error(f"permission_error : {text}")
