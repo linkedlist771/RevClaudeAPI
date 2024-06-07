@@ -320,6 +320,8 @@ class Client:
                     # for text in r.iter_text():
                 async for text in async_stream("POST", httpx.URL(url), headers=headers, data=payload, timeout=STREAM_TIMEOUT):
                         logger.info(f"raw text: {text}")
+                        # convert a byte string to a string
+                        text = text.decode("utf-8")
                         # logger.info(f"raw text: {text}")
                         if "permission_error" in text:
                             logger.error(f"permission_error : {text}")
