@@ -297,7 +297,7 @@ class Client:
             {
                 "attachments": attachments,  # attachments is a list
                 "files": [] if files is None else files,
-                # "model": model,
+                "model": model,
                 "timezone": "Europe/London",
                 "prompt": f"{prompt}",
             }
@@ -451,12 +451,9 @@ class Client:
         formatted_uuid = f"{random_uuid_str[0:8]}-{random_uuid_str[9:13]}-{random_uuid_str[14:18]}-{random_uuid_str[19:23]}-{random_uuid_str[24:]}"
         return formatted_uuid
 
-    def create_new_chat(self, model):
-        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
-        uuid = self.generate_uuid()
 
-        payload = json.dumps({"uuid": uuid, "name": "", "model": model})
-        headers = {
+    def build_new_chat_payload(self, uuid):
+        return {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.5",
             "Referer": f"https://claude.ai/chat/{uuid}",
@@ -471,10 +468,20 @@ class Client:
             "Sec-Fetch-Site": "same-origin",
             "TE": "trailers",
         }
-        logger.info(f"headers: {headers}")
-        logger.info(f"payload: {payload}")
+
+    async def set_new_chat_model(self, conversation_id):
+        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}"
+
+    async def create_new_chat(self, model):
+        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations?tree=True"
+        uuid = self.generate_uuid()
+        payload = json.dumps({"uuid": uuid, "name": "", "model": model})
+        headers = self.build_new_chat_payload(uuid)
         # response = requests.post( url, headers=headers, data=payload,impersonate="chrome110")
-        response = httpx.post(url, headers=headers, data=payload)
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=headers, data=payload)
+
+        # response = httpx.post(url, headers=headers, data=payload)
 
         # Returns JSON of the newly created conversation information
         return response.json()

@@ -165,7 +165,7 @@ async def chat(
         try:
             if not conversation_id:
                 try:
-                    conversation = claude_client.create_new_chat(model=model)
+                    conversation = await claude_client.create_new_chat(model=model)
                     conversation_id = conversation["uuid"]
                     logger.debug(
                         f"Created new conversation with response: \n{conversation}"
