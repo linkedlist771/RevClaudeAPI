@@ -319,7 +319,7 @@ class Client:
                     # logger.debug(f"payload: {payload}")
                     # for text in r.iter_text():
                 async for text in async_stream("POST", httpx.URL(url), headers=headers, data=payload, timeout=STREAM_TIMEOUT):
-                        logger.info(f"raw text: {text}")
+                        # logger.info(f"raw text: {text}")
                         # convert a byte string to a string
                         text = text.decode("utf-8")
                         # logger.info(f"raw text: {text}")
@@ -332,7 +332,6 @@ class Client:
 
                             if client_type == "plus":
                                 if "opus" in model:
-                                    #  "resetsAt": 1714053600
                                     dict_res = json.loads(text)
                                     error_message = dict_res["error"]
                                     resetAt = int(
