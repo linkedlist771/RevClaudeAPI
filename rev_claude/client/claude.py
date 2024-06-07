@@ -9,7 +9,11 @@ import httpx
 import asyncio
 from loguru import logger
 
-from rev_claude.REMINDING_MESSAGE import NO_EMPTY_PROMPT_MESSAGE, PROMPT_TOO_LONG_MESSAGE, EXCEED_LIMIT_MESSAGE
+from rev_claude.REMINDING_MESSAGE import (
+    NO_EMPTY_PROMPT_MESSAGE,
+    PROMPT_TOO_LONG_MESSAGE,
+    EXCEED_LIMIT_MESSAGE,
+)
 from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
@@ -240,9 +244,7 @@ class Client:
                     logger.error(f"permission_error : {text}")
 
                     client_manager = ClientsStatusManager()
-                    client_manager.set_client_error(
-                        client_type, client_idx
-                    )
+                    client_manager.set_client_error(client_type, client_idx)
                     logger.error(f"设置账号状态为error")
 
         except json.JSONDecodeError:
@@ -265,15 +267,18 @@ class Client:
                                 pattern = r'"completion":"(.*?)(?<!\\)"'
                                 match = re.search(pattern, data)
                                 if match:
-                                    completion_content = match.group(1)  # 提取第一个捕获组的内容
+                                    completion_content = match.group(
+                                        1
+                                    )  # 提取第一个捕获组的内容
                                     events.append(completion_content)
-                                    logger.info(f"regex catch completion: {completion_content}")
+                                    logger.info(
+                                        f"regex catch completion: {completion_content}"
+                                    )
                             except Exception as e:
                                 logger.error(f"Error: {e}")
             return events
 
     # Send and Response Stream Message to Claude
-
 
     async def stream_message(
         self,
@@ -310,35 +315,25 @@ class Client:
 
         while current_retry < max_retry:
             try:
-                async for text in async_stream("POST",
-                                               httpx.URL(url),
-                                               headers=headers,
-                                               data=payload,
-                                               timeout=STREAM_TIMEOUT):
-                        # logger.info(f"raw text: {text}")
-                        # convert a byte string to a string
-                        text = text.decode("utf-8")
-                        # logger.info(f"raw text: {text}")
-                        if "permission_error" in text:
-                            logger.error(f"permission_error : {text}")
-                            # raise Exception(error_message)
-                            # ClientsStatusManager
-                        if "exceeded_limit" in text:
-                            # 对于plus用户只opus model才设置
-                            if client_type == "plus":
-                                if "opus" in model:
-                                    dict_res = json.loads(text)
-                                    error_message = dict_res["error"]
-                                    resetAt = int(
-                                        json.loads(error_message["message"])["resetsAt"]
-                                    )
-                                    refresh_time = resetAt
-                                    start_time = int(refresh_time) - 8 * 3600
-                                    client_manager = ClientsStatusManager()
-                                    client_manager.set_client_limited(
-                                        client_type, client_idx, start_time
-                                    )
-                            else:
+                async for text in async_stream(
+                    "POST",
+                    httpx.URL(url),
+                    headers=headers,
+                    data=payload,
+                    timeout=STREAM_TIMEOUT,
+                ):
+                    # logger.info(f"raw text: {text}")
+                    # convert a byte string to a string
+                    text = text.decode("utf-8")
+                    # logger.info(f"raw text: {text}")
+                    if "permission_error" in text:
+                        logger.error(f"permission_error : {text}")
+                        # raise Exception(error_message)
+                        # ClientsStatusManager
+                    if "exceeded_limit" in text:
+                        # 对于plus用户只opus model才设置
+                        if client_type == "plus":
+                            if "opus" in model:
                                 dict_res = json.loads(text)
                                 error_message = dict_res["error"]
                                 resetAt = int(
@@ -350,30 +345,45 @@ class Client:
                                 client_manager.set_client_limited(
                                     client_type, client_idx, start_time
                                 )
-                            logger.error(f"exceeded_limit : {text}")
-                            yield EXCEED_LIMIT_MESSAGE
-                            await asyncio.sleep(0)  # 模拟异步操作, 让出权限
-                            break
-                        elif 'prompt is too long' in text:
-                            yield PROMPT_TOO_LONG_MESSAGE
-                            await asyncio.sleep(0)  # 模拟异步操作, 让出权限
-
-                        response_parse_text = await self.parse_text( text, client_type, client_idx)
-                        # logger.info(f"parsed text: {response_parse_text}")
-                        if response_parse_text:
-                            client_manager.set_client_status(
-                                client_type, client_idx, "active"
+                        else:
+                            dict_res = json.loads(text)
+                            error_message = dict_res["error"]
+                            resetAt = int(
+                                json.loads(error_message["message"])["resetsAt"]
                             )
-                            resp_text = "".join(response_parse_text)
-                            response_text += resp_text
-                            yield resp_text
-                            await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                            refresh_time = resetAt
+                            start_time = int(refresh_time) - 8 * 3600
+                            client_manager = ClientsStatusManager()
+                            client_manager.set_client_limited(
+                                client_type, client_idx, start_time
+                            )
+                        logger.error(f"exceeded_limit : {text}")
+                        yield EXCEED_LIMIT_MESSAGE
+                        await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                        break
+                    elif "prompt is too long" in text:
+                        yield PROMPT_TOO_LONG_MESSAGE
+                        await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+
+                    response_parse_text = await self.parse_text(
+                        text, client_type, client_idx
+                    )
+                    # logger.info(f"parsed text: {response_parse_text}")
+                    if response_parse_text:
+                        client_manager.set_client_status(
+                            client_type, client_idx, "active"
+                        )
+                        resp_text = "".join(response_parse_text)
+                        response_text += resp_text
+                        yield resp_text
+                        await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                 logger.info(f"Response text:\n {response_text}")
                 if call_back:
                     await call_back(response_text)
                 break
             except Exception as e:
                 import traceback
+
                 current_retry += 1
                 logger.error(
                     f"Failed to stream message. Retry {current_retry}/{max_retry}. Error: {traceback.format_exc()}"

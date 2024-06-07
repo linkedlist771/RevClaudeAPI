@@ -36,7 +36,7 @@ async def validate_api_key(
     if api_key is None or not manager.is_api_key_valid(api_key):
         raise HTTPException(
             status_code=403,
-            detail= "APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。"
+            detail="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
         )
     manager.increment_usage(api_key)
     logger.info(f"API key, {api_key}:")
@@ -137,8 +137,7 @@ async def chat(
         return JSONResponse(
             status_code=403,
             content={
-                "message":
-                f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
+                "message": f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
             },
         )
 
@@ -146,8 +145,7 @@ async def chat(
         return JSONResponse(
             status_code=403,
             content={
-                "message":
-                f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
+                "message": f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
             },
         )
     logger.info(f"client_idx: {client_idx}, client_idx type: {type(client_idx)}")
@@ -169,7 +167,9 @@ async def chat(
                 try:
                     conversation = claude_client.create_new_chat(model=model)
                     conversation_id = conversation["uuid"]
-                    logger.debug(f"Created new conversation with response: \n{conversation}")
+                    logger.debug(
+                        f"Created new conversation with response: \n{conversation}"
+                    )
                     break  # 成功创建对话后跳出循环
                 except Exception as e:
                     current_retry += 1

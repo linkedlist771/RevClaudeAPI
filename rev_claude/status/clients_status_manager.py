@@ -74,7 +74,6 @@ class ClientsStatusManager:
         if status == ClientStatus.ERROR.value:
             return "账号异常"
 
-
         current_time = time.time()
         print(f"current_time: {current_time}, start_time: {start_time}")
         time_passed = current_time - float(start_time)
@@ -155,9 +154,7 @@ class ClientsStatusManager:
             else:
                 _status = ClientStatus.CD.value
                 key = self.get_client_status_start_time_key("basic", idx)
-                _message = self.get_limited_message(
-                    self.redis.get(key), "basic", idx
-                )
+                _message = self.get_limited_message(self.redis.get(key), "basic", idx)
             status = ClientsStatus(
                 id=account,
                 status=_status,
@@ -177,9 +174,7 @@ class ClientsStatusManager:
             else:
                 _status = ClientStatus.CD.value
                 key = self.get_client_status_start_time_key("plus", idx)
-                _message = self.get_limited_message(
-                    self.redis.get(key), "plus", idx
-                )
+                _message = self.get_limited_message(self.redis.get(key), "plus", idx)
             status = ClientsStatus(
                 id=account,
                 status=_status,

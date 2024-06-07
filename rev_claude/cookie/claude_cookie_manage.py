@@ -101,13 +101,15 @@ class CookieManager:
                 base_key = key.decode("utf-8").split(":type")[0]
                 cookie_value = self.redis.get(base_key)
                 account_key = self.get_cookie_account_key(base_key)
-                account = self.redis.get(account_key).decode('utf-8')
+                account = self.redis.get(account_key).decode("utf-8")
                 if cookie_value:
-                    cookies.append({
-                        "cookie": cookie_value,
-                        "type": actual_type,
-                        "account": account
-                    })
+                    cookies.append(
+                        {
+                            "cookie": cookie_value,
+                            "type": actual_type,
+                            "account": account,
+                        }
+                    )
 
             if cursor == 0:
                 break

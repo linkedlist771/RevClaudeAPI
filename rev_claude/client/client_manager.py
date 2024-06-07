@@ -4,10 +4,12 @@ import hashlib
 
 HASH_MODULE = 1e6
 
+
 def improved_hash(key: str, seed: str = "your_secret_seed"):
     h = hashlib.sha256()
     h.update((key + seed).encode())  # Combine key and seed
     return int(h.hexdigest(), 16) % HASH_MODULE
+
 
 class ClientManager:
     basic_clients: dict = {}
@@ -17,10 +19,10 @@ class ClientManager:
         cookie_manager = get_cookie_manager()
         basic_clients, plus_clients = cookie_manager.get_all_basic_and_plus_client()
         ClientManager.basic_clients = {
-            int(improved_hash(client.cookie_key) ): client for client in basic_clients
+            int(improved_hash(client.cookie_key)): client for client in basic_clients
         }
         ClientManager.plus_clients = {
-            int(improved_hash(client.cookie_key) ): client for client in plus_clients
+            int(improved_hash(client.cookie_key)): client for client in plus_clients
         }
         logger.info(f"basic_clients: {ClientManager.basic_clients.keys()}")
         logger.info(f"plus_clients: {ClientManager.plus_clients.keys()}")
