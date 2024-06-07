@@ -560,7 +560,7 @@ class Client:
                         )
                     },
                 )
-                logger.info(f"response: {response}")
+                logger.info(f"response: \n{response.json()} ")
                 if response.status_code == 200:
                     res_json = response.json()
                     return JSONResponse(content=res_json)
