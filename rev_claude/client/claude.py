@@ -54,10 +54,13 @@ class Client:
         self.cookie_key = cookie_key
         self.organization_id = self.get_organization_id()
 
-    def get_organization_id(self):
-        url = "https://claude.ai/api/organizations"
+    async def __async__init__(self, cookie, cookie_key=None):
+        self.cookie = self.fix_sessionKey(cookie)
+        self.cookie_key = cookie_key
+        self.organization_id = await self.__async_get_organization_id()
 
-        headers = {
+    def build_organization_headers(self):
+        return {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept-Language": "en-US,en;q=0.5",
             "Referer": "https://claude.ai/chats",
@@ -69,11 +72,21 @@ class Client:
             "Cookie": self.cookie,
         }
 
+    def get_organization_id(self):
+        url = "https://claude.ai/api/organizations"
+        headers = self.build_organization_headers()
         response = requests.get(url, headers=headers, impersonate="chrome110")
         res = json.loads(response.text)
         uuid = res[0]["uuid"]
-
         return uuid
+
+    async def __async_get_organization_id(self):
+        url = "https://claude.ai/api/organizations"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=self.build_organization_headers())
+            res = response.json()
+            uuid = res[0]["uuid"]
+            return uuid
 
     def get_content_type(self, file_path):
         # Function to determine content type based on file extension
@@ -296,7 +309,7 @@ class Client:
         __payload =         {
                 "attachments": attachments,  # attachments is a list
                 "files": [] if files is None else files,
-                "model": model,
+                "model": model,  # TODO: 当账号类型为普通账号的时候，这里不需要传入model
                 "timezone": "Europe/London",
                 "prompt": f"{prompt}",
             }

@@ -1,10 +1,12 @@
+import asyncio
+
 import redis
 import uuid
 from enum import Enum
 from typing import Tuple, List
 from loguru import logger
 from rev_claude.client.claude import Client
-from tqdm import tqdm
+from rev_claude.utils.async_utils import register_clients
 
 
 class CookieKeyType(Enum):
@@ -116,6 +118,9 @@ class CookieManager:
 
         return cookies
 
+
+
+
     # 还是重启一下比较好哎。
     def get_all_basic_and_plus_client(self) -> Tuple[List[Client], List[Client]]:
         _basic_cookies, _basic_cookie_keys = self.get_all_cookies(
@@ -124,26 +129,27 @@ class CookieManager:
         _plus_cookies, _plus_cookie_keys = self.get_all_cookies(
             CookieKeyType.PLUS.value
         )
-        _basic_clients = []
-        _plus_clients = []
-        logger.info("Begin register the client.....")
-        # TODO: make the a async process.
-        for basic_cookie, basic_cookie_key in tqdm(
-            zip(_basic_cookies, _basic_cookie_keys)
-        ):
-            try:
-                basic_client = Client(basic_cookie, basic_cookie_key)
-                _basic_clients.append(basic_client)
-                logger.info(f"Register the basic client: {basic_client}")
-            except Exception as e:
-                logger.error(f"Failed to register the basic client: {e}")
-        for plus_cookie, plus_cookie_key in tqdm(zip(_plus_cookies, _plus_cookie_keys)):
-            try:
-                plus_client = Client(plus_cookie, plus_cookie_key)
-                _plus_clients.append(plus_client)
-                logger.info(f"Register the plus client: {plus_client}")
-            except Exception as e:
-                logger.error(f"Failed to register the plus client: {e}")
+        _basic_clients, _plus_clients = asyncio.run(register_clients(_basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys) )
+        # _basic_clients = []
+        # _plus_clients = []
+        # logger.info("Begin register the client.....")
+        # # TODO: make the a async process.
+        # for basic_cookie, basic_cookie_key in tqdm(
+        #     zip(_basic_cookies, _basic_cookie_keys)
+        # ):
+        #     try:
+        #         basic_client = Client(basic_cookie, basic_cookie_key)
+        #         _basic_clients.append(basic_client)
+        #         logger.info(f"Register the basic client: {basic_client}")
+        #     except Exception as e:
+        #         logger.error(f"Failed to register the basic client: {e}")
+        # for plus_cookie, plus_cookie_key in tqdm(zip(_plus_cookies, _plus_cookie_keys)):
+        #     try:
+        #         plus_client = Client(plus_cookie, plus_cookie_key)
+        #         _plus_clients.append(plus_client)
+        #         logger.info(f"Register the plus client: {plus_client}")
+        #     except Exception as e:
+        #         logger.error(f"Failed to register the plus client: {e}")
         return _basic_clients, _plus_clients
 
     def get_all_cookie_status(self):
