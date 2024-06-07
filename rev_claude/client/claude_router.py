@@ -127,7 +127,7 @@ async def chat(
     if model not in [model.value for model in ClaudeModels]:
         return JSONResponse(
             status_code=400,
-            content={"error": f"Model: not found.\n" f"未找到模型:"},
+            content={"message": f"Model: not found.\n" f"未找到模型:"},
         )
     conversation_id = claude_chat_request.conversation_id
 
@@ -137,7 +137,7 @@ async def chat(
         return JSONResponse(
             status_code=403,
             content={
-                "error":
+                "message":
                 f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
             },
         )
@@ -146,7 +146,7 @@ async def chat(
         return JSONResponse(
             status_code=403,
             content={
-                "error":
+                "message":
                 f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
             },
         )
