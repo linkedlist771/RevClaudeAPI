@@ -52,11 +52,9 @@ class Client:
     def __init__(self, cookie, cookie_key=None):
         self.cookie = self.fix_sessionKey(cookie)
         self.cookie_key = cookie_key
-        self.organization_id = self.get_organization_id()
+        # self.organization_id = self.get_organization_id()
 
-    async def __async__init__(self, cookie, cookie_key=None):
-        self.cookie = self.fix_sessionKey(cookie)
-        self.cookie_key = cookie_key
+    async def __set_organization_id__(self):
         self.organization_id = await self.__async_get_organization_id()
 
     def build_organization_headers(self):
