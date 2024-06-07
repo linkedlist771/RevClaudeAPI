@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# Specify the directory to lint, use "." to lint the entire project
-# You can also specify specific files or subdirectories
+# 指定要格式化的目录，如果要格式化整个项目，请使用"."
+# 您也可以指定特定的文件或子目录
 TARGET_DIRECTORY="."
 
-# Check if Ruff is installed
-if ! command -v ruff &> /dev/null
+# 检查 Black 是否已安装
+if ! command -v black &> /dev/null
 then
-    echo "Ruff could not be found, installing..."
-    pip install ruff
+    echo "Black could not be found, installing..."
+    pip install black
 fi
 
-# Run Ruff to lint the code
-echo "Running Ruff on ${TARGET_DIRECTORY}..."
-ruff $TARGET_DIRECTORY
+# 运行 Black 来格式化代码
+echo "Running Black on ${TARGET_DIRECTORY}..."
+black $TARGET_DIRECTORY
 
-echo "Linting complete."
+echo "Formatting complete."
