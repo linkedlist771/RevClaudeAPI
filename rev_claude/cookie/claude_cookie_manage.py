@@ -122,14 +122,14 @@ class CookieManager:
 
 
     # 还是重启一下比较好哎。
-    def get_all_basic_and_plus_client(self) -> Tuple[List[Client], List[Client]]:
+    async def get_all_basic_and_plus_client(self) -> Tuple[List[Client], List[Client]]:
         _basic_cookies, _basic_cookie_keys = self.get_all_cookies(
             CookieKeyType.BASIC.value
         )
         _plus_cookies, _plus_cookie_keys = self.get_all_cookies(
             CookieKeyType.PLUS.value
         )
-        _basic_clients, _plus_clients = asyncio.run(register_clients(_basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys) )
+        _basic_clients, _plus_clients = await register_clients(_basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys)
         # _basic_clients = []
         # _plus_clients = []
         # logger.info("Begin register the client.....")
