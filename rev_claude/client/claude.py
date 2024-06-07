@@ -16,6 +16,7 @@ from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from rev_claude.utils.file_utils import DocumentConverter
 from rev_claude.utils.httpx_utils import async_stream
+from rev_claude.utils.sse_utils import build_sse_data
 
 
 async def upload_attachment_for_fastapi(file: UploadFile):
@@ -198,95 +199,8 @@ class Client:
         print(answer)
         return answer
 
-    # Send and Response Stream Message to Claude
-    async def stream_message(
-        self,
-        prompt,
-        conversation_id,
-        model,
-        client_type,
-        client_idx,
-        attachments=None,
-        files=None,
-        call_back=None,
-        timeout=120,
-    ):
-
-        async def parse_text(text):
-            # TODO: add error handling for invalid model.
-            try:
-                parsed_response = json.loads(text)
-                if "error" in parsed_response:
-
-                    # print("Error Message:", error_message)
-                    logger.error(f"Error Message: {parsed_response}")
-                    # raise Exception(error_message)
-                    # ClientsStatusManager
-                    if "exceeded_limit" in text:
-                        dict_res = json.loads(text)
-                        error_message = dict_res["error"]
-                        resetAt = int(json.loads(error_message["message"])["resetsAt"])
-                        refresh_time = resetAt
-                        start_time = int(refresh_time) - 8 * 3600
-                        client_manager = ClientsStatusManager()
-                        client_manager.set_client_limited(
-                            client_type, client_idx, start_time
-                        )
-
-
-                    elif "permission" in text:
-                        logger.error(f"permission_error : {text}")
-
-                        client_manager = ClientsStatusManager()
-                        client_manager.set_client_error(
-                            client_type, client_idx
-                        )
-                        logger.error(f"设置账号状态为error")
-
-            except json.JSONDecodeError:
-                events = []
-                lines = text.split("\n")
-                for line in lines:
-                    line = line.strip()
-                    if line:
-                        parts = line.split(": ")
-                        if len(parts) == 2:
-                            event_type, data = parts
-                            if data != "completion" and data != "ping":
-                                try:
-                                    event_data = json.loads(data)
-                                    events.append(event_data["completion"])
-                                    # logger.debug(event_data)
-
-                                except json.JSONDecodeError:
-                                    logger.error(f"CLAUDE STREAM ERROR: {data}")
-                                    if not data.endswith('"'):
-                                        data = data + '"'
-                                    # try to use the regex to extract the completion
-                                    # {"type":"completion","id":"chatcompl_0145sxQa4jPmpPFChuBqc1dw","completion":"","stop_reason":"stop_sequence","model":"claude-3-sonnet-20240625","stop":"\n\nHuman:","log_id":"chatcompl_0145sxQa4jPmpPFChuBqc1dw","messageLimit":{"type":"approaching_limit","resetsAt":1717610400,"remaining":2,"perModelLimit":false
-                                    pattern = r'"completion":"(.*?)(?<!\\)"'
-                                    match = re.search(pattern, data)
-                                    if match:
-                                        completion_content = match.group(1)  # 提取第一个捕获组的内容
-                                        events.append(completion_content)
-                                        logger.info(f"regex catch completion: {completion_content}")
-                                except Exception as e:
-                                    logger.error(f"Error: {e}")
-                # print(events)
-                return events
-
-        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
-        payload = json.dumps(
-            {
-                "attachments": attachments,  # attachments is a list
-                "files": [] if files is None else files,
-                # "model": model,
-                "timezone": "Europe/London",
-                "prompt": f"{prompt}",
-            }
-        )
-
-        headers = {
+    def build_stream_headers(self):
+        return {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept": "text/event-stream, text/event-stream",
             "Accept-Language": "en-US,en;q=0.5",
@@ -301,6 +215,90 @@ class Client:
             "Sec-Fetch-Site": "same-origin",
             "TE": "trailers",
         }
+
+    async def parse_text(self, text, client_type, client_idx):
+        # TODO: add error handling for invalid model.
+        try:
+            parsed_response = json.loads(text)
+            if "error" in parsed_response:
+
+                # print("Error Message:", error_message)
+                logger.error(f"Error Message: {parsed_response}")
+                # raise Exception(error_message)
+                # ClientsStatusManager
+                if "exceeded_limit" in text:
+                    dict_res = json.loads(text)
+                    error_message = dict_res["error"]
+                    resetAt = int(json.loads(error_message["message"])["resetsAt"])
+                    refresh_time = resetAt
+                    start_time = int(refresh_time) - 8 * 3600
+                    client_manager = ClientsStatusManager()
+                    client_manager.set_client_limited(
+                        client_type, client_idx, start_time
+                    )
+                elif "permission" in text:
+                    logger.error(f"permission_error : {text}")
+
+                    client_manager = ClientsStatusManager()
+                    client_manager.set_client_error(
+                        client_type, client_idx
+                    )
+                    logger.error(f"设置账号状态为error")
+
+        except json.JSONDecodeError:
+            events = []
+            lines = text.split("\n")
+            for line in lines:
+                line = line.strip()
+                if line:
+                    parts = line.split(": ")
+                    if len(parts) == 2:
+                        event_type, data = parts
+                        if data != "completion" and data != "ping":
+                            try:
+                                event_data = json.loads(data)
+                                events.append(event_data["completion"])
+                            except json.JSONDecodeError:
+                                logger.error(f"CLAUDE STREAM ERROR: {data}")
+                                if not data.endswith('"'):
+                                    data = data + '"'
+                                pattern = r'"completion":"(.*?)(?<!\\)"'
+                                match = re.search(pattern, data)
+                                if match:
+                                    completion_content = match.group(1)  # 提取第一个捕获组的内容
+                                    events.append(completion_content)
+                                    logger.info(f"regex catch completion: {completion_content}")
+                            except Exception as e:
+                                logger.error(f"Error: {e}")
+            return events
+
+    # Send and Response Stream Message to Claude
+
+
+    async def stream_message(
+        self,
+        prompt,
+        conversation_id,
+        model,
+        client_type,
+        client_idx,
+        attachments=None,
+        files=None,
+        call_back=None,
+        timeout=120,
+    ):
+        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
+        payload = json.dumps(
+            {
+                "attachments": attachments,  # attachments is a list
+                "files": [] if files is None else files,
+                # "model": model,
+                "timezone": "Europe/London",
+                "prompt": f"{prompt}",
+            }
+        )
+
+        headers = self.build_stream_headers()
         max_retry = 3
         current_retry = 0
         response_text = ""
@@ -312,12 +310,6 @@ class Client:
 
         while current_retry < max_retry:
             try:
-                # with httpx.stream("POST", url, headers=headers, data=payload, timeout=STREAM_TIMEOUT) as r:
-
-                    # logger.debug(f"url: {url}")
-                    # logger.debug(f"headers: {headers}")
-                    # logger.debug(f"payload: {payload}")
-                    # for text in r.iter_text():
                 async for text in async_stream("POST",
                                                httpx.URL(url),
                                                headers=headers,
@@ -366,7 +358,7 @@ class Client:
                             yield PROMPT_TOO_LONG_MESSAGE
                             await asyncio.sleep(0)  # 模拟异步操作, 让出权限
 
-                        response_parse_text = await parse_text(text)
+                        response_parse_text = await self.parse_text( text, client_type, client_idx)
                         # logger.info(f"parsed text: {response_parse_text}")
                         if response_parse_text:
                             client_manager.set_client_status(

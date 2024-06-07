@@ -18,6 +18,8 @@ from rev_claude.schemas import ClaudeChatRequest
 from loguru import logger
 
 from rev_claude.models import ClaudeModels
+from rev_claude.utils.sse_utils import build_sse_data
+
 
 # This in only for claude router, I do not use the
 
@@ -56,11 +58,12 @@ def obtain_claude_client():
 
 async def patched_generate_data(original_generator, conversation_id):
     # 首先发送 conversation_id
-    yield f"<{conversation_id}>"
 
+    yield build_sse_data(message=f"<{conversation_id}>", id=conversation_id)
     # 然后，对原始生成器进行迭代，产生剩余的数据
     async for data in original_generator:
-        yield data
+        yield build_sse_data(message=data, id=conversation_id)
+    yield build_sse_data(message="closed", id=conversation_id)
 
 
 @router.get("/list_models")
@@ -160,18 +163,6 @@ async def chat(
     if has_reached_limit:
         message = manager.generate_exceed_message(api_key)
         return JSONResponse(status_code=403, content=message)
-
-    # client_type,
-    # apikey,
-    # client_idx,
-    # conversation_id
-    # model
-
-    # claude_client
-    # conversation_id = "test"
-    max_retry = 3
-    current_retry = 0
-    # conversation_id = "test"
     max_retry = 3
     current_retry = 0
     while current_retry < max_retry:
@@ -249,10 +240,11 @@ async def chat(
         return StreamingResponse(
             streaming_res,
             media_type="text/event-stream",
-            headers={
-                "conversation_id": conversation_id
-            },  # 这里通过header返回conversation_id
+            # headers={
+            #     "conversation_id": conversation_id
+            # },  # 这里通过header返回conversation_id
         )
     else:
+
         res = claude_client.send_message(message, conversation_id, model)
         return res
