@@ -375,9 +375,14 @@ class Client:
                         yield EXCEED_LIMIT_MESSAGE
                         await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                         break
+
                     elif "prompt is too long" in text:
                         yield PROMPT_TOO_LONG_MESSAGE
                         await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+
+                    elif "concurrent connections has" in text:
+                        logger.error(f"concurrent connections has exceeded the limit")
+                        raise Exception("concurrent connections has exceeded the limit")
 
                     response_parse_text = await self.parse_text(
                         text, client_type, client_idx
