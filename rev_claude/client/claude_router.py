@@ -134,19 +134,31 @@ async def chat(
     client_type = claude_chat_request.client_type
     client_type = "plus" if client_type == "plus" else "basic"
     if (not manager.is_plus_user(api_key)) and (client_type == "plus"):
-        return JSONResponse(
-            status_code=403,
-            content={
-                "message": f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
-            },
+        # return JSONResponse(
+        #     status_code=403,
+        #     content={
+        #         "message": f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
+        #     },
+        # )
+        return StreamingResponse(
+            build_sse_data(
+                message="您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
+            ),
+            media_type="text/event-stream",
         )
 
     if (client_type == "basic") and ClaudeModels.model_is_plus(model):
-        return JSONResponse(
-            status_code=403,
-            content={
-                "message": f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
-            },
+        # return JSONResponse(
+        #     status_code=403,
+        #     content={
+        #         "message": f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
+        #     },
+        # )
+        return StreamingResponse(
+            build_sse_data(
+                message="客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
+            ),
+            media_type="text/event-stream",
         )
     logger.info(f"client_idx: {client_idx}, client_idx type: {type(client_idx)}")
 
@@ -158,7 +170,8 @@ async def chat(
     has_reached_limit = manager.has_exceeded_limit(api_key)
     if has_reached_limit:
         message = manager.generate_exceed_message(api_key)
-        return JSONResponse(status_code=403, content=message)
+        # return JSONResponse(status_code=403, content=message)
+        return StreamingResponse(build_sse_data(message=message), media_type="text/event-stream")
     max_retry = 3
     current_retry = 0
     while current_retry < max_retry:
