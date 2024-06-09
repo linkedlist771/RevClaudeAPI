@@ -125,9 +125,13 @@ async def chat(
     client_idx = claude_chat_request.client_idx
     model = claude_chat_request.model
     if model not in [model.value for model in ClaudeModels]:
-        return JSONResponse(
-            status_code=400,
-            content={"message": f"Model: not found.\n" f"未找到模型:"},
+        # return JSONResponse(
+        #     status_code=400,
+        #     content={"message": f"Model: not found.\n" f"未找到模型:"},
+        # )
+        return StreamingResponse(
+            build_sse_data(message="Model: not found.\n" f"未找到模型:"),
+            media_type="text/event-stream",
         )
     conversation_id = claude_chat_request.conversation_id
 
