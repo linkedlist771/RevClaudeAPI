@@ -7,6 +7,7 @@ from rev_claude.client.claude import Client
 async def register_basic_client(basic_cookie, basic_cookie_key):
     try:
         basic_client = Client(basic_cookie, basic_cookie_key)
+        await asyncio.sleep(0.3)
         await basic_client.__set_organization_id__()
         await asyncio.sleep(0.3)
         logger.info(f"Register the basic client: {basic_client}")
@@ -19,6 +20,7 @@ async def register_basic_client(basic_cookie, basic_cookie_key):
 async def register_plus_client(plus_cookie, plus_cookie_key):
     try:
         plus_client = Client(plus_cookie, plus_cookie_key)
+        await asyncio.sleep(0.3)
         await plus_client.__set_organization_id__()
         await asyncio.sleep(0.3)
         logger.info(f"Register the plus client: {plus_client}")
