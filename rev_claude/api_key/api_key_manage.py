@@ -30,10 +30,36 @@ class APIKeyManager:
         if isinstance(api_key_type, bytes):
             api_key_type = api_key_type.decode("utf-8")
         api_key = f"sj-{str(uuid.uuid4()).replace('-', '')}"
-        self.redis.setex(api_key, expiration_seconds, "active")
-        self.redis.setex(f"{api_key}:usage", expiration_seconds, 0)
-        self.redis.setex(f"{api_key}:type", expiration_seconds, api_key_type)
+        # self.redis.setex(api_key, expiration_seconds, "active")
+        # self.redis.setex(f"{api_key}:usage", expiration_seconds, 0)
+        # self.redis.setex(f"{api_key}:type", expiration_seconds, api_key_type)
+        self.redis.set(f"{api_key}:usage", 0)
+        self.redis.set(f"{api_key}:type", api_key_type)
+        self.redis.set(f"{api_key}:expiration", expiration_seconds)
+        self.redis.set(api_key, "active")
         return api_key
+
+
+    def activate_api_key(self, api_key):
+        # 首先判断是否存在
+        if not self.is_api_key_valid(api_key):
+            return "不存在该APIKEY"
+        # 判断是否已经激活
+        ttl = self.redis.ttl(api_key)
+        if ttl == -1:
+            # 还未激活
+            expiration_seconds = int(self.redis.get(f"{api_key}:expiration"))  # 确保转换为整数
+            api_key_type = self.redis.get(f"{api_key}:type").decode('utf-8')  # 确保字符串格式正确
+            self.redis.setex(api_key, expiration_seconds, "active")
+            self.redis.setex(f"{api_key}:usage", expiration_seconds, 0)
+            self.redis.setex(f"{api_key}:type", expiration_seconds, api_key_type)
+            return f"API key {api_key} has been activated."
+        elif ttl == -2:
+            return "APIKEY已经过期"
+        else:
+
+            return f"APIKEY已经激活, 还有{ttl}秒过期"
+
 
     def is_api_key_valid(self, api_key):
         """Check if an API key is still valid (exists and has not expired)."""

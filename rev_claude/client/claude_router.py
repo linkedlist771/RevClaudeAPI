@@ -49,6 +49,9 @@ async def validate_api_key(
     manager.increment_usage(api_key)
     logger.info(f"API key, {api_key}:")
     logger.info(manager.get_apikey_information(api_key))
+    # 尝试激活 API key
+    active_message = manager.activate_api_key(api_key)
+    logger.info(active_message)
 
 
 router = APIRouter(dependencies=[Depends(validate_api_key)])
