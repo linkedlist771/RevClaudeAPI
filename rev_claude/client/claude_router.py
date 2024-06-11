@@ -4,6 +4,7 @@ from functools import partial
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import HTTPException, File, UploadFile, Form
+
 from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 
 from rev_claude.client.claude import upload_attachment_for_fastapi
@@ -18,6 +19,7 @@ from rev_claude.schemas import ClaudeChatRequest
 from loguru import logger
 
 from rev_claude.models import ClaudeModels
+from rev_claude.status_code.status_code_enum import API_KEY_INVALID
 from rev_claude.utils.sse_utils import build_sse_data
 
 
@@ -35,7 +37,7 @@ async def validate_api_key(
     # logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
         raise HTTPException(
-            status_code=403,
+            status_code=API_KEY_INVALID,
             detail="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
         )
     manager.increment_usage(api_key)

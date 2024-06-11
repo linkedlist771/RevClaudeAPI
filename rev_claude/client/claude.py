@@ -33,14 +33,14 @@ async def upload_attachment_for_fastapi(file: UploadFile):
         if result is None:
             logger.error(f"Unsupported file type: {file.filename}")
             return JSONResponse(
-                content={"message": "无法处理该文件类型"}, status_code=400
+                content={"message": "无法处理该文件类型"}, status_code=405
             )
 
         return JSONResponse(content=result.model_dump())
 
     except Exception as e:
         logger.error(f"Meet Error when converting file to text: \n{e}")
-        return JSONResponse(content={"message": "处理上传文件报错"}, status_code=400)
+        return JSONResponse(content={"message": "处理上传文件报错"}, status_code=405)
 
 
 class Client:
