@@ -43,7 +43,7 @@ async def register_clients(_basic_cookies, _basic_cookie_keys, _plus_cookies, _p
     basic_clients = await asyncio.gather(*basic_tasks)
 
     _basic_clients.extend(filter(None, basic_clients))
-    _plus_clients = filter(None, _plus_clients)
+    _plus_clients = [client for client in _plus_clients if client]
     logger.debug(f"registered basic clients: {len(_basic_clients)}")
     logger.debug(f"registered plus clients: {len(_plus_clients)}")
     return _basic_clients, _plus_clients
