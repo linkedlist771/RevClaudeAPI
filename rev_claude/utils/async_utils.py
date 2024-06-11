@@ -7,9 +7,7 @@ from rev_claude.client.claude import Client
 async def register_basic_client(basic_cookie, basic_cookie_key):
     try:
         basic_client = Client(basic_cookie, basic_cookie_key)
-        await asyncio.sleep(1)
         await basic_client.__set_organization_id__()
-        await asyncio.sleep(1)
         logger.info(f"Register the basic client: {basic_client}")
         return basic_client
     except Exception as e:
@@ -20,9 +18,7 @@ async def register_basic_client(basic_cookie, basic_cookie_key):
 async def register_plus_client(plus_cookie, plus_cookie_key):
     try:
         plus_client = Client(plus_cookie, plus_cookie_key)
-        await asyncio.sleep(1)
         await plus_client.__set_organization_id__()
-        await asyncio.sleep(1)
         logger.info(f"Register the plus client: {plus_client}")
         return plus_client
     except Exception as e:
@@ -41,14 +37,15 @@ async def register_clients(_basic_cookies, _basic_cookie_keys, _plus_cookies, _p
         basic_tasks.append(task)
 
     for plus_cookie, plus_cookie_key in zip(_plus_cookies, _plus_cookie_keys):
-        task = asyncio.create_task(register_plus_client(plus_cookie, plus_cookie_key))
-        plus_tasks.append(task)
+        plus_client = await register_plus_client(plus_cookie, plus_cookie_key)
+        _plus_clients.append(plus_client)
 
     basic_clients = await asyncio.gather(*basic_tasks)
-    plus_clients = await asyncio.gather(*plus_tasks)
 
     _basic_clients.extend(filter(None, basic_clients))
-    _plus_clients.extend(filter(None, plus_clients))
+    _plus_clients = filter(None, _plus_clients)
+    logger.debug(f"registered basic clients: {len(_basic_clients)}")
+    logger.debug(f"registered plus clients: {len(_plus_clients)}")
     return _basic_clients, _plus_clients
 
 
