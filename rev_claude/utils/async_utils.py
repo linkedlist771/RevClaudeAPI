@@ -40,7 +40,7 @@ async def register_clients(_basic_cookies, _basic_cookie_keys, _plus_cookies, _p
         task = asyncio.create_task(register_basic_client(basic_cookie, basic_cookie_key))
         basic_tasks.append(task)
 
-    async for plus_cookie, plus_cookie_key in zip(_plus_cookies, _plus_cookie_keys):
+    for plus_cookie, plus_cookie_key in zip(_plus_cookies, _plus_cookie_keys):
         task = asyncio.create_task(register_plus_client(plus_cookie, plus_cookie_key))
         plus_tasks.append(task)
 
