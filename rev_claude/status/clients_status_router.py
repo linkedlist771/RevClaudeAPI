@@ -2,6 +2,8 @@ from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
+from rev_claude.status_code.status_code_enum import NORMAL_ERROR
+
 router = APIRouter()
 
 
@@ -18,4 +20,4 @@ async def update_cookie(
         manager.set_client_status(client_type, client_idx, status)
         return {"message": "Set client status successfully."}
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=NORMAL_ERROR, detail=str(e))

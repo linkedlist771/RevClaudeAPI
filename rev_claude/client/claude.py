@@ -18,6 +18,8 @@ from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
+
+from rev_claude.status_code.status_code_enum import IMAGE_UPLOAD_FAILED
 from rev_claude.utils.file_utils import DocumentConverter
 from rev_claude.utils.httpx_utils import async_stream
 from rev_claude.utils.sse_utils import build_sse_data
@@ -488,9 +490,6 @@ class Client:
             "TE": "trailers",
         }
 
-    async def set_new_chat_model(self, conversation_id):
-        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}"
-
     async def create_new_chat(self, model):
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations?tree=True"
         uuid = self.generate_uuid()
@@ -594,14 +593,14 @@ class Client:
                 else:
                     return JSONResponse(
                         content={"message": "Failed to upload image"},
-                        status_code=400,
+                        status_code=IMAGE_UPLOAD_FAILED,
                     )
 
         except Exception as e:
             logger.error(f"Failed to upload image: {e}")
             return JSONResponse(
                 content={"message": "Failed to upload image"},
-                status_code=400,
+                status_code=IMAGE_UPLOAD_FAILED,
             )
 
     # Renames the chat conversation title
