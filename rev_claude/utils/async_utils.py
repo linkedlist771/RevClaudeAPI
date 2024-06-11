@@ -4,8 +4,11 @@ from loguru import logger
 from rev_claude.client.claude import Client
 import traceback
 
+REGISTER_MAY_RETRY = 3
+REGISTER_WAIT = 3
+
 async def register_basic_client(basic_cookie, basic_cookie_key):
-    retry_count = 3  # 设置最大重试次数
+    retry_count = REGISTER_MAY_RETRY  # 设置最大重试次数
     while retry_count > 0:
         try:
             basic_client = Client(basic_cookie, basic_cookie_key)
@@ -18,11 +21,11 @@ async def register_basic_client(basic_cookie, basic_cookie_key):
             if retry_count == 0:
                 logger.error("Failed to register the basic client after several retries.")
                 return None
-            await asyncio.sleep(1)  # 在重试前暂停1秒
+            await asyncio.sleep(REGISTER_WAIT)  # 在重试前暂停1秒
 
 
 async def register_plus_client(plus_cookie, plus_cookie_key):
-    retry_count = 3  # 设置最大重试次数
+    retry_count = REGISTER_MAY_RETRY  # 设置最大重试次数
     while retry_count > 0:
         try:
             plus_client = Client(plus_cookie, plus_cookie_key)
@@ -35,7 +38,7 @@ async def register_plus_client(plus_cookie, plus_cookie_key):
             if retry_count == 0:
                 logger.error("Failed to register the plus client after several retries.")
                 return None
-            await asyncio.sleep(1)  # 在重试前暂停1秒
+            await asyncio.sleep(REGISTER_WAIT)  # 在重试前暂停1秒
 
 
 async def register_clients(_basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys):
