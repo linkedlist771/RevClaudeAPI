@@ -92,7 +92,7 @@ class Client:
         async with httpx.AsyncClient() as client:
             response = await client.get(url, headers=self.build_organization_headers())
             res = response.json()
-            logger.debug(f"Organization ID: {res[0]['uuid']}")
+            logger.debug(f"res : {res}")
             uuid = res[0]["uuid"]
             return uuid
 
