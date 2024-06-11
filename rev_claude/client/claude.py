@@ -502,13 +502,8 @@ class Client:
         uuid = self.generate_uuid()
         payload = json.dumps({"uuid": uuid, "name": "", "model": model})
         headers = self.build_new_chat_payload(uuid)
-        # response = requests.post( url, headers=headers, data=payload,impersonate="chrome110")
         async with httpx.AsyncClient() as client:
             response = await client.post(url, headers=headers, data=payload)
-
-        # response = httpx.post(url, headers=headers, data=payload)
-
-        # Returns JSON of the newly created conversation information
         return response.json()
 
     # Resets all the conversations
