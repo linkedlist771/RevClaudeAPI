@@ -36,15 +36,15 @@ async def validate_api_key(
     api_key = request.headers.get("Authorization")
     # logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
-        # raise HTTPException(
-        #     status_code=HTTP_480_API_KEY_INVALID,
-        #     detail="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
-        # )
-        #
-        return JSONResponse(
+        raise HTTPException(
             status_code=HTTP_480_API_KEY_INVALID,
-            content="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
+            detail="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
         )
+        #
+        # return JSONResponse(
+        #     status_code=HTTP_480_API_KEY_INVALID,
+        #     content="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
+        # )
 
     manager.increment_usage(api_key)
     logger.info(f"API key, {api_key}:")
