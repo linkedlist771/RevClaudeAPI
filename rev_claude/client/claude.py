@@ -38,7 +38,7 @@ async def upload_attachment_for_fastapi(file: UploadFile):
             #     content={"message": "无法处理该文件类型"}, status_code=HTTP_482_DOCUMENT_UPLOAD_FAILED
             # )
             raise HTTPException(
-                status_code=status.HTTP_482_DOCUMENT_UPLOAD_FAILED,
+                status_code=HTTP_482_DOCUMENT_UPLOAD_FAILED,
                 detail="无法处理该文件类型",
             )
 
@@ -48,7 +48,7 @@ async def upload_attachment_for_fastapi(file: UploadFile):
         logger.error(f"Meet Error when converting file to text: \n{e}")
         # return JSONResponse(content={"message": "处理上传文件报错"}, status_code=HTTP_482_DOCUMENT_UPLOAD_FAILED)
         raise HTTPException(
-            status_code=status.HTTP_482_DOCUMENT_UPLOAD_FAILED,
+            status_code=HTTP_482_DOCUMENT_UPLOAD_FAILED,
             detail="处理上传文件报错",
         )
 
