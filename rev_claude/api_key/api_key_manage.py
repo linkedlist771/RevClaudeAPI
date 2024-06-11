@@ -49,7 +49,9 @@ class APIKeyManager:
         if ttl == -1:
             # 还未激活
             expiration_seconds = int(self.redis.get(f"{api_key}:expiration"))  # 确保转换为整数
-            api_key_type = self.redis.get(f"{api_key}:type").decode('utf-8')  # 确保字符串格式正确
+            api_key_type = self.redis.get(f"{api_key}:type")
+            if isinstance(api_key_type, bytes):
+                api_key_type = api_key_type.decode("utf-8")
             self.redis.setex(api_key, expiration_seconds, "active")
             self.redis.setex(f"{api_key}:usage", expiration_seconds, 0)
             self.redis.setex(f"{api_key}:type", expiration_seconds, api_key_type)
