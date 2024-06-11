@@ -16,10 +16,9 @@ from rev_claude.REMINDING_MESSAGE import (
 )
 from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT
 from rev_claude.status.clients_status_manager import ClientsStatusManager
-from fastapi import UploadFile
+from fastapi import UploadFile, status
 from fastapi.responses import JSONResponse
-
-from rev_claude.status_code.status_code_enum import IMAGE_UPLOAD_FAILED
+from rev_claude.status_code.status_code_enum import HTTP_481_IMAGE_UPLOAD_FAILED, HTTP_482_DOCUMENT_UPLOAD_FAILED
 from rev_claude.utils.file_utils import DocumentConverter
 from rev_claude.utils.httpx_utils import async_stream
 from rev_claude.utils.sse_utils import build_sse_data
@@ -35,14 +34,14 @@ async def upload_attachment_for_fastapi(file: UploadFile):
         if result is None:
             logger.error(f"Unsupported file type: {file.filename}")
             return JSONResponse(
-                content={"message": "无法处理该文件类型"}, status_code=405
+                content={"message": "无法处理该文件类型"}, status_code=HTTP_482_DOCUMENT_UPLOAD_FAILED
             )
 
         return JSONResponse(content=result.model_dump())
 
     except Exception as e:
         logger.error(f"Meet Error when converting file to text: \n{e}")
-        return JSONResponse(content={"message": "处理上传文件报错"}, status_code=405)
+        return JSONResponse(content={"message": "处理上传文件报错"}, status_code=HTTP_482_DOCUMENT_UPLOAD_FAILED)
 
 
 class Client:
@@ -593,14 +592,14 @@ class Client:
                 else:
                     return JSONResponse(
                         content={"message": "Failed to upload image"},
-                        status_code=IMAGE_UPLOAD_FAILED,
+                        status_code=HTTP_481_IMAGE_UPLOAD_FAILED,
                     )
 
         except Exception as e:
             logger.error(f"Failed to upload image: {e}")
             return JSONResponse(
                 content={"message": "Failed to upload image"},
-                status_code=IMAGE_UPLOAD_FAILED,
+                status_code=HTTP_481_IMAGE_UPLOAD_FAILED,
             )
 
     # Renames the chat conversation title
