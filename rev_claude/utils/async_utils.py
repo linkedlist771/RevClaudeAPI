@@ -2,7 +2,7 @@ import asyncio
 from tqdm.asyncio import tqdm
 from loguru import logger
 from rev_claude.client.claude import Client
-
+import traceback
 
 async def register_basic_client(basic_cookie, basic_cookie_key):
     try:
@@ -22,7 +22,7 @@ async def register_plus_client(plus_cookie, plus_cookie_key):
         logger.info(f"Register the plus client: {plus_client}")
         return plus_client
     except Exception as e:
-        logger.error(f"Failed to register the plus client: {e}")
+        logger.error(f"Failed to register the plus client: \n {traceback.format_exc()}")
         return None
 
 
@@ -44,8 +44,8 @@ async def register_clients(_basic_cookies, _basic_cookie_keys, _plus_cookies, _p
 
     _basic_clients.extend(filter(None, basic_clients))
     _plus_clients = [client for client in _plus_clients if client]
-    logger.debug(f"registered basic clients: {len(_basic_clients)}")
-    logger.debug(f"registered plus clients: {len(_plus_clients)}")
+    logger.debug(f"registered basic clients: {len(_basic_clients)} / {len(_basic_cookies)}")
+    logger.debug(f"registered plus clients: {len(_plus_clients)} / {len(_plus_cookies)}")
     return _basic_clients, _plus_clients
 
 
