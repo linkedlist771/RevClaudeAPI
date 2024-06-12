@@ -4,6 +4,9 @@ import time
 import uvicorn
 import asyncio
 
+from rev_claude.middlewares.docs_middleware import ApidocBasicAuthMiddleware
+from rev_claude.middlewares.register_middlewares import register_middleware
+
 app = FastAPI()
 
 
@@ -58,14 +61,9 @@ async def health():
 # cross origin
 from fastapi.middleware.cors import CORSMiddleware
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 请根据需要调整此设置
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
+app = register_middleware(app)
+
+
 config = uvicorn.Config(app, host="0.0.0.0", port=8848)
 server = uvicorn.Server(config=config)
 server.run()

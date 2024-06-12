@@ -20,3 +20,7 @@ STREAM_TIMEOUT = Timeout(
     write=None,
     pool=STREAM_POOL_TIME_OUT,  # 例如设为 10 分钟
 )
+
+
+DOCS_USERNAME = "claude-backend"
+DOCS_PASSWORD = "20Wd!!!!"
