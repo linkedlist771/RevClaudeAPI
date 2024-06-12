@@ -61,5 +61,5 @@ async def async_stream(
             auth=auth,
             follow_redirects=follow_redirects,
         ) as response:
-            async for chunk in response.aiter_bytes():
+            async for chunk in response.aiter_lines():
                 yield chunk

@@ -292,9 +292,6 @@ class Client:
                                         1
                                     )  # 提取第一个捕获组的内容
                                     events.append(completion_content)
-                                    # logger.info(
-                                    #     f"regex catch completion: {completion_content}"
-                                    # )
                             except Exception as e:
                                 logger.error(f"Error: {e}")
             return events
@@ -348,11 +345,6 @@ class Client:
                 ):
                     # logger.info(f"raw text: {text}")
                     # convert a byte string to a string
-                    try:
-                        text = text.decode("utf-8")
-                    except Exception as e:
-                        logger.error(f"Failed to decode text: {text}")
-                        text = ""
                     # logger.info(f"raw text: {text}")
                     if "permission_error" in text:
                         logger.error(f"permission_error : {text}")
