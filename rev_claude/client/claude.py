@@ -348,7 +348,11 @@ class Client:
                 ):
                     # logger.info(f"raw text: {text}")
                     # convert a byte string to a string
-                    text = text.decode("utf-8")
+                    try:
+                        text = text.decode("utf-8")
+                    except Exception as e:
+                        logger.error(f"Failed to decode text: {text}")
+                        text = ""
                     # logger.info(f"raw text: {text}")
                     if "permission_error" in text:
                         logger.error(f"permission_error : {text}")
