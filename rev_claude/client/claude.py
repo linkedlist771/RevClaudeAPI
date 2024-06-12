@@ -282,7 +282,7 @@ class Client:
                                 event_data = json.loads(data)
                                 events.append(event_data["completion"])
                             except json.JSONDecodeError:
-                                logger.error(f"CLAUDE STREAM ERROR: {data}")
+                                # logger.error(f"CLAUDE STREAM ERROR: {data}")
                                 if not data.endswith('"'):
                                     data = data + '"'
                                 pattern = r'"completion":"(.*?)(?<!\\)"'
@@ -292,9 +292,9 @@ class Client:
                                         1
                                     )  # 提取第一个捕获组的内容
                                     events.append(completion_content)
-                                    logger.info(
-                                        f"regex catch completion: {completion_content}"
-                                    )
+                                    # logger.info(
+                                    #     f"regex catch completion: {completion_content}"
+                                    # )
                             except Exception as e:
                                 logger.error(f"Error: {e}")
             return events
