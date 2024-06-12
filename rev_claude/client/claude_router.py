@@ -134,7 +134,9 @@ async def chat(
         message = manager.generate_exceed_message(api_key)
         # return JSONResponse(status_code=403, content=message)
         logger.info(f"API {api_key} has reached the limit.")
-        return StreamingResponse(build_sse_data(message=message), media_type="text/event-stream")
+        return StreamingResponse(
+            build_sse_data(message=message), media_type="text/event-stream"
+        )
     logger.info(f"Input chat request request: \n{claude_chat_request.model_dump()}")
     basic_clients = clients["basic_clients"]
     plus_clients = clients["plus_clients"]
@@ -186,7 +188,6 @@ async def chat(
         claude_client = plus_clients[client_idx]
     else:
         claude_client = basic_clients[client_idx]
-
 
     max_retry = 3
     current_retry = 0

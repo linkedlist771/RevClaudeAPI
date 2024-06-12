@@ -17,7 +17,9 @@ class ClientManager:
 
     async def load_clients(self):
         cookie_manager = get_cookie_manager()
-        basic_clients, plus_clients = await cookie_manager.get_all_basic_and_plus_client()
+        basic_clients, plus_clients = (
+            await cookie_manager.get_all_basic_and_plus_client()
+        )
         ClientManager.basic_clients = {
             int(improved_hash(client.cookie_key)): client for client in basic_clients
         }

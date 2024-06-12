@@ -39,7 +39,6 @@ class APIKeyManager:
         self.redis.set(api_key, "active")
         return api_key
 
-
     def activate_api_key(self, api_key):
         # 首先判断是否存在
         if not self.is_api_key_valid(api_key):
@@ -48,7 +47,9 @@ class APIKeyManager:
         ttl = self.redis.ttl(api_key)
         if ttl == -1:
             # 还未激活
-            expiration_seconds = int(self.redis.get(f"{api_key}:expiration"))  # 确保转换为整数
+            expiration_seconds = int(
+                self.redis.get(f"{api_key}:expiration")
+            )  # 确保转换为整数
             api_key_type = self.redis.get(f"{api_key}:type")
             if isinstance(api_key_type, bytes):
                 api_key_type = api_key_type.decode("utf-8")
@@ -61,7 +62,6 @@ class APIKeyManager:
         else:
 
             return f"APIKEY已经激活, 还有{ttl}秒过期"
-
 
     def is_api_key_valid(self, api_key):
         """Check if an API key is still valid (exists and has not expired)."""

@@ -19,7 +19,10 @@ from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile, status, HTTPException
 from fastapi.responses import JSONResponse
-from rev_claude.status_code.status_code_enum import HTTP_481_IMAGE_UPLOAD_FAILED, HTTP_482_DOCUMENT_UPLOAD_FAILED
+from rev_claude.status_code.status_code_enum import (
+    HTTP_481_IMAGE_UPLOAD_FAILED,
+    HTTP_482_DOCUMENT_UPLOAD_FAILED,
+)
 from rev_claude.utils.file_utils import DocumentConverter
 from rev_claude.utils.httpx_utils import async_stream
 from rev_claude.utils.sse_utils import build_sse_data
@@ -51,6 +54,7 @@ async def upload_attachment_for_fastapi(file: UploadFile):
             status_code=HTTP_482_DOCUMENT_UPLOAD_FAILED,
             detail="处理上传文件报错",
         )
+
 
 class Client:
     def fix_sessionKey(self, cookie):
@@ -311,18 +315,16 @@ class Client:
         timeout=120,
     ):
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
-        __payload =         {
-                "attachments": attachments,  # attachments is a list
-                "files": [] if files is None else files,
-                "model": model,  # TODO: 当账号类型为普通账号的时候，这里不需要传入model
-                "timezone": "Europe/London",
-                "prompt": f"{prompt}",
-            }
+        __payload = {
+            "attachments": attachments,  # attachments is a list
+            "files": [] if files is None else files,
+            "model": model,  # TODO: 当账号类型为普通账号的时候，这里不需要传入model
+            "timezone": "Europe/London",
+            "prompt": f"{prompt}",
+        }
         if client_type != "plus":
             __payload.pop("model")
-        payload = json.dumps(
-            __payload
-        )
+        payload = json.dumps(__payload)
 
         headers = self.build_stream_headers()
         max_retry = 3
@@ -475,7 +477,6 @@ class Client:
         random_uuid_str = str(random_uuid)
         formatted_uuid = f"{random_uuid_str[0:8]}-{random_uuid_str[9:13]}-{random_uuid_str[14:18]}-{random_uuid_str[19:23]}-{random_uuid_str[24:]}"
         return formatted_uuid
-
 
     def build_new_chat_payload(self, uuid):
         return {
