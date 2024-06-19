@@ -35,8 +35,7 @@ ua = UserAgent()
 
 def get_random_user_agent():
     # 获取 iPhone 的用户代理
-    safari_user_agent = ua.safari
-    return safari_user_agent
+    return ua.random
 async def upload_attachment_for_fastapi(file: UploadFile):
     # 从 UploadFile 对象读取文件内容
     # 直接try to read
