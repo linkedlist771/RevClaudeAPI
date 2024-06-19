@@ -196,10 +196,11 @@ async def chat(
             if not conversation_id:
                 try:
                     conversation = await claude_client.create_new_chat(model=model)
-                    conversation_id = conversation["uuid"]
                     logger.debug(
                         f"Created new conversation with response: \n{conversation}"
                     )
+                    conversation_id = conversation["uuid"]
+
                     break  # 成功创建对话后跳出循环
                 except Exception as e:
                     current_retry += 1
@@ -212,8 +213,8 @@ async def chat(
                         )
                         return ("error: ", e)
                     else:
-                        logger.info("Retrying in 1 second...")
-                        await asyncio.sleep(1)
+                        logger.info("Retrying in 2 second...")
+                        await asyncio.sleep(2)
             else:
                 logger.info(f"Using existing conversation with id: {conversation_id}")
                 break

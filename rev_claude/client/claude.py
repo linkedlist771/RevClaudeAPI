@@ -509,7 +509,7 @@ class Client:
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
         uuid = self.generate_uuid()
         # payload = json.dumps({"uuid": uuid, "name": "", "model": model})
-        payload = json.dumps({"uuid": uuid, "name": ""})
+        payload = {"uuid": uuid, "name": ""}
 
         headers = self.build_new_chat_payload(uuid)
         async with httpx.AsyncClient() as client:
