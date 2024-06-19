@@ -55,9 +55,9 @@ async def async_stream(
             content=content,
             data=data,
             files=files,
+            headers=headers,
             json=json,
             params=params,
-            headers=headers,
             auth=auth,
             follow_redirects=follow_redirects,
         ) as response:
