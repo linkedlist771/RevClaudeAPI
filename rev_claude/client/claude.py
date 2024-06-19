@@ -512,6 +512,8 @@ class Client:
         payload = {"uuid": uuid, "name": ""}
 
         headers = self.build_new_chat_payload(uuid)
+        logger.debug(f"headers: \n{headers}")
+        logger.debug(f"payload: \n{payload}")
         async with httpx.AsyncClient() as client:
             response = await client.post(url, headers=headers, data=payload)
         return response.json()
