@@ -4,7 +4,7 @@ from loguru import logger
 from rev_claude.client.claude import Client
 import traceback
 
-REGISTER_MAY_RETRY = 3
+REGISTER_MAY_RETRY = 5
 REGISTER_WAIT = 3
 
 

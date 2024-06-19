@@ -251,7 +251,7 @@ class Client:
         payload = __payload
 
         headers = self.build_stream_headers()
-        max_retry = 3
+        max_retry = 5
         current_retry = 0
         response_text = ""
         client_manager = ClientsStatusManager()
