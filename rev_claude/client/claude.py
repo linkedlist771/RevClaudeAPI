@@ -32,28 +32,22 @@ from rev_claude.utils.sse_utils import build_sse_data
 from fake_useragent import UserAgent
 
 ua = UserAgent()
+filtered_browsers = list(
+    filter(
+        lambda x: x["browser"] in ua.browsers
+                  and x["os"] in ua.os
+                  and x["percent"] >= ua.min_percentage,
+        ua.data_browsers,
+    )
+)
+
+# 使用itertools.cycle创建一个无限迭代器
+infinite_iter = itertools.cycle(filtered_browsers)
 
 
 def get_random_user_agent():
-    filtered_browsers = list(
-        filter(
-            lambda x: x["browser"] in ua.browsers
-                      and x["os"] in ua.os
-                      and x["percent"] >= ua.min_percentage,
-            ua.data_browsers,
-        )
-    )
+    return next(infinite_iter).get("useragent")
 
-    # 使用itertools.cycle创建一个无限迭代器
-    infinite_iter = itertools.cycle(filtered_browsers)
-
-    while True:
-        # 从无限迭代器中获取下一个浏览器信息
-        browser = next(infinite_iter)
-
-        # 根据浏览器信息生成随机用户代理
-        user_agent_string = ua.random(browser)
-        yield user_agent_string
 async def upload_attachment_for_fastapi(file: UploadFile):
     # 从 UploadFile 对象读取文件内容
     # 直接try to read
