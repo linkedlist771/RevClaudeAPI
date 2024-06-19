@@ -351,7 +351,7 @@ class Client:
                 async with httpx.AsyncClient(timeout=STREAM_CONNECTION_TIME_OUT) as client:
                  async with client.stream(method="POST", url=url, headers=headers, json=payload) as response:
                   async for text in response.aiter_lines():
-
+                    logger.debug(f"raw text: {text}")
                     # async with client.stream(method="POST", url=url, headers=headers, json=data) as response:
 
                     # logger.info(f"raw text: {text}")
