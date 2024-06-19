@@ -324,7 +324,8 @@ class Client:
         }
         if client_type != "plus":
             __payload.pop("model")
-        payload = json.dumps(__payload)
+        # payload = json.dumps(__payload)
+        payload = __payload
 
         headers = self.build_stream_headers()
         max_retry = 3
