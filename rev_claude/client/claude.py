@@ -340,13 +340,17 @@ class Client:
         logger.debug(f"payload:\n {payload}")
         while current_retry < max_retry:
             try:
-                async for text in async_stream(
-                    "POST",
-                    httpx.URL(url),
-                    headers=headers,
-                    json=payload,
-                    timeout=STREAM_TIMEOUT,
-                ):
+                # async for text in async_stream(
+                #     "POST",
+                #     httpx.URL(url),
+                #     headers=headers,
+                #     json=payload,
+                #     timeout=STREAM_TIMEOUT,
+                # ):
+
+                async with httpx.AsyncClient(timeout=STREAM_CONNECTION_TIME_OUT) as client:
+                 async with client.stream(method="POST", url=url, headers=headers, json=payload) as response:
+                  async for text in response.aiter_lines():
 
                     # async with client.stream(method="POST", url=url, headers=headers, json=data) as response:
 
