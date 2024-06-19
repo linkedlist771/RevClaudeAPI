@@ -200,7 +200,6 @@ async def chat(
                     logger.debug(
                         f"Created new conversation with response: \n{conversation}"
                     )
-                    await asyncio.sleep(1)  # 等待一秒,创建成功后
                     break  # 成功创建对话后跳出循环
                 except Exception as e:
                     current_retry += 1
@@ -253,6 +252,7 @@ async def chat(
     files = claude_chat_request.files
     if files is None:
         files = []
+    await asyncio.sleep(2)  # 等待两秒秒,创建成功后
 
     if is_stream:
         streaming_res = claude_client.stream_message(
