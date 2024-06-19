@@ -283,7 +283,7 @@ class Client:
                     # logger.info(f"raw text: {text}")
                     if "permission_error" in text:
                         logger.error(f"permission_error : {text}")
-                        # raise Exception(error_message)
+                        raise Exception(error_message)
                         # ClientsStatusManager
                     if "exceeded_limit" in text:
                         # 对于plus用户只opus model才设置
