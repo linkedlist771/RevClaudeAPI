@@ -166,18 +166,19 @@ class Client:
         return {
             "User-Agent": "'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1 OPX/2.2.0",
             # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
-            "Accept": "text/event-stream, text/event-stream",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Referer": "https://claude.ai/chats",
-            "Content-Type": "application/json",
-            "Origin": "https://claude.ai",
-            "DNT": "1",
-            "Connection": "keep-alive",
+            # "Accept": "text/event-stream, text/event-stream",
+            # "Accept-Language": "en-US,en;q=0.5",
+            # "Referer": "https://claude.ai/chats",
+            # "Content-Type": "application/json",
+            # "Origin": "https://claude.ai",
+            # "DNT": "1",
+            # "Connection": "keep-alive",
             "Cookie": self.cookie,
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
+            # "Sec-Fetch-Dest": "empty",
+            # "Sec-Fetch-Mode": "cors",
+            # "TE": "trailers",
+
             "Sec-Fetch-Site": "same-origin",
-            "TE": "trailers",
         }
 
     async def parse_text(self, text, client_type, client_idx):
