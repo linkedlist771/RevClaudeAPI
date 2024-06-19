@@ -496,13 +496,27 @@ class Client:
         }
 
     async def create_new_chat(self, model):
-        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations?tree=True"
+        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
         uuid = self.generate_uuid()
-        payload = json.dumps({"uuid": uuid, "name": "", "model": model})
+        # payload = json.dumps({"uuid": uuid, "name": "", "model": model})
+        payload = json.dumps({"uuid": uuid, "name": ""})
+
         headers = self.build_new_chat_payload(uuid)
         async with httpx.AsyncClient() as client:
             response = await client.post(url, headers=headers, data=payload)
         return response.json()
+
+    async def set_conversation_model(self, model, uuid):
+        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
+        uuid = self.generate_uuid()
+        # payload = json.dumps({"uuid": uuid, "name": "", "model": model})
+        payload = json.dumps({"uuid": uuid, "name": ""})
+
+        headers = self.build_new_chat_payload(uuid)
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=headers, data=payload)
+        return response.json()
+
 
     # Resets all the conversations
     def reset_all(self):
