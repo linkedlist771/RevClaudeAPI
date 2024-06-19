@@ -28,6 +28,14 @@ from rev_claude.utils.httpx_utils import async_stream
 from rev_claude.utils.sse_utils import build_sse_data
 
 
+from fake_useragent import UserAgent
+
+ua = UserAgent()
+
+
+def get_random_user_agent():
+    return ua.random
+
 async def upload_attachment_for_fastapi(file: UploadFile):
     # 从 UploadFile 对象读取文件内容
     # 直接try to read
@@ -72,7 +80,8 @@ class Client:
 
     def build_organization_headers(self):
         return {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+            "User-Agent": get_random_user_agent(),
+                #"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept-Language": "en-US,en;q=0.5",
             "Referer": "https://claude.ai/chats",
             "Content-Type": "application/json",
@@ -139,98 +148,12 @@ class Client:
             print(f"Error: {response.status_code} - {response.text}")
 
     # Send Message to Claude
-    def send_message(
-        self, prompt, conversation_id, model, attachment=None, timeout=120
-    ):
 
-        def parse_text(text):
-
-            try:
-                # TODO: 目前不会修复， 我是笨蛋， 呜呜呜， 怎么办，我好笨。 放弃吧， 我是猪脑子，呜呜呜。
-                parsed_response = json.loads(text)
-                if "error" in parsed_response:
-                    error_message = parsed_response["error"]["message"]
-                    print("Error Message:", error_message)
-
-            except json.JSONDecodeError:
-                # print("Invalid JSON format:", response)
-                events = []
-                lines = text.split("\n")
-                for line in lines:
-                    line = line.strip()
-                    # print(line)
-                    if line:
-                        parts = line.split(": ")
-                        if len(parts) == 2:
-                            event_type, data = parts
-                            if data != "completion" and data != "ping":
-                                event_data = json.loads(data)
-                                events.append(event_data["completion"])
-                                logger.debug(event_data)
-
-                return events
-
-        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
-
-        payload = json.dumps(
-            {
-                "prompt": prompt,
-                "timezone": "Europe/London",
-                # "model": f"claude-{self.model_version}",
-                "model": model,
-                # claude-3-haiku-20240307
-                # claude-3-opus-20240229
-                "attachments": [],
-                "files": [],
-            }
-        )
-
-        # Upload attachment if provided
-        attachments = []
-        if attachment:
-            attachment_response = self.upload_attachment(attachment)
-            if attachment_response:
-                attachments = [attachment_response]
-            else:
-                return {"Error: Invalid file format. Please try again."}
-
-        # Ensure attachments is an empty list when no attachment is provided
-        if not attachment:
-            attachments = []
-
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
-            "Accept": "text/event-stream, text/event-stream",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Referer": "https://claude.ai/chats",
-            "Content-Type": "application/json",
-            "Origin": "https://claude.ai",
-            "DNT": "1",
-            "Connection": "keep-alive",
-            "Cookie": self.cookie,
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "TE": "trailers",
-        }
-
-        # response = requests.post( url, headers=headers, data=payload,impersonate="chrome110",timeout=120)
-        response = httpx.post(url, headers=headers, data=payload, timeout=120)
-
-        response_parse_text = parse_text(response.content.decode("utf-8"))
-
-        text_res = ""
-        if response_parse_text:
-            for text in response_parse_text:
-                text_res += text
-
-        answer = "".join(text_res).strip()
-        print(answer)
-        return answer
 
     def build_stream_headers(self):
         return {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+            "User-Agent": get_random_user_agent(),
+            # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept": "text/event-stream, text/event-stream",
             "Accept-Language": "en-US,en;q=0.5",
             "Referer": "https://claude.ai/chats",
@@ -490,7 +413,8 @@ class Client:
 
     def build_new_chat_payload(self, uuid):
         return {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            # "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "User-Agent": get_random_user_agent(),
             "Accept-Language": "en-US,en;q=0.5",
             "Referer": f"https://claude.ai/chat/{uuid}",
             "Content-Type": "application/json",
@@ -498,7 +422,6 @@ class Client:
             "DNT": "1",
             "Connection": "keep-alive",
             "Cookie": self.cookie,
-            "Sec-CH-Ua-Mobile": '"Linux"',
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
