@@ -19,6 +19,7 @@ from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile, status, HTTPException
 from fastapi.responses import JSONResponse
+import itertools
 from rev_claude.status_code.status_code_enum import (
     HTTP_481_IMAGE_UPLOAD_FAILED,
     HTTP_482_DOCUMENT_UPLOAD_FAILED,
@@ -34,8 +35,25 @@ ua = UserAgent()
 
 
 def get_random_user_agent():
-    # 获取 iPhone 的用户代理
-    return ua.random
+    filtered_browsers = list(
+        filter(
+            lambda x: x["browser"] in ua.browsers
+                      and x["os"] in ua.os
+                      and x["percent"] >= ua.min_percentage,
+            ua.data_browsers,
+        )
+    )
+
+    # 使用itertools.cycle创建一个无限迭代器
+    infinite_iter = itertools.cycle(filtered_browsers)
+
+    while True:
+        # 从无限迭代器中获取下一个浏览器信息
+        browser = next(infinite_iter)
+
+        # 根据浏览器信息生成随机用户代理
+        user_agent_string = ua.random(browser)
+        yield user_agent_string
 async def upload_attachment_for_fastapi(file: UploadFile):
     # 从 UploadFile 对象读取文件内容
     # 直接try to read

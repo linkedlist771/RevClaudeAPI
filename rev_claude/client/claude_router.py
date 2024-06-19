@@ -189,7 +189,7 @@ async def chat(
     else:
         claude_client = basic_clients[client_idx]
 
-    max_retry = 3
+    max_retry = 5
     current_retry = 0
     while current_retry < max_retry:
         try:
