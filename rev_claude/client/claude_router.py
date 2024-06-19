@@ -200,6 +200,7 @@ async def chat(
                     logger.debug(
                         f"Created new conversation with response: \n{conversation}"
                     )
+                    await asyncio.sleep(1)  # 等待一秒,创建成功后
                     break  # 成功创建对话后跳出循环
                 except Exception as e:
                     current_retry += 1
