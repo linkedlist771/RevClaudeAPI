@@ -335,7 +335,9 @@ class Client:
             yield NO_EMPTY_PROMPT_MESSAGE
             return
             # 这里要return吗
-
+        logger.debug(f"url:\n {url}")
+        logger.debug(f"headers:\n {headers}")
+        logger.debug(f"payload:\n {payload}")
         while current_retry < max_retry:
             try:
                 async for text in async_stream(
