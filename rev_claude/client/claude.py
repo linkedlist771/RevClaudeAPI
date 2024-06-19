@@ -344,9 +344,12 @@ class Client:
                     "POST",
                     httpx.URL(url),
                     headers=headers,
-                    data=payload,
+                    json=payload,
                     timeout=STREAM_TIMEOUT,
                 ):
+
+                    # async with client.stream(method="POST", url=url, headers=headers, json=data) as response:
+
                     # logger.info(f"raw text: {text}")
                     # convert a byte string to a string
                     # logger.info(f"raw text: {text}")
