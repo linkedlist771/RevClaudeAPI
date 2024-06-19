@@ -515,7 +515,7 @@ class Client:
         logger.debug(f"headers: \n{headers}")
         logger.debug(f"payload: \n{payload}")
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, headers=headers, data=payload)
+            response = await client.post(url, headers=headers, json=payload)
         return response.json()
 
     async def set_conversation_model(self, model, uuid):
