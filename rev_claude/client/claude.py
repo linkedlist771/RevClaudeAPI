@@ -31,6 +31,27 @@ from rev_claude.utils.sse_utils import build_sse_data
 
 from fake_useragent import UserAgent
 
+import uuid
+import random
+import os
+
+
+def generate_trace_id():
+    # 生成一个随机的 UUID
+    trace_id = uuid.uuid4().hex
+
+    # 生成一个随机的 Span ID，长度为16的十六进制数
+    span_id = os.urandom(8).hex()
+
+    # 设定采样标识，这里假设采样率为1/10，即10%的数据发送
+    sampled = random.choices([0, 1], weights=[9, 1])[0]
+
+    # 将三个部分组合成完整的 Sentry-Trace
+    sentry_trace = f"{trace_id}-{span_id}-{sampled}"
+    return sentry_trace
+
+
+
 ua = UserAgent()
 filtered_browsers = list(
     filter(
@@ -164,21 +185,25 @@ class Client:
 
     def build_stream_headers(self):
         return {
-            "User-Agent": "'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1 OPX/2.2.0",
-            # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
-            # "Accept": "text/event-stream, text/event-stream",
-            # "Accept-Language": "en-US,en;q=0.5",
-            # "Referer": "https://claude.ai/chats",
-            # "Content-Type": "application/json",
-            # "Origin": "https://claude.ai",
-            # "DNT": "1",
-            # "Connection": "keep-alive",
-            "Cookie": self.cookie,
-            # "Sec-Fetch-Dest": "empty",
-            # "Sec-Fetch-Mode": "cors",
-            # "TE": "trailers",
 
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+            "Accept": "text/event-stream, text/event-stream",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Referer": "https://claude.ai/chats",
+            "Content-Type": "application/json",
+            "Origin": "https://claude.ai",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Cookie": self.cookie,
+
+            "TE": "trailers",
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": "Windows",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
+            "Sentry-Trace": generate_trace_id()[2:]
+
         }
 
     async def parse_text(self, text, client_type, client_idx):
@@ -257,6 +282,7 @@ class Client:
             "model": model,  # TODO: 当账号类型为普通账号的时候，这里不需要传入model
             "timezone": "Europe/London",
             "prompt": f"{prompt}",
+            "rendering_mode": "raw"
         }
         if client_type != "plus":
             __payload.pop("model")
