@@ -15,7 +15,7 @@ from rev_claude.REMINDING_MESSAGE import (
     PROMPT_TOO_LONG_MESSAGE,
     EXCEED_LIMIT_MESSAGE,
 )
-from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT
+from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT, PROXIES, USE_PROXY
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile, status, HTTPException
 from fastapi.responses import JSONResponse
@@ -34,6 +34,7 @@ from fake_useragent import UserAgent
 import uuid
 import random
 import os
+
 
 
 def generate_trace_id():
@@ -311,7 +312,10 @@ class Client:
                 #     timeout=STREAM_TIMEOUT,
                 # ):
 
-                async with httpx.AsyncClient(timeout=STREAM_CONNECTION_TIME_OUT) as client:
+                async with httpx.AsyncClient(timeout=STREAM_CONNECTION_TIME_OUT,
+                                             proxies=PROXIES if USE_PROXY else None
+
+                                             ) as client:
                  async with client.stream(method="POST", url=url, headers=headers, json=payload) as response:
                   async for text in response.aiter_lines():
                     # logger.debug(f"raw text: {text}")
@@ -476,7 +480,9 @@ class Client:
         headers = self.build_new_chat_payload(uuid)
         logger.debug(f"headers: \n{headers}")
         logger.debug(f"payload: \n{payload}")
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(
+            proxies=PROXIES if USE_PROXY else None
+        ) as client:
             response = await client.post(url, headers=headers, json=payload)
         return response.json()
 

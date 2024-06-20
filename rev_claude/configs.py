@@ -21,6 +21,13 @@ STREAM_TIMEOUT = Timeout(
     pool=STREAM_POOL_TIME_OUT,  # 例如设为 10 分钟
 )
 
+USE_PROXY = True
+
+PROXIES = {
+    'http://': 'socks5://127.0.0.1:7891',
+    'https://': 'socks5://127.0.0.1:7891'
+}
+
 
 DOCS_USERNAME = "claude-backend"
 DOCS_PASSWORD = "20Wd!!!!"
