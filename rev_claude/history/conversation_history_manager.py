@@ -3,6 +3,7 @@ from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel
 
+from rev_claude.configs import REDIS_HOST, REDIS_PORT
 from rev_claude.cookie.claude_cookie_manage import CookieKeyType
 from rev_claude.models import ClaudeModels
 
@@ -33,7 +34,7 @@ class ConversationHistoryRequestInput(BaseModel):
 
 class ConversationHistoryManager:
 
-    def __init__(self, host="localhost", port=6379, db=0):
+    def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=0):
         """Initialize the connection to Redis."""
         self.redis = redis.StrictRedis(host=host, port=port, db=db)
 

@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Tuple, List
 from loguru import logger
 from rev_claude.client.claude import Client
+from rev_claude.configs import REDIS_HOST, REDIS_PORT
 from rev_claude.utils.async_utils import register_clients
 
 
@@ -18,7 +19,7 @@ class CookieKeyType(Enum):
 
 class CookieManager:
 
-    def __init__(self, host="localhost", port=6379, db=1):
+    def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=1):
         """Initialize the connection to Redis."""
         self.redis = redis.StrictRedis(host=host, port=port, db=db)
 

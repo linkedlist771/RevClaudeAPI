@@ -9,7 +9,7 @@ from rev_claude.configs import (
     BASIC_KEY_MAX_USAGE,
     PLUS_KEY_MAX_USAGE,
     API_KEY_REFRESH_INTERVAL,
-    API_KEY_REFRESH_INTERVAL_HOURS,
+    API_KEY_REFRESH_INTERVAL_HOURS, REDIS_HOST, REDIS_PORT,
 )
 
 
@@ -19,7 +19,7 @@ class APIKeyType(Enum):
 
 
 class APIKeyManager:
-    def __init__(self, host="localhost", port=6379, db=0):
+    def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=0):
         """Initialize the connection to Redis."""
         self.redis = redis.StrictRedis(
             host=host, port=port, db=db, decode_responses=True

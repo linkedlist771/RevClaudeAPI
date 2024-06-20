@@ -4,7 +4,7 @@
 import json, os, uuid
 import re
 
-from curl_cffi import requests
+# from curl_cffi import requests
 import httpx
 import asyncio
 from loguru import logger

@@ -5,6 +5,9 @@ from enum import Enum
 import time
 from pydantic import BaseModel
 
+from rev_claude.configs import REDIS_HOST
+
+
 # from claude_cookie_manage import get_cookie_manager
 
 
@@ -49,7 +52,7 @@ class ClientsStatus(BaseModel):
 
 class ClientsStatusManager:
 
-    def __init__(self, host="localhost", port=6379, db=2):
+    def __init__(self, host=REDIS_HOST, port=6379, db=2):
         """Initialize the connection to Redis."""
         self.redis = redis.StrictRedis(
             host=host, port=port, db=db, decode_responses=True

@@ -28,6 +28,9 @@ PROXIES = {
     'https://': 'socks5://127.0.0.1:7891'
 }
 
+REDIS_HOST = "198.23.176.34"
+REDIS_PORT = 6379
+
 
 DOCS_USERNAME = "claude-backend"
 DOCS_PASSWORD = "20Wd!!!!"
