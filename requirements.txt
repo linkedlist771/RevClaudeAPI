@@ -2,3 +2,5 @@ python-docx
 pdfminer.six
 httpx_sse
 fake_useragent
+fire
+httpx
