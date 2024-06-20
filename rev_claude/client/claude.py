@@ -481,7 +481,7 @@ class Client:
         logger.debug(f"headers: \n{headers}")
         logger.debug(f"payload: \n{payload}")
         async with httpx.AsyncClient(
-            proxies=PROXIES if USE_PROXY else None,
+            # proxies=PROXIES if USE_PROXY else None,
             timeout=STREAM_CONNECTION_TIME_OUT,
         ) as client:
             response = await client.post(url, headers=headers, json=payload)
