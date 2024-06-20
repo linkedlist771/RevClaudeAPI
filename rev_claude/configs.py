@@ -28,7 +28,7 @@ PROXIES = {
     'https://': 'socks5://127.0.0.1:7891'
 }
 
-REDIS_HOST = "198.23.176.34"
+REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 
 

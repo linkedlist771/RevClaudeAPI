@@ -5,3 +5,6 @@ fake_useragent
 fire
 httpx
 uvicorn
+fastapi
+loguru
+redis
