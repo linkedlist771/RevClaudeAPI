@@ -17,6 +17,7 @@ def register_cross_origin(app: FastAPI):
     )
     return app
 
+
 def register_docs_auth(app: FastAPI):
 
     # app_env = 'production'

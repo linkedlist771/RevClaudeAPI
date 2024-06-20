@@ -15,7 +15,12 @@ from rev_claude.REMINDING_MESSAGE import (
     PROMPT_TOO_LONG_MESSAGE,
     EXCEED_LIMIT_MESSAGE,
 )
-from rev_claude.configs import STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT, PROXIES, USE_PROXY
+from rev_claude.configs import (
+    STREAM_CONNECTION_TIME_OUT,
+    STREAM_TIMEOUT,
+    PROXIES,
+    USE_PROXY,
+)
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile, status, HTTPException
 from fastapi.responses import JSONResponse
@@ -36,7 +41,6 @@ import random
 import os
 
 
-
 def generate_trace_id():
     # 生成一个随机的 UUID
     trace_id = uuid.uuid4().hex
@@ -52,13 +56,12 @@ def generate_trace_id():
     return sentry_trace
 
 
-
 ua = UserAgent()
 filtered_browsers = list(
     filter(
         lambda x: x["browser"] in ua.browsers
-                  and x["os"] in ua.os
-                  and x["percent"] >= ua.min_percentage,
+        and x["os"] in ua.os
+        and x["percent"] >= ua.min_percentage,
         ua.data_browsers,
     )
 )
@@ -69,6 +72,7 @@ infinite_iter = itertools.cycle(filtered_browsers)
 
 def get_random_user_agent():
     return next(infinite_iter).get("useragent")
+
 
 async def upload_attachment_for_fastapi(file: UploadFile):
     # 从 UploadFile 对象读取文件内容
@@ -115,7 +119,7 @@ class Client:
     def build_organization_headers(self):
         return {
             "User-Agent": get_random_user_agent(),
-                #"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
+            # "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept-Language": "en-US,en;q=0.5",
             "Referer": "https://claude.ai/chats",
             "Content-Type": "application/json",
@@ -183,10 +187,8 @@ class Client:
 
     # Send Message to Claude
 
-
     def build_stream_headers(self):
         return {
-
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept": "text/event-stream, text/event-stream",
             "Accept-Language": "en-US,en;q=0.5",
@@ -196,15 +198,13 @@ class Client:
             "DNT": "1",
             "Connection": "keep-alive",
             "Cookie": self.cookie,
-
             "TE": "trailers",
             "Sec-Ch-Ua-Mobile": "?0",
             "Sec-Ch-Ua-Platform": "Windows",
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
-            "Sentry-Trace": generate_trace_id()[2:]
-
+            "Sentry-Trace": generate_trace_id()[2:],
         }
 
     async def parse_text(self, text, client_type, client_idx):
@@ -283,7 +283,7 @@ class Client:
             "model": model,  # TODO: 当账号类型为普通账号的时候，这里不需要传入model
             "timezone": "Europe/London",
             "prompt": f"{prompt}",
-            "rendering_mode": "raw"
+            "rendering_mode": "raw",
         }
         if client_type != "plus":
             __payload.pop("model")
@@ -312,74 +312,85 @@ class Client:
                 #     timeout=STREAM_TIMEOUT,
                 # ):
 
-                async with httpx.AsyncClient(timeout=STREAM_TIMEOUT,
-                                             proxies=PROXIES if USE_PROXY else None
+                async with httpx.AsyncClient(
+                    timeout=STREAM_TIMEOUT, proxies=PROXIES if USE_PROXY else None
+                ) as client:
+                    async with client.stream(
+                        method="POST",
+                        url=url,
+                        headers=headers,
+                        json=payload,
+                        timeout=10,
+                    ) as response:
+                        async for text in response.aiter_lines():
+                            # logger.debug(f"raw text: {text}")
+                            # async with client.stream(method="POST", url=url, headers=headers, json=data) as response:
 
-                                             ) as client:
-                 async with client.stream(method="POST", url=url, headers=headers, json=payload, timeout=10) as response:
-                  async for text in response.aiter_lines():
-                    # logger.debug(f"raw text: {text}")
-                    # async with client.stream(method="POST", url=url, headers=headers, json=data) as response:
+                            # logger.info(f"raw text: {text}")
+                            # convert a byte string to a string
+                            # logger.info(f"raw text: {text}")
+                            if "permission_error" in text:
+                                logger.error(f"permission_error : {text}")
+                                raise Exception(text)
+                                # ClientsStatusManager
+                            if "exceeded_limit" in text:
+                                # 对于plus用户只opus model才设置
+                                if client_type == "plus":
+                                    if "opus" in model:
+                                        dict_res = json.loads(text)
+                                        error_message = dict_res["error"]
+                                        resetAt = int(
+                                            json.loads(error_message["message"])[
+                                                "resetsAt"
+                                            ]
+                                        )
+                                        refresh_time = resetAt
+                                        start_time = int(refresh_time) - 8 * 3600
+                                        client_manager = ClientsStatusManager()
+                                        client_manager.set_client_limited(
+                                            client_type, client_idx, start_time
+                                        )
+                                else:
+                                    dict_res = json.loads(text)
+                                    error_message = dict_res["error"]
+                                    resetAt = int(
+                                        json.loads(error_message["message"])["resetsAt"]
+                                    )
+                                    refresh_time = resetAt
+                                    start_time = int(refresh_time) - 8 * 3600
+                                    client_manager = ClientsStatusManager()
+                                    client_manager.set_client_limited(
+                                        client_type, client_idx, start_time
+                                    )
+                                logger.error(f"exceeded_limit : {text}")
+                                yield EXCEED_LIMIT_MESSAGE
+                                await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                                break
 
-                    # logger.info(f"raw text: {text}")
-                    # convert a byte string to a string
-                    # logger.info(f"raw text: {text}")
-                    if "permission_error" in text:
-                        logger.error(f"permission_error : {text}")
-                        raise Exception(text)
-                        # ClientsStatusManager
-                    if "exceeded_limit" in text:
-                        # 对于plus用户只opus model才设置
-                        if client_type == "plus":
-                            if "opus" in model:
-                                dict_res = json.loads(text)
-                                error_message = dict_res["error"]
-                                resetAt = int(
-                                    json.loads(error_message["message"])["resetsAt"]
+                            elif "prompt is too long" in text:
+                                yield PROMPT_TOO_LONG_MESSAGE
+                                await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+
+                            elif "concurrent connections has" in text:
+                                logger.error(
+                                    f"concurrent connections has exceeded the limit"
                                 )
-                                refresh_time = resetAt
-                                start_time = int(refresh_time) - 8 * 3600
-                                client_manager = ClientsStatusManager()
-                                client_manager.set_client_limited(
-                                    client_type, client_idx, start_time
+                                raise Exception(
+                                    "concurrent connections has exceeded the limit"
                                 )
-                        else:
-                            dict_res = json.loads(text)
-                            error_message = dict_res["error"]
-                            resetAt = int(
-                                json.loads(error_message["message"])["resetsAt"]
+
+                            response_parse_text = await self.parse_text(
+                                text, client_type, client_idx
                             )
-                            refresh_time = resetAt
-                            start_time = int(refresh_time) - 8 * 3600
-                            client_manager = ClientsStatusManager()
-                            client_manager.set_client_limited(
-                                client_type, client_idx, start_time
-                            )
-                        logger.error(f"exceeded_limit : {text}")
-                        yield EXCEED_LIMIT_MESSAGE
-                        await asyncio.sleep(0)  # 模拟异步操作, 让出权限
-                        break
-
-                    elif "prompt is too long" in text:
-                        yield PROMPT_TOO_LONG_MESSAGE
-                        await asyncio.sleep(0)  # 模拟异步操作, 让出权限
-
-                    elif "concurrent connections has" in text:
-                        logger.error(f"concurrent connections has exceeded the limit")
-                        raise Exception("concurrent connections has exceeded the limit")
-
-                    response_parse_text = await self.parse_text(
-                        text, client_type, client_idx
-                    )
-                    # logger.info(f"parsed text: {response_parse_text}")
-                    if response_parse_text:
-                        client_manager.set_client_status(
-                            client_type, client_idx, "active"
-                        )
-                        resp_text = "".join(response_parse_text)
-                        response_text += resp_text
-                        yield resp_text
-                        await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                            # logger.info(f"parsed text: {response_parse_text}")
+                            if response_parse_text:
+                                client_manager.set_client_status(
+                                    client_type, client_idx, "active"
+                                )
+                                resp_text = "".join(response_parse_text)
+                                response_text += resp_text
+                                yield resp_text
+                                await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                 logger.info(f"Response text:\n {response_text}")
                 if call_back:
                     await call_back(response_text)
@@ -497,7 +508,6 @@ class Client:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, headers=headers, data=payload)
         return response.json()
-
 
     # Resets all the conversations
     def reset_all(self):

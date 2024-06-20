@@ -23,10 +23,7 @@ STREAM_TIMEOUT = Timeout(
 
 USE_PROXY = False
 
-PROXIES = {
-    'http://': 'socks5://127.0.0.1:7891',
-    'https://': 'socks5://127.0.0.1:7891'
-}
+PROXIES = {"http://": "socks5://127.0.0.1:7891", "https://": "socks5://127.0.0.1:7891"}
 
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
