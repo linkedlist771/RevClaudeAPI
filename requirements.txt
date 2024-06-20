@@ -4,3 +4,4 @@ httpx_sse
 fake_useragent
 fire
 httpx
+uvicorn
