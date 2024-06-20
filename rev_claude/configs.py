@@ -21,7 +21,7 @@ STREAM_TIMEOUT = Timeout(
     pool=STREAM_POOL_TIME_OUT,  # 例如设为 10 分钟
 )
 
-USE_PROXY = True
+USE_PROXY = False
 
 PROXIES = {
     'http://': 'socks5://127.0.0.1:7891',
