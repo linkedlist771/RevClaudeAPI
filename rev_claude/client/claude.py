@@ -316,9 +316,7 @@ class Client:
                                              proxies=PROXIES if USE_PROXY else None
 
                                              ) as client:
-                 async with client.stream(method="POST", url=url, headers=headers, json=payload,
-                                          timeout=STREAM_TIMEOUT
-                                          ) as response:
+                 async with client.stream(method="POST", url=url, headers=headers, json=payload, timeout=10) as response:
                   async for text in response.aiter_lines():
                     # logger.debug(f"raw text: {text}")
                     # async with client.stream(method="POST", url=url, headers=headers, json=data) as response:
