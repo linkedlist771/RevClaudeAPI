@@ -312,7 +312,7 @@ class Client:
                 #     timeout=STREAM_TIMEOUT,
                 # ):
 
-                async with httpx.AsyncClient(timeout=STREAM_CONNECTION_TIME_OUT,
+                async with httpx.AsyncClient(timeout=STREAM_TIMEOUT,
                                              proxies=PROXIES if USE_PROXY else None
 
                                              ) as client:
