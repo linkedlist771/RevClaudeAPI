@@ -9,7 +9,7 @@ class ClaudeModels(Enum):
 
     @staticmethod
     def model_is_plus(model):
-        return model in [ClaudeModels.OPUS.value, ClaudeModels.HAIKU.value, ClaudeModels.SONNET_3_5.value]
+        return model in [ClaudeModels.OPUS.value, ClaudeModels.HAIKU.value]
 
     @staticmethod
     def model_is_basic(model):
