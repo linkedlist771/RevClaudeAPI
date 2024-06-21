@@ -9,6 +9,7 @@ from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 
 from rev_claude.client.claude import upload_attachment_for_fastapi
 from rev_claude.client.client_manager import ClientManager
+from rev_claude.configs import NEW_CONVERSATION_RETRY
 from rev_claude.history.conversation_history_manager import (
     conversation_history_manager,
     ConversationHistoryRequestInput,
@@ -189,7 +190,7 @@ async def chat(
     else:
         claude_client = basic_clients[client_idx]
 
-    max_retry = 5
+    max_retry = NEW_CONVERSATION_RETRY
     current_retry = 0
     while current_retry < max_retry:
         try:
