@@ -24,6 +24,7 @@ class ClaudeChatRequest(BaseChatRequest):
     client_type: str
     attachments: Union[List[Dict], None] = None
     files: Union[List[str], None] = None
+    need_web_search: bool = False
 
 
 class FileConversionRequest(BaseModel):

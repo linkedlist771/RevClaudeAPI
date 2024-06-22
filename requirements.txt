@@ -8,3 +8,4 @@ uvicorn
 fastapi
 loguru
 redis
+duckduckgo_search

@@ -48,7 +48,7 @@ async def validate_api_key(
         # )
 
     manager.increment_usage(api_key)
-    logger.info(f"API key, {api_key}:")
+    logger.info(f"API key:\n{api_key}")
     logger.info(manager.get_apikey_information(api_key))
     # 尝试激活 API key
     active_message = manager.activate_api_key(api_key)
@@ -201,6 +201,7 @@ async def chat(
                         f"Created new conversation with response: \n{conversation}"
                     )
                     conversation_id = conversation["uuid"]
+                    await asyncio.sleep(2)  # 等待两秒秒,创建成功后
 
                     break  # 成功创建对话后跳出循环
                 except Exception as e:
@@ -254,7 +255,12 @@ async def chat(
     files = claude_chat_request.files
     if files is None:
         files = []
-    await asyncio.sleep(2)  # 等待两秒秒,创建成功后
+
+    # 处理message的部分， 如果需要搜索的话:
+    if claude_chat_request.need_web_search:
+        from rev_claude.prompts_builder.duckduck_search_prompt import DuckDuckSearchPrompt
+        message = await DuckDuckSearchPrompt(prompt=message).render_prompt()
+        logger.info(f"Prompt After search: \n{message}")
 
     if is_stream:
         streaming_res = claude_client.stream_message(
