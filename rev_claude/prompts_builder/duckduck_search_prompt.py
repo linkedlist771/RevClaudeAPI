@@ -9,8 +9,8 @@ class DuckDuckSearchPrompt(BaseModel):
     prompt: str
     max_results: int = 5
     base_prompt: str = \
-"""You can answer to the user's question based on the search results from the internet and provide the link in markdown format if necessary like
-citation (xxx is a xxx [1]) in paper:
+"""You can answer to the user's question based on the search results from the internet and provide the citation(xxx is a xxx [1])  if necessary 
+, but you don't have to provide the reference at end of the answer.:
 {search_results}
 
 Note: if the search results are not helpful, you can ignore this message and provide the answer directly.
