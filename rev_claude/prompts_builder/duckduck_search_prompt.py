@@ -13,6 +13,8 @@ class DuckDuckSearchPrompt(BaseModel):
 citation in paper:
 {search_results}
 
+Note: if the search results are not helpful, you can ignore this message and provide the answer directly.
+
 User's question: 
 {prompt}
     """
