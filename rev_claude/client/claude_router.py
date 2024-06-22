@@ -257,6 +257,7 @@ async def chat(
         files = []
 
     # 处理message的部分， 如果需要搜索的话:
+    logger.debug(f"Need web search: {claude_chat_request.need_web_search}")
     if claude_chat_request.need_web_search:
         from rev_claude.prompts_builder.duckduck_search_prompt import DuckDuckSearchPrompt
         message = await DuckDuckSearchPrompt(prompt=message).render_prompt()
