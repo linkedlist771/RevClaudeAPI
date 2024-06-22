@@ -115,7 +115,8 @@ async def upload_image(
 async def push_assistant_message_callback(
     request: ConversationHistoryRequestInput,
     messages: list[Message],
-    assistant_message: str,
+    hrefs: list[str] = None,
+    assistant_message: str = "",
 ):
     messages.append(
         Message(
@@ -123,6 +124,10 @@ async def push_assistant_message_callback(
             role=RoleType.ASSISTANT,
         )
     )
+    if hrefs:
+        hrefs_str = "".join(hrefs)
+        messages[-1].content += hrefs_str
+
     conversation_history_manager.push_message(request, messages)
 
 
@@ -245,9 +250,7 @@ async def chat(
             role=RoleType.USER,
         )
     )
-    call_back = partial(
-        push_assistant_message_callback, conversation_history_request, messages
-    )
+
 
     # 处理文件的部分
     attachments = claude_chat_request.attachments
@@ -267,7 +270,9 @@ async def chat(
         from rev_claude.prompts_builder.duckduck_search_prompt import DuckDuckSearchPrompt
         message, hrefs = await DuckDuckSearchPrompt(prompt=message).render_prompt()
         logger.info(f"Prompt After search: \n{message}")
-
+    call_back = partial(
+        push_assistant_message_callback, conversation_history_request, messages, hrefs
+    )
     if is_stream:
         streaming_res = claude_client.stream_message(
             message,
