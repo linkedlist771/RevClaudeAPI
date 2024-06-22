@@ -10,7 +10,7 @@ class DuckDuckSearchPrompt(BaseModel):
     max_results: int = 5
     base_prompt: str = \
 """You can answer to the user's question based on the search results from the internet and provide the link in markdown format if necessary like
-citation ([xxx is a xxx][1] ) in paper:
+citation (xxx is a xxx [1]) in paper:
 {search_results}
 
 Note: if the search results are not helpful, you can ignore this message and provide the answer directly.
@@ -31,7 +31,9 @@ User's question:
                 href = res["href"]
                 message = f"[{idx+1}]: {body}"
                 search_res += message + "\n"
-                hrefs.append("\n" * (1 + idx == 0) + f"[{idx+1}]: {href}" + "\n")
+                # [[2]: https://news.cctv.com/china/](https://news.cctv.com/china/)
+                hypper_link = f"[[{idx+1}]: {href}]({href})"
+                hrefs.append("\n" * (1 + idx == 0) + hypper_link + "\n")
 
             # TODO: this will be fixed later, just a trade off
             return self.base_prompt.format(search_results=search_res, prompt=self.prompt), hrefs
