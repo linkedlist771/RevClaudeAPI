@@ -3,25 +3,11 @@ from tqdm.asyncio import tqdm
 from loguru import logger
 from rev_claude.client.claude import Client
 import traceback
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
+
 
 REGISTER_MAY_RETRY = 10
 REGISTER_WAIT = 3
 
-
-async def run_background_task(task):
-    with ThreadPoolExecutor() as pool:
-        await asyncio.get_event_loop().run_in_executor(pool, task)
-
-
-#  submit a synchronous function to the event loop to make it asynchronous
-
-
-async def submit_task2event_loop(func, *args, **kwargs):
-    running_loop = asyncio.get_running_loop()
-    partial_func = partial(func, *args, **kwargs)
-    return await running_loop.run_in_executor(executor=None, func=partial_func)
 
 
 async def register_basic_client(basic_cookie, basic_cookie_key):

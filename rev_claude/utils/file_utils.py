@@ -8,7 +8,7 @@ from pdfminer.layout import LAParams
 import asyncio
 from loguru import logger
 
-from rev_claude.utils.async_utils import submit_task2event_loop
+from rev_claude.utils.async_task_utils import submit_task2event_loop
 
 
 class DocumentConvertedResponse(BaseModel):
