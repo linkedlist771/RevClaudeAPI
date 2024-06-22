@@ -31,7 +31,7 @@ User's question:
                 href = res["href"]
                 message = f"[^{idx+1}]: {body}"
                 search_res += message + "\n"
-                hrefs.append(f"\n[^{idx+1}]: {href}\n")
+                hrefs.append("\n" *(1 + idx == 0) + f"[^{idx+1}]: {href}\n")
             # TODO: this will be fixed later, just a trade off
             return self.base_prompt.format(search_results=search_res, prompt=self.prompt), hrefs
         except Exception as e:
