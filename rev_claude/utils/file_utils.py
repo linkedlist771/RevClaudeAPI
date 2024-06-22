@@ -8,6 +8,8 @@ from pdfminer.layout import LAParams
 import asyncio
 from loguru import logger
 
+from rev_claude.utils.async_utils import submit_task2event_loop
+
 
 class DocumentConvertedResponse(BaseModel):
     file_name: str
@@ -96,28 +98,37 @@ class DocumentConverter:
             == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
 
-    async def process_text(self, content):
+    def process_text_sync(self, content):
         # 处理文本文件
         return content.decode("utf-8")
 
-    async def process_pdf(self, content):
-        # Use run_in_threadpool to handle synchronous pdfplumber operations
-        # Assuming 'content' is the PDF data read from a file-like object
-        pdf_content = BytesIO(content)  # Since content is already read as bytes
+    async def process_text(self, content):
+        # 使用 run_in_threadpool 处理同步操作
+        extracted_text = await submit_task2event_loop(self.process_text_sync, content)
+        return extracted_text
 
-        # Prepare an output buffer to capture the text
+    def process_pdf_sync(self, content):
+        # 将二进制内容转换为类文件对象
+        pdf_content = BytesIO(content)
+
+        # 准备一个输出缓冲区来捕获文本
         output_buffer = StringIO()
 
-        # Call the function
+        # 调用函数
         extract_text_to_fp(
             inf=pdf_content, outfp=output_buffer, codec="utf-8", laparams=LAParams()
         )
 
-        # Retrieve the extracted text from the output buffer
+        # 从输出缓冲区中检索提取的文本
         extracted_text = output_buffer.getvalue()
         return extracted_text
 
-    async def process_docx(self, content):
+    async def process_pdf(self, content):
+        # 使用 run_in_threadpool 处理同步操作
+        extracted_text = await submit_task2event_loop(self.process_pdf_sync, content)
+        return extracted_text
+
+    def process_docx_sync(self, content):
         # Convert the binary content to a file-like object
         docx_file = BytesIO(content)
 
@@ -131,6 +142,11 @@ class DocumentConverter:
 
         # Optionally, handle more complex structures like tables, headers, footers if needed
         # For simplicity, this example focuses only on text in paragraphs
+
+        return extracted_text
+
+    async def process_docx(self, content):
+        extracted_text = await submit_task2event_loop(self.process_docx_sync, content)
 
         return extracted_text
 
