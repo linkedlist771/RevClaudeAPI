@@ -33,7 +33,10 @@ User's question:
                 search_res += message + "\n"
                 # [[2]: https://news.cctv.com/china/](https://news.cctv.com/china/)
                 hypper_link = f"[[{idx+1}]: {href}]({href})"
-                hrefs.append("\n" * (1 + idx == 0) + hypper_link + "\n")
+                hypper_link = f"\n{hypper_link}\n"
+                if idx == 0:
+                    hypper_link = "\n" + hypper_link
+                hrefs.append(hypper_link)
 
             # TODO: this will be fixed later, just a trade off
             return self.base_prompt.format(search_results=search_res, prompt=self.prompt), hrefs
