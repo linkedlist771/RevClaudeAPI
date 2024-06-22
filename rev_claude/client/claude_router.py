@@ -68,11 +68,15 @@ def obtain_claude_client():
     }
 
 
-async def patched_generate_data(original_generator, conversation_id):
+async def patched_generate_data(original_generator, conversation_id, hrefs=None):
     # 首先发送 conversation_id
     # 然后，对原始生成器进行迭代，产生剩余的数据
     async for data in original_generator:
         yield build_sse_data(message=data, id=conversation_id)
+    if hrefs:
+        for href in hrefs:
+            yield build_sse_data(message=href, id=conversation_id)
+
     yield build_sse_data(message="closed", id=conversation_id)
 
 
@@ -258,9 +262,10 @@ async def chat(
 
     # 处理message的部分， 如果需要搜索的话:
     logger.debug(f"Need web search: {claude_chat_request.need_web_search}")
+    hrefs = []
     if claude_chat_request.need_web_search:
         from rev_claude.prompts_builder.duckduck_search_prompt import DuckDuckSearchPrompt
-        message = await DuckDuckSearchPrompt(prompt=message).render_prompt()
+        message, hrefs = await DuckDuckSearchPrompt(prompt=message).render_prompt()
         logger.info(f"Prompt After search: \n{message}")
 
     if is_stream:
@@ -274,7 +279,7 @@ async def chat(
             files=files,
             call_back=call_back,
         )
-        streaming_res = patched_generate_data(streaming_res, conversation_id)
+        streaming_res = patched_generate_data(streaming_res, conversation_id, hrefs)
         return StreamingResponse(
             streaming_res,
             media_type="text/event-stream",
