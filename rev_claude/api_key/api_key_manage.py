@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timedelta
 
 import redis
 import uuid
@@ -144,11 +145,15 @@ class APIKeyManager:
         time_diff = current_timestamp - last_usage_time
         wait_time = max(0, API_KEY_REFRESH_INTERVAL - time_diff)  # 确保不显示负数
 
+        current_time = datetime.now()
+        next_usage_time = current_time + timedelta(seconds=wait_time)
+
         message = (
-            f"您的账户是{key_type}类型，使用限制是{usage_limit}次/{API_KEY_REFRESH_INTERVAL_HOURS}小时"
-            f"您需要等待{wait_time}秒后再次使用。"
+            f"您的账户是{key_type}类型，使用限制是{usage_limit}次/{API_KEY_REFRESH_INTERVAL_HOURS}小时。"
+            f"您可以在 {next_usage_time.strftime('%H:%M:%S')} 后再次使用。"
         )
         return message
+
 
     # 这里设置还是用普通的字符串算了。
     def get_api_key_type(self, api_key):

@@ -222,7 +222,11 @@ async def chat(
                         logger.error(
                             f"Failed to create conversation after {max_retry} retries."
                         )
-                        return ("error: ", e)
+                        return StreamingResponse(
+                            build_sse_data(message="创建对话失败，请重新尝试。"),
+                            media_type="text/event-stream",
+                        )
+                        # return ("error: ", e)
                     else:
                         logger.info("Retrying in 2 second...")
                         await asyncio.sleep(2)
