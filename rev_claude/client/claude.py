@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from rev_claude.REMINDING_MESSAGE import (
     NO_EMPTY_PROMPT_MESSAGE,
     PROMPT_TOO_LONG_MESSAGE,
-    EXCEED_LIMIT_MESSAGE,
+    EXCEED_LIMIT_MESSAGE, PLUS_EXPIRE,
 )
 from rev_claude.configs import (
     STREAM_CONNECTION_TIME_OUT,
@@ -336,6 +336,15 @@ class Client:
                                 logger.error(f"permission_error : {text}")
                                 raise Exception(text)
                                 # ClientsStatusManager
+                            if "Invalid model" in text:
+                                logger.error(f"Invalid model : {text}")
+
+                                client_manager = ClientsStatusManager()
+                                client_manager.set_client_error(client_type, client_idx)
+                                logger.error(f"设置账号状态为error")
+                                yield PLUS_EXPIRE
+                                await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                                break
                             if "exceeded_limit" in text:
                                 # 对于plus用户只opus model才设置
                                 if client_type == "plus":
