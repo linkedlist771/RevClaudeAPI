@@ -21,6 +21,7 @@ from rev_claude.configs import (
     PROXIES,
     USE_PROXY,
 )
+from rev_claude.models import ClaudeModels
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import UploadFile, status, HTTPException
 from fastapi.responses import JSONResponse
@@ -338,7 +339,7 @@ class Client:
                             if "exceeded_limit" in text:
                                 # 对于plus用户只opus model才设置
                                 if client_type == "plus":
-                                    if "opus" in model:
+                                    if ClaudeModels.model_is_plus(model):
                                         dict_res = json.loads(text)
                                         error_message = dict_res["error"]
                                         resetAt = int(
