@@ -268,7 +268,9 @@ async def chat(
     hrefs = []
     if claude_chat_request.need_web_search:
         from rev_claude.prompts_builder.duckduck_search_prompt import DuckDuckSearchPrompt
-        message, hrefs = await DuckDuckSearchPrompt(prompt=message).render_prompt()
+        # here we choose a number from 3 to 5
+        message, hrefs = await DuckDuckSearchPrompt(prompt=message,
+                                                    ).render_prompt()
         logger.info(f"Prompt After search: \n{message}")
     call_back = partial(
         push_assistant_message_callback, conversation_history_request, messages, hrefs

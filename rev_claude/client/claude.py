@@ -311,7 +311,7 @@ class Client:
                 #     json=payload,
                 #     timeout=STREAM_TIMEOUT,
                 # ):
-
+                works_fine = False
                 async with httpx.AsyncClient(
                     timeout=STREAM_TIMEOUT, proxies=PROXIES if USE_PROXY else None
                 ) as client:
@@ -325,7 +325,9 @@ class Client:
                         async for text in response.aiter_lines():
                             # logger.debug(f"raw text: {text}")
                             # async with client.stream(method="POST", url=url, headers=headers, json=data) as response:
-
+                            if works_fine == False:
+                                logger.info(f"Streaming message works fine and get the first text:\n {text}")
+                                works_fine = True
                             # logger.info(f"raw text: {text}")
                             # convert a byte string to a string
                             # logger.info(f"raw text: {text}")
@@ -489,8 +491,8 @@ class Client:
         payload = {"uuid": uuid, "name": ""}
 
         headers = self.build_new_chat_payload(uuid)
-        logger.debug(f"headers: \n{headers}")
-        logger.debug(f"payload: \n{payload}")
+        # logger.debug(f"headers: \n{headers}")
+        # logger.debug(f"payload: \n{payload}")
         async with httpx.AsyncClient(
             # proxies=PROXIES if USE_PROXY else None,
             timeout=STREAM_CONNECTION_TIME_OUT,
