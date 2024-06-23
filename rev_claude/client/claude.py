@@ -332,10 +332,7 @@ class Client:
                             # logger.info(f"raw text: {text}")
                             # convert a byte string to a string
                             # logger.info(f"raw text: {text}")
-                            if "permission_error" in text:
-                                logger.error(f"permission_error : {text}")
-                                raise Exception(text)
-                                # ClientsStatusManager
+
                             if "Invalid model" in text:
                                 logger.error(f"Invalid model : {text}")
 
@@ -345,6 +342,10 @@ class Client:
                                 yield PLUS_EXPIRE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                                 break
+                            elif "permission_error" in text:
+                                logger.error(f"permission_error : {text}")
+                                raise Exception(text)
+                                # ClientsStatusManager
                             if "exceeded_limit" in text:
                                 # 对于plus用户只opus model才设置
                                 if client_type == "plus":
@@ -403,6 +404,7 @@ class Client:
                                 response_text += resp_text
                                 yield resp_text
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+
                 logger.info(f"Response text:\n {response_text}")
                 if call_back:
                     await call_back(response_text)
