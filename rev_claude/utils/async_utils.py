@@ -7,12 +7,14 @@ import traceback
 
 
 
-REGISTER_MAY_RETRY = 4
+REGISTER_MAY_RETRY = 1
+REGISTER_MAY_RETRY_RELOAD = 5 # in reload there are more retries
+
 REGISTER_WAIT = 3
 
 
 async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, reload: bool = False):
-    retry_count = REGISTER_MAY_RETRY  # 设置最大重试次数
+    retry_count = REGISTER_MAY_RETRY if not reload else REGISTER_MAY_RETRY_RELOAD
     from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
     cookie_manager = get_cookie_manager()
     while retry_count > 0:
