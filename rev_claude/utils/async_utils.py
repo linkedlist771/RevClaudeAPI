@@ -3,12 +3,9 @@ from tqdm.asyncio import tqdm
 from loguru import logger
 from rev_claude.client.claude import Client
 import traceback
-from typing import TYPE_CHECKING
-if not TYPE_CHECKING:
 
-    from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 
-cookie_manager = get_cookie_manager()
+
 
 REGISTER_MAY_RETRY = 10
 REGISTER_WAIT = 3
@@ -16,6 +13,8 @@ REGISTER_WAIT = 3
 
 async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, reload: bool = False):
     retry_count = REGISTER_MAY_RETRY  # 设置最大重试次数
+    from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
+    cookie_manager = get_cookie_manager()
     while retry_count > 0:
         try:
             client = Client(cookie, cookie_key)
