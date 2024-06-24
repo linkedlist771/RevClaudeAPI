@@ -29,6 +29,20 @@ class CookieManager:
     def get_cookie_account_key(self, cookie_key):
         return f"{cookie_key}:account"
 
+    def get_cookie_organization_key(self, cookie_key):
+        return f"{cookie_key}:organization"
+
+    def update_organization_id(self, cookie_key, organization_id):
+        organization_key = self.get_cookie_organization_key(cookie_key)
+        self.redis.set(organization_key, organization_id)
+        return f"Organization ID for {cookie_key} has been updated."
+
+    def get_organization_id(self, cookie_key):
+        organization_key = self.get_cookie_organization_key(cookie_key)
+        organization_id = self.redis.get(organization_key)
+        return organization_id.decode("utf-8") if organization_id else None
+
+
     # 这里设置一下账号和cookie的type方便后面检索。
 
     # 暂时不设置过期时间，因为我也不知道过期时间是啥时候
@@ -120,7 +134,9 @@ class CookieManager:
         return cookies
 
     # 还是重启一下比较好哎。
-    async def get_all_basic_and_plus_client(self) -> Tuple[List[Client], List[Client]]:
+    async def get_all_basic_and_plus_client(self,
+                                            reload: bool = False
+                                            ) -> Tuple[List[Client], List[Client]]:
         _basic_cookies, _basic_cookie_keys = self.get_all_cookies(
             CookieKeyType.BASIC.value
         )
@@ -128,28 +144,9 @@ class CookieManager:
             CookieKeyType.PLUS.value
         )
         _basic_clients, _plus_clients = await register_clients(
-            _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys
+            _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys,
+            reload
         )
-        # _basic_clients = []
-        # _plus_clients = []
-        # logger.info("Begin register the client.....")
-        # # TODO: make the a async process.
-        # for basic_cookie, basic_cookie_key in tqdm(
-        #     zip(_basic_cookies, _basic_cookie_keys)
-        # ):
-        #     try:
-        #         basic_client = Client(basic_cookie, basic_cookie_key)
-        #         _basic_clients.append(basic_client)
-        #         logger.info(f"Register the basic client: {basic_client}")
-        #     except Exception as e:
-        #         logger.error(f"Failed to register the basic client: {e}")
-        # for plus_cookie, plus_cookie_key in tqdm(zip(_plus_cookies, _plus_cookie_keys)):
-        #     try:
-        #         plus_client = Client(plus_cookie, plus_cookie_key)
-        #         _plus_clients.append(plus_client)
-        #         logger.info(f"Register the plus client: {plus_client}")
-        #     except Exception as e:
-        #         logger.error(f"Failed to register the plus client: {e}")
         return _basic_clients, _plus_clients
 
     def get_all_cookie_status(self):

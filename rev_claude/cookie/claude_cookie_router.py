@@ -29,7 +29,7 @@ async def get_cookies_count():
 
 @router.get("/refresh_cookies")
 async def refresh_cookies():
-    await ClientManager().load_clients()
+    await ClientManager().load_clients(reload=True)
     data = get_cookie_counts()
     return JSONResponse(
         content={"message": "Clients refreshed successfully.", "data": data}

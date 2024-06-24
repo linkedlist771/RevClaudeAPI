@@ -116,6 +116,7 @@ class Client:
 
     async def __set_organization_id__(self):
         self.organization_id = await self.__async_get_organization_id()
+        return self.organization_id
 
     def build_organization_headers(self):
         return {
@@ -131,13 +132,6 @@ class Client:
             "Cookie": self.cookie,
         }
 
-    def get_organization_id(self):
-        url = "https://claude.ai/api/organizations"
-        headers = self.build_organization_headers()
-        response = requests.get(url, headers=headers, impersonate="chrome110")
-        res = json.loads(response.text)
-        uuid = res[0]["uuid"]
-        return uuid
 
     async def __async_get_organization_id(self):
         url = "https://claude.ai/api/organizations"
@@ -228,12 +222,13 @@ class Client:
                     client_manager.set_client_limited(
                         client_type, client_idx, start_time
                     )
-                elif "permission" in text:
+                elif "Invalid" in text:
                     logger.error(f"permission_error : {text}")
 
                     client_manager = ClientsStatusManager()
                     client_manager.set_client_error(client_type, client_idx)
                     logger.error(f"设置账号状态为error")
+
 
         except json.JSONDecodeError:
             events = []
@@ -380,11 +375,11 @@ class Client:
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                                 break
 
-                            elif "prompt is too long" in text:
+                            if "prompt is too long" in text:
                                 yield PROMPT_TOO_LONG_MESSAGE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
 
-                            elif "concurrent connections has" in text:
+                            if "concurrent connections has" in text:
                                 logger.error(
                                     f"concurrent connections has exceeded the limit"
                                 )

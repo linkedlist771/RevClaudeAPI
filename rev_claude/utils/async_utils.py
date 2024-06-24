@@ -4,68 +4,64 @@ from loguru import logger
 from rev_claude.client.claude import Client
 import traceback
 
+from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
+
+cookie_manager = get_cookie_manager()
 
 REGISTER_MAY_RETRY = 10
 REGISTER_WAIT = 3
 
 
-
-async def register_basic_client(basic_cookie, basic_cookie_key):
+async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, reload: bool = False):
     retry_count = REGISTER_MAY_RETRY  # 设置最大重试次数
     while retry_count > 0:
         try:
-            basic_client = Client(basic_cookie, basic_cookie_key)
-            await basic_client.__set_organization_id__()
-            logger.info(f"Registered the basic client: {basic_client}")
-            return basic_client
+            client = Client(cookie, cookie_key)
+            if not reload:
+                # first , try to obtain it from the reids, if not then register it
+                organization_id = cookie_manager.get_organization_id(cookie_key)
+
+                if organization_id:
+                    client.organization_id = organization_id
+                else:
+                    organization_id = await client.__set_organization_id__()
+                    cookie_manager.update_organization_id(cookie_key, organization_id)
+                    logger.info(f"Registered the {cookie_type} client: {client}")
+            else:
+                organization_id = await client.__set_organization_id__()
+                cookie_manager.update_organization_id(cookie_key, organization_id)
+                logger.info(f"Reloaded the {cookie_type} client: {client}")
+            return client
         except Exception as e:
             retry_count -= 1
             logger.error(
-                f"Failed to register the basic client, retrying... {retry_count} retries left. \n Error: {traceback.format_exc()}"
+                f"Failed to register the {cookie_type} client, retrying... {retry_count} retries left. \n Error: {traceback.format_exc()}"
             )
             if retry_count == 0:
                 logger.error(
-                    "Failed to register the basic client after several retries."
-                )
-                return None
-            await asyncio.sleep(REGISTER_WAIT)  # 在重试前暂停1秒
-
-
-async def register_plus_client(plus_cookie, plus_cookie_key):
-    retry_count = REGISTER_MAY_RETRY  # 设置最大重试次数
-    while retry_count > 0:
-        try:
-            plus_client = Client(plus_cookie, plus_cookie_key)
-            await plus_client.__set_organization_id__()
-            logger.info(f"Registered the plus client: {plus_client}")
-            return plus_client
-        except Exception as e:
-            retry_count -= 1
-            logger.error(
-                f"Failed to register the plus client, retrying... {retry_count} retries left. \n Error: {traceback.format_exc()}"
-            )
-            if retry_count == 0:
-                logger.error(
-                    "Failed to register the plus client after several retries."
+                    f"Failed to register the {cookie_type} client after several retries."
                 )
                 return None
             await asyncio.sleep(REGISTER_WAIT)  # 在重试前暂停1秒
 
 
 async def register_clients(
-    _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys
+    _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys,
+    reload: bool = False
 ):
     basic_tasks = []
     plus_tasks = []
     _basic_clients = []
     _plus_clients = []
     for plus_cookie, plus_cookie_key in zip(_plus_cookies, _plus_cookie_keys):
-        task = asyncio.create_task(register_plus_client(plus_cookie, plus_cookie_key))
+        task = asyncio.create_task(
+            _register_clients(plus_cookie, plus_cookie_key, "plus", reload)
+        )
         plus_tasks.append(task)
 
     for basic_cookie, basic_cookie_key in zip(_basic_cookies, _basic_cookie_keys):
         task = asyncio.create_task(
-            register_basic_client(basic_cookie, basic_cookie_key)
+            _register_clients(basic_cookie, basic_cookie_key, "basic", reload)
         )
         basic_tasks.append(task)
 
