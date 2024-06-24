@@ -5,6 +5,8 @@ from fastapi.openapi.utils import get_openapi
 
 
 from rev_claude.middlewares.docs_middleware import ApidocBasicAuthMiddleware
+from rev_claude.middlewares.not_found_middleware import NotFoundResponseMiddleware
+
 
 
 def register_cross_origin(app: FastAPI):
@@ -41,4 +43,5 @@ def register_docs_auth(app: FastAPI):
 def register_middleware(app: FastAPI):
     app = register_cross_origin(app)
     app = register_docs_auth(app)
+    app.add_middleware(NotFoundResponseMiddleware)
     return app
