@@ -138,9 +138,10 @@ class Client:
         async with httpx.AsyncClient() as client:
             response = await client.get(url, headers=self.build_organization_headers())
             res = response.json()
+            res_str = response.text
+            if "We are unable to serve your request" in res_str:
+                raise Exception("We are unable to serve your request")
             logger.debug(f"res : {res}")
-            if "Invalid" in res:
-                raise ValueError("Invalid cookie")
             uuid = res[0]["uuid"]
             return uuid
 

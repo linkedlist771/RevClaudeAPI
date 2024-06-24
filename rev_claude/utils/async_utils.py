@@ -39,11 +39,12 @@ async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, relo
         # if "Invalid" in res:
         #     raise ValueError("Invalid cookie")
         # uuid = res[0]["uuid"]
-        except ValueError as e:
-            logger.error(f"Invalid cookie: {cookie}")
-            return None
+
         except Exception as e:
-            retry_count -= 1
+            if "We are unable to serve your request" in str(e):
+                retry_count -= 1
+            else:
+                retry_count = 0
             logger.error(
                 f"Failed to register the {cookie_type} client, retrying... {retry_count} retries left. \n Error: {traceback.format_exc()}"
             )
