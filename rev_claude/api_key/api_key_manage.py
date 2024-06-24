@@ -12,7 +12,7 @@ from rev_claude.configs import (
     API_KEY_REFRESH_INTERVAL,
     API_KEY_REFRESH_INTERVAL_HOURS,
     REDIS_HOST,
-    REDIS_PORT,
+    REDIS_PORT, ACCOUNT_DELETE_LIMIT,
 )
 
 
@@ -112,6 +112,12 @@ class APIKeyManager:
 
     def has_exceeded_limit(self, api_key) -> bool:
         current_usage = self.get_current_usage(api_key)
+        # 首先检测是不是超过限制进行帅脚本了
+        if current_usage >= ACCOUNT_DELETE_LIMIT:
+            self.redis.delete(api_key)
+            return True
+
+
         key_type = self.get_api_key_type(api_key)
         if key_type == APIKeyType.BASIC.value:
             usage_limit = BASIC_KEY_MAX_USAGE
