@@ -45,6 +45,8 @@ async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, relo
                 retry_count -= 1
             else:
                 retry_count = 0
+            logger.error(f"error:"
+                         f"{str (e)}")
             logger.error(
                 f"Failed to register the {cookie_type} client, retrying... {retry_count} retries left. \n Error: {traceback.format_exc()}"
             )
