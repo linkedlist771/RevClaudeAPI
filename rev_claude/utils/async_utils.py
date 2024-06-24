@@ -21,7 +21,7 @@ async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, relo
             if not reload:
                 # first , try to obtain it from the reids, if not then register it
                 organization_id = cookie_manager.get_organization_id(cookie_key)
-
+                logger.debug(f"organization_id got from redis: {organization_id}")
                 if organization_id:
                     client.organization_id = organization_id
                 else:
