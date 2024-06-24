@@ -7,7 +7,7 @@ import traceback
 
 
 
-REGISTER_MAY_RETRY = 10
+REGISTER_MAY_RETRY = 4
 REGISTER_WAIT = 3
 
 
