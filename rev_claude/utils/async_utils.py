@@ -32,7 +32,16 @@ async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, relo
                 organization_id = await client.__set_organization_id__()
                 cookie_manager.update_organization_id(cookie_key, organization_id)
                 logger.info(f"Reloaded the {cookie_type} client: {client}")
+
             return client
+        # res = response.json()
+        # logger.debug(f"res : {res}")
+        # if "Invalid" in res:
+        #     raise ValueError("Invalid cookie")
+        # uuid = res[0]["uuid"]
+        except ValueError as e:
+            logger.error(f"Invalid cookie: {cookie}")
+            return None
         except Exception as e:
             retry_count -= 1
             logger.error(

@@ -139,6 +139,8 @@ class Client:
             response = await client.get(url, headers=self.build_organization_headers())
             res = response.json()
             logger.debug(f"res : {res}")
+            if "Invalid" in res:
+                raise ValueError("Invalid cookie")
             uuid = res[0]["uuid"]
             return uuid
 
