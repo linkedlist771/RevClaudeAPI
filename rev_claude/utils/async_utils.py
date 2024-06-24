@@ -4,7 +4,7 @@ from loguru import logger
 from rev_claude.client.claude import Client
 import traceback
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:
+if not TYPE_CHECKING:
 
     from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 
