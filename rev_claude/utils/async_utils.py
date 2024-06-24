@@ -8,7 +8,7 @@ import traceback
 
 
 REGISTER_MAY_RETRY = 1
-REGISTER_MAY_RETRY_RELOAD = 5 # in reload there are more retries
+REGISTER_MAY_RETRY_RELOAD = 10 # in reload there are more retries
 
 REGISTER_WAIT = 3
 
