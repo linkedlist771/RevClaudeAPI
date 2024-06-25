@@ -28,6 +28,8 @@ app = register_middleware(app)
 async def _get_client_status(api_key: str = Query(None, alias="apikey")):
     manager = get_api_key_manager()
     logger.debug(f"API Key:{api_key}")
+    if not api_key:
+        raise HTTPException(status_code=401, detail="API Key is required")
     if not manager.is_api_key_valid(api_key):
         raise HTTPException(status_code=401, detail="Invalid API Key")
     basic_clients, plus_clients = ClientManager().get_clients()
