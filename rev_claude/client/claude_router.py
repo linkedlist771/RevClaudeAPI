@@ -142,7 +142,7 @@ async def chat(
     has_reached_limit = manager.has_exceeded_limit(api_key)
     if has_reached_limit:
         # 首先check一下用户是不是被删除了
-        is_deleted = manager.is_api_key_valid(api_key)
+        is_deleted = not manager.is_api_key_valid(api_key)
         if is_deleted:
             return StreamingResponse(
                 build_sse_data(message="由于滥用API key，已经被删除，如有疑问，请联系管理员。"),
