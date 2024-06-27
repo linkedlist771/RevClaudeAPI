@@ -199,7 +199,7 @@ async def chat(
             ),
             media_type="text/event-stream",
         )
-    logger.info(f"client_idx: {client_idx}, client_idx type: {type(client_idx)}")
+    # logger.info(f"client_idx: {client_idx}, client_idx type: {type(client_idx)}")
 
     if client_type == "plus":
         claude_client = plus_clients[client_idx]
