@@ -71,7 +71,9 @@ class ClientsStatusManager:
         if value is None:
             return None
         try:
-            return json.loads(value)
+            res = json.loads(value)
+            if not isinstance(res, dict):
+                return {}
         except (json.JSONDecodeError, TypeError):
             return {}
     def set_client_limited(self, client_type, client_idx, start_time, model):
