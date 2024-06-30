@@ -184,6 +184,7 @@ class ClientsStatusManager:
                     _message = self.get_limited_message(key, client_type, idx)
                 # if 948928 == idx:
                 #     logger.debug(f"is_active: {is_active}")
+                client_type = "normal" if client_type == "basic" else client_type
                 status = ClientsStatus(
                     id=account,
                     status=_status,
