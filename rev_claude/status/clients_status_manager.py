@@ -86,20 +86,19 @@ class ClientsStatusManager:
         client_status_start_time_key = self.get_client_status_start_time_key(
             client_type, client_idx
         )
-        if client_idx == 948928:
-            logger.debug(f"status：{self.redis.get(client_status_key)}")
+        # if client_idx == 948928:
+        #     logger.debug(f"status：{self.redis.get(client_status_key)}")
         # 首先判断这个是不是已经是cd状态了。
         if self.redis.get(client_status_key) == ClientStatus.CD.value:
             return
 
         self.redis.set(client_status_key, ClientStatus.CD.value)
-        logger.debug(f"status：{self.redis.get(client_status_key)}")
         # 这里就设计到另一个设计了，
         # 首先获取这个字典对应的值
         start_time_dict = self.get_dict_value(client_status_start_time_key)
-        logger.debug(f"start_time_dict: {start_time_dict}")
-        logger.debug(f"model: {model}")
-        logger.debug(f"start_time: {start_time}")
+        # logger.debug(f"start_time_dict: {start_time_dict}")
+        # logger.debug(f"model: {model}")
+        # logger.debug(f"start_time: {start_time}")
         start_time_dict[model] = start_time
         self.redis.set(client_status_start_time_key, json.dumps(start_time_dict))
 
@@ -119,8 +118,8 @@ class ClientsStatusManager:
     def set_client_active_when_cd(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         status = self.redis.get(client_status_key)
-        if client_idx == 948928:
-            logger.debug(f"status: {status}")
+        # if client_idx == 948928:
+        #     logger.debug(f"status: {status}")
 
         if status == ClientStatus.CD.value:
             client_status_start_time_key = self.get_client_status_start_time_key(
@@ -128,8 +127,8 @@ class ClientsStatusManager:
             )
             current_time = time.time()
             start_time_dict = self.get_dict_value(client_status_start_time_key)
-            if client_idx == 948928:
-                logger.debug(f"start_time_dict: {start_time_dict}")
+            # if client_idx == 948928:
+            #     logger.debug(f"start_time_dict: {start_time_dict}")
             for model, start_time in start_time_dict.items():
                 time_elapsed = current_time - start_time
                 if not(time_elapsed > 8 * 3600):
@@ -155,9 +154,9 @@ class ClientsStatusManager:
         client_status_key = self.get_client_status_key(client_type, client_idx)
         start_time_key = self.get_client_status_start_time_key(client_type, client_idx)
         start_times = self.get_dict_value(start_time_key)
-        if client_idx == 948928:
-            logger.debug(f"start_times: {start_times}")
-            logger.debug(f"client_status_key: {client_status_key}")
+        # if client_idx == 948928:
+        #     logger.debug(f"start_times: {start_times}")
+        #     logger.debug(f"client_status_key: {client_status_key}")
         if (not self.redis.exists(client_status_key)) or (not start_times):
             self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
 
@@ -183,8 +182,8 @@ class ClientsStatusManager:
                     _status = ClientStatus.CD.value
                     key = self.get_client_status_start_time_key(client_type, idx)
                     _message = self.get_limited_message(key, client_type, idx)
-                if 948928 == idx:
-                    logger.debug(f"is_active: {is_active}")
+                # if 948928 == idx:
+                #     logger.debug(f"is_active: {is_active}")
                 status = ClientsStatus(
                     id=account,
                     status=_status,
