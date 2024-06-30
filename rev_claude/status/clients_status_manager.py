@@ -93,6 +93,7 @@ class ClientsStatusManager:
             return
 
         self.redis.set(client_status_key, ClientStatus.CD.value)
+        logger.debug(f"status：{self.redis.get(client_status_key)}")
         # 这里就设计到另一个设计了，
         # 首先获取这个字典对应的值
         start_time_dict = self.get_dict_value(client_status_start_time_key)
