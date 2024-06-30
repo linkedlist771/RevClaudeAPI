@@ -57,13 +57,6 @@ class ClientsStatusManager:
         self.redis = redis.StrictRedis(
             host=host, port=port, db=db, decode_responses=True
         )
-
-    # 8 小时刷新一次。
-    # 需要注意的是这里的键值对应该有几种呢？  应该有三种花键
-    # 基本键值通过client类型[plus, basic]和idx[0,1,2,3,4,5,6,]来组装:
-    #  client_status_key  = f"status-{client_type}-{client_idx}", 其值为ClientStatus
-    #  client_status_start_time_key = f"{client_status_key}:start_time", 其值为时间戳, 记录当前状态的开始时间， 开始的时间。
-
     def get_client_status_key(self, client_type, client_idx):
         return f"status-{client_type}-{client_idx}"
 
