@@ -86,6 +86,8 @@ class ClientsStatusManager:
         client_status_start_time_key = self.get_client_status_start_time_key(
             client_type, client_idx
         )
+        if client_idx == 948928:
+            logger.debug(f"status：{self.redis.get(client_status_key)}")
         # 首先判断这个是不是已经是cd状态了。
         if self.redis.get(client_status_key) == ClientStatus.CD.value:
             return
