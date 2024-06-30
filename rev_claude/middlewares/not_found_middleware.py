@@ -9,6 +9,5 @@ class NotFoundResponseMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         if response.status_code == 404:
             # 关闭连接，不返回响应
-            return Response(content='', status_code=204)
+            return Response(content="", status_code=204)
         return response
-

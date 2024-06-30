@@ -4,7 +4,6 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-
 from rev_claude.client.client_manager import ClientManager
 from rev_claude.lifespan import lifespan
 from rev_claude.middlewares.register_middlewares import register_middleware
@@ -17,8 +16,6 @@ parser.add_argument("--port", default=6238, help="port")
 args = parser.parse_args()
 logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
 app = FastAPI(lifespan=lifespan)
-
-
 app = register_middleware(app)
 
 

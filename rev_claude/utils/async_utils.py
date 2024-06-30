@@ -5,17 +5,18 @@ from rev_claude.client.claude import Client
 import traceback
 
 
-
-
 REGISTER_MAY_RETRY = 1
-REGISTER_MAY_RETRY_RELOAD = 10 # in reload there are more retries
+REGISTER_MAY_RETRY_RELOAD = 10  # in reload there are more retries
 
 REGISTER_WAIT = 3
 
 
-async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, reload: bool = False):
+async def _register_clients(
+    cookie: str, cookie_key: str, cookie_type: str, reload: bool = False
+):
     retry_count = REGISTER_MAY_RETRY if not reload else REGISTER_MAY_RETRY_RELOAD
     from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
+
     cookie_manager = get_cookie_manager()
     while retry_count > 0:
         try:
@@ -48,8 +49,7 @@ async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, relo
                 retry_count -= 1
             else:
                 retry_count = 0
-            logger.error(f"error:"
-                         f"{str (e)}")
+            logger.error(f"error:" f"{str (e)}")
             logger.error(
                 f"Failed to register the {cookie_type} client, retrying... {retry_count} retries left. \n Error: {traceback.format_exc()}"
             )
@@ -62,8 +62,11 @@ async def _register_clients(cookie: str, cookie_key: str, cookie_type: str, relo
 
 
 async def register_clients(
-    _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys,
-    reload: bool = False
+    _basic_cookies,
+    _basic_cookie_keys,
+    _plus_cookies,
+    _plus_cookie_keys,
+    reload: bool = False,
 ):
     basic_tasks = []
     plus_tasks = []

@@ -145,7 +145,9 @@ async def chat(
         is_deleted = not manager.is_api_key_valid(api_key)
         if is_deleted:
             return StreamingResponse(
-                build_sse_data(message="由于滥用API key，已经被删除，如有疑问，请联系管理员。"),
+                build_sse_data(
+                    message="由于滥用API key，已经被删除，如有疑问，请联系管理员。"
+                ),
                 media_type="text/event-stream",
             )
         message = manager.generate_exceed_message(api_key)
@@ -262,7 +264,6 @@ async def chat(
         )
     )
 
-
     # 处理文件的部分
     attachments = claude_chat_request.attachments
     if attachments is None:
@@ -278,10 +279,14 @@ async def chat(
     logger.debug(f"Need web search: {claude_chat_request.need_web_search}")
     hrefs = []
     if claude_chat_request.need_web_search:
-        from rev_claude.prompts_builder.duckduck_search_prompt import DuckDuckSearchPrompt
+        from rev_claude.prompts_builder.duckduck_search_prompt import (
+            DuckDuckSearchPrompt,
+        )
+
         # here we choose a number from 3 to 5
-        message, hrefs = await DuckDuckSearchPrompt(prompt=message,
-                                                    ).render_prompt()
+        message, hrefs = await DuckDuckSearchPrompt(
+            prompt=message,
+        ).render_prompt()
         logger.info(f"Prompt After search: \n{message}")
     call_back = partial(
         push_assistant_message_callback, conversation_history_request, messages, hrefs

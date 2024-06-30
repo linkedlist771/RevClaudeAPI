@@ -42,7 +42,6 @@ class CookieManager:
         organization_id = self.redis.get(organization_key)
         return organization_id.decode("utf-8") if organization_id else None
 
-
     # 这里设置一下账号和cookie的type方便后面检索。
 
     # 暂时不设置过期时间，因为我也不知道过期时间是啥时候
@@ -134,9 +133,9 @@ class CookieManager:
         return cookies
 
     # 还是重启一下比较好哎。
-    async def get_all_basic_and_plus_client(self,
-                                            reload: bool = False
-                                            ) -> Tuple[List[Client], List[Client]]:
+    async def get_all_basic_and_plus_client(
+        self, reload: bool = False
+    ) -> Tuple[List[Client], List[Client]]:
         _basic_cookies, _basic_cookie_keys = self.get_all_cookies(
             CookieKeyType.BASIC.value
         )
@@ -144,8 +143,7 @@ class CookieManager:
             CookieKeyType.PLUS.value
         )
         _basic_clients, _plus_clients = await register_clients(
-            _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys,
-            reload
+            _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys, reload
         )
         return _basic_clients, _plus_clients
 

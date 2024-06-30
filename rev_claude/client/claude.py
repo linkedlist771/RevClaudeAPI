@@ -13,7 +13,8 @@ from fastapi import HTTPException
 from rev_claude.REMINDING_MESSAGE import (
     NO_EMPTY_PROMPT_MESSAGE,
     PROMPT_TOO_LONG_MESSAGE,
-    EXCEED_LIMIT_MESSAGE, PLUS_EXPIRE,
+    EXCEED_LIMIT_MESSAGE,
+    PLUS_EXPIRE,
 )
 from rev_claude.configs import (
     STREAM_CONNECTION_TIME_OUT,
@@ -132,7 +133,6 @@ class Client:
             "Cookie": self.cookie,
         }
 
-
     async def __async_get_organization_id(self):
         url = "https://claude.ai/api/organizations"
         async with httpx.AsyncClient() as client:
@@ -158,30 +158,7 @@ class Client:
         else:
             return "application/octet-stream"
 
-    # Lists all the conversations you had with Claude
-    def list_all_conversations(self):
-        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
-
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Referer": "https://claude.ai/chats",
-            "Content-Type": "application/json",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "Connection": "keep-alive",
-            "Cookie": self.cookie,
-        }
-
-        response = requests.get(url, headers=headers, impersonate="chrome110")
-        conversations = response.json()
-
-        # Returns all conversation information in a list
-        if response.status_code == 200:
-            return conversations
-        else:
-            print(f"Error: {response.status_code} - {response.text}")
+    # Lists all the conversations you had with Claud
 
     # Send Message to Claude
 
@@ -208,7 +185,7 @@ class Client:
     async def parse_text(self, text, client_type, client_idx):
         # TODO: add error handling for invalid model.
         try:
-            logger.debug(f"parsing_text: {text}")
+            logger.debug(f"parsing_text: \n{text}")
             parsed_response = json.loads(text)
             if "error" in parsed_response:
 
@@ -232,7 +209,6 @@ class Client:
                     client_manager = ClientsStatusManager()
                     client_manager.set_client_error(client_type, client_idx)
                     logger.error(f"设置账号状态为error")
-
 
         except json.JSONDecodeError:
             events = []
@@ -326,7 +302,9 @@ class Client:
                             # logger.debug(f"raw text: {text}")
                             # async with client.stream(method="POST", url=url, headers=headers, json=data) as response:
                             if works_fine == False:
-                                logger.info(f"Streaming message works fine and get the first text:\n {text}")
+                                logger.info(
+                                    f"Streaming message works fine and get the first text:\n {text}"
+                                )
                                 works_fine = True
                             # logger.info(f"raw text: {text}")
                             # convert a byte string to a string
@@ -478,7 +456,7 @@ class Client:
         formatted_uuid = f"{random_uuid_str[0:8]}-{random_uuid_str[9:13]}-{random_uuid_str[14:18]}-{random_uuid_str[19:23]}-{random_uuid_str[24:]}"
         return formatted_uuid
 
-    def build_new_chat_payload(self, uuid):
+    def build_new_chat_headers(self, uuid):
         return {
             # "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "User-Agent": get_random_user_agent(),
@@ -495,13 +473,50 @@ class Client:
             "TE": "trailers",
         }
 
+    def build_get_conversation_histories_headers(self, url_path):
+        return {
+            "Alt-Svc": "h3=':443'; ma=86400",
+            "Cf-Cache-Status": "DYNAMIC",
+            # "Cf-Ray": "89a7300dae7c827c-TPE",
+            "Content-Encoding": "br",
+            # "Content-Security-Policy": "script-src 'strict-dynamic' 'wasm-unsafe-eval' https: 'nonce-17ba8129-a77d-4672-b23d-4662a4cbb39d'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'; block-all-mixed-content; upgrade-insecure-requests",
+            "Content-Type": "application/json",
+            # "Date": "Thu, 27 Jun 2024 17:34:25 GMT",
+            "Server": "cloudflare",
+            "Set-Cookie": self.cookie,
+            # f"activitySessionId=ad8f37d8-d54a-4730-be0a-c86e39b90f30; Path=/; Expires=Fri, 28 Jun 2024 05:34:25 GMT; Secure; HttpOnly; SameSite=lax",
+            "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+            "Vary": "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Url",
+            "Via": "1.1 google",
+            "X-Activity-Session-Id": "ad8f37d8-d54a-4730-be0a-c86e39b90f30",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "SAMEORIGIN",
+            "X-Request-Pathname": url_path,
+            # "/api/organizations/dc00b293-7c1c-43f9-ac4a-d14d501e73ca/chat_conversations/0796759-9efe-4875-9984-8dc2021640bc",
+            "X-Xss-Protection": "1; mode=block",
+        }
+
+    async def get_conversation_histories(self, conversation_id):
+        # Q:与prefix相对的是什么
+        # A: 与prefix相对的是suffix
+        path = f"/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}"
+        # url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}"
+        url = f"https://claude.ai{path}"
+        headers = self.build_get_conversation_histories_headers(path)
+        async with httpx.AsyncClient(
+            # proxies=PROXIES if USE_PROXY else None,
+            timeout=STREAM_CONNECTION_TIME_OUT,
+        ) as client:
+            response = await client.get(url, headers=headers)
+        return response.json()
+
     async def create_new_chat(self, model):
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
         uuid = self.generate_uuid()
         # payload = json.dumps({"uuid": uuid, "name": "", "model": model})
         payload = {"uuid": uuid, "name": ""}
 
-        headers = self.build_new_chat_payload(uuid)
+        headers = self.build_new_chat_headers(uuid)
         # logger.debug(f"headers: \n{headers}")
         # logger.debug(f"payload: \n{payload}")
         async with httpx.AsyncClient(
@@ -509,17 +524,6 @@ class Client:
             timeout=STREAM_CONNECTION_TIME_OUT,
         ) as client:
             response = await client.post(url, headers=headers, json=payload)
-        return response.json()
-
-    async def set_conversation_model(self, model, uuid):
-        url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations"
-        uuid = self.generate_uuid()
-        # payload = json.dumps({"uuid": uuid, "name": "", "model": model})
-        payload = json.dumps({"uuid": uuid, "name": ""})
-
-        headers = self.build_new_chat_payload(uuid)
-        async with httpx.AsyncClient() as client:
-            response = await client.post(url, headers=headers, data=payload)
         return response.json()
 
     # Resets all the conversations

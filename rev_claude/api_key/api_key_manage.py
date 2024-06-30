@@ -12,8 +12,11 @@ from rev_claude.configs import (
     API_KEY_REFRESH_INTERVAL,
     API_KEY_REFRESH_INTERVAL_HOURS,
     REDIS_HOST,
-    REDIS_PORT, ACCOUNT_DELETE_LIMIT,
+    REDIS_PORT,
+    ACCOUNT_DELETE_LIMIT,
 )
+
+# from redis.asyncio import StrictRedis
 
 
 class APIKeyType(Enum):
@@ -117,7 +120,6 @@ class APIKeyManager:
             self.redis.delete(api_key)
             return True
 
-
         key_type = self.get_api_key_type(api_key)
         if key_type == APIKeyType.BASIC.value:
             usage_limit = BASIC_KEY_MAX_USAGE
@@ -159,7 +161,6 @@ class APIKeyManager:
             f"您可以在 {next_usage_time.strftime('%H:%M:%S')} 后再次使用。"
         )
         return message
-
 
     # 这里设置还是用普通的字符串算了。
     def get_api_key_type(self, api_key):

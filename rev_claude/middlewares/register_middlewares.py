@@ -8,7 +8,6 @@ from rev_claude.middlewares.docs_middleware import ApidocBasicAuthMiddleware
 from rev_claude.middlewares.not_found_middleware import NotFoundResponseMiddleware
 
 
-
 def register_cross_origin(app: FastAPI):
     app.add_middleware(
         CORSMiddleware,
