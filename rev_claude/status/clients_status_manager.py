@@ -116,12 +116,17 @@ class ClientsStatusManager:
     def set_client_active_when_cd(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         status = self.redis.get(client_status_key)
+        if client_idx == 948928:
+            logger.debug(f"status: {status}")
+
         if status == ClientStatus.CD.value:
             client_status_start_time_key = self.get_client_status_start_time_key(
                 client_type, client_idx
             )
             current_time = time.time()
             start_time_dict = self.get_dict_value(client_status_start_time_key)
+            if client_idx == 948928:
+                logger.debug(f"start_time_dict: {start_time_dict}")
             for model, start_time in start_time_dict.items():
                 time_elapsed = current_time - start_time
                 if not(time_elapsed > 8 * 3600):
@@ -159,6 +164,7 @@ class ClientsStatusManager:
     def get_all_clients_status(self, basic_clients, plus_clients):
         def process_clients(clients, client_type, models):
             for idx, client in clients.items():
+
                 self.create_if_not_exist(client_type, idx, models)
                 account = cookie_manager.get_account(client.cookie_key)
                 is_active = self.set_client_active_when_cd(client_type, idx)
@@ -170,7 +176,8 @@ class ClientsStatusManager:
                     _status = ClientStatus.CD.value
                     key = self.get_client_status_start_time_key(client_type, idx)
                     _message = self.get_limited_message(key, client_type, idx)
-
+                if 948928 == idx:
+                    logger.debug(f"is_active: {is_active}")
                 status = ClientsStatus(
                     id=account,
                     status=_status,
