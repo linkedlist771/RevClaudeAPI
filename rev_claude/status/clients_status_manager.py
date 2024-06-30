@@ -198,6 +198,6 @@ class ClientsStatusManager:
         from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 
         cookie_manager = get_cookie_manager()
-        process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
         process_clients(plus_clients, "plus", [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value])
+        process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
         return clients_status
