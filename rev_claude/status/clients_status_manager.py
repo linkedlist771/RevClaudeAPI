@@ -74,6 +74,8 @@ class ClientsStatusManager:
             res = json.loads(value)
             if not isinstance(res, dict):
                 return {}
+            else:
+                return res
         except (json.JSONDecodeError, TypeError):
             return {}
     def set_client_limited(self, client_type, client_idx, start_time, model):
