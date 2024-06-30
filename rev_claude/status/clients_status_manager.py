@@ -69,7 +69,7 @@ class ClientsStatusManager:
     def get_dict_value(self, key):
         value = self.redis.get(key)
         if value is None:
-            return None
+            return {}
         try:
             res = json.loads(value)
             if not isinstance(res, dict):
