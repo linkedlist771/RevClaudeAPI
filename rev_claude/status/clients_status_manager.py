@@ -143,7 +143,8 @@ class ClientsStatusManager:
 
     def create_if_not_exist(self, client_type: str, client_idx: int, models: list[str]):
         client_status_key = self.get_client_status_key(client_type, client_idx)
-        if not self.redis.exists(client_status_key):
+        start_times = self.get_dict_value(client_status_key)
+        if not self.redis.exists(client_status_key) or not start_times:
             self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
 
             val = json.dumps({model: time.time() for model in models})
