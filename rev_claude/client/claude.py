@@ -182,7 +182,7 @@ class Client:
             "Sentry-Trace": generate_trace_id()[2:],
         }
 
-    async def parse_text(self, text, client_type, client_idx):
+    async def parse_text(self, text, client_type, client_idx, model):
         # TODO: add error handling for invalid model.
         try:
             logger.debug(f"parsing_text: \n{text}")
@@ -201,7 +201,7 @@ class Client:
                     start_time = int(refresh_time) - 8 * 3600
                     client_manager = ClientsStatusManager()
                     client_manager.set_client_limited(
-                        client_type, client_idx, start_time
+                        client_type, client_idx, start_time, model
                     )
                 elif "Invalid" in text:
                     logger.error(f"permission_error : {text}")
@@ -326,20 +326,21 @@ class Client:
                             if "exceeded_limit" in text:
                                 # 对于plus用户只opus model才设置
                                 if client_type == "plus":
-                                    if ClaudeModels.model_is_plus(model):
-                                        dict_res = json.loads(text)
-                                        error_message = dict_res["error"]
-                                        resetAt = int(
-                                            json.loads(error_message["message"])[
-                                                "resetsAt"
-                                            ]
-                                        )
-                                        refresh_time = resetAt
-                                        start_time = int(refresh_time) - 8 * 3600
-                                        client_manager = ClientsStatusManager()
-                                        client_manager.set_client_limited(
-                                            client_type, client_idx, start_time
-                                        )
+                                    # if ClaudeModels.model_is_plus(model): 这个地方就不需要check了
+                                    dict_res = json.loads(text)
+                                    error_message = dict_res["error"]
+                                    resetAt = int(
+                                        json.loads(error_message["message"])[
+                                            "resetsAt"
+                                        ]
+                                    )
+                                    refresh_time = resetAt
+                                    start_time = int(refresh_time) - 8 * 3600
+                                    client_manager = ClientsStatusManager()
+                                    client_manager.set_client_limited(
+                                        client_type, client_idx, start_time,
+                                        model
+                                    )
                                 else:
                                     dict_res = json.loads(text)
                                     error_message = dict_res["error"]
@@ -350,7 +351,7 @@ class Client:
                                     start_time = int(refresh_time) - 8 * 3600
                                     client_manager = ClientsStatusManager()
                                     client_manager.set_client_limited(
-                                        client_type, client_idx, start_time
+                                        client_type, client_idx, start_time, model
                                     )
                                 logger.error(f"exceeded_limit : {text}")
                                 yield EXCEED_LIMIT_MESSAGE
@@ -370,7 +371,7 @@ class Client:
                                 )
 
                             response_parse_text = await self.parse_text(
-                                text, client_type, client_idx
+                                text, client_type, client_idx, model
                             )
                             # logger.info(f"parsed text: {response_parse_text}")
                             if response_parse_text:
