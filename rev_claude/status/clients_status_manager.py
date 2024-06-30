@@ -5,6 +5,7 @@ import redis
 from enum import Enum
 import time
 from pydantic import BaseModel
+from loguru import logger
 from rev_claude.configs import REDIS_HOST
 from rev_claude.models import ClaudeModels
 
@@ -89,6 +90,9 @@ class ClientsStatusManager:
         # 这里就设计到另一个设计了，
         # 首先获取这个字典对应的值
         start_time_dict = self.get_dict_value(client_status_start_time_key)
+        logger.debug(f"start_time_dict: {start_time_dict}")
+        logger.debug(f"model: {model}")
+        logger.debug(f"start_time: {start_time}")
         start_time_dict[model] = start_time
         self.redis.set(client_status_start_time_key, json.dumps(start_time_dict))
 
