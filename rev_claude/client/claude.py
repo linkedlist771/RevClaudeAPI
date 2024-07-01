@@ -254,7 +254,6 @@ class Client:
         call_back=None,
         timeout=120,
     ):
-      async def process_error_message(text):
 
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
         __payload = {
