@@ -378,8 +378,9 @@ class Client:
                             response_parse_text = ""
                             if sse is not None:
                                 data = json.loads(sse.data)
-                                message = data["message"]
-                                response_parse_text = message
+                                if "completion" in list(data.keys()):
+                                    message = data["completion"]
+                                    response_parse_text = message
 
 
                             # logger.info(f"parsed text: {response_parse_text}")
