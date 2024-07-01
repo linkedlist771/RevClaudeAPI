@@ -291,6 +291,8 @@ class Client:
                 async with httpx.AsyncClient(
                     timeout=STREAM_TIMEOUT, proxies=PROXIES if USE_PROXY else None
                 ) as client:
+                    logger.debug(f"url:\n {url}")
+                    logger.debug(f"headers:\n {headers}")
                     async with client.stream(
                         method="POST",
                         url=url,
