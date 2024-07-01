@@ -7,6 +7,8 @@ import re
 # from curl_cffi import requests
 import httpx
 import asyncio
+
+from httpx_sse._decoders import SSEDecoder
 from loguru import logger
 from fastapi import HTTPException
 
@@ -252,6 +254,8 @@ class Client:
         call_back=None,
         timeout=120,
     ):
+      async def process_error_message(text):
+
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
         __payload = {
             "attachments": attachments,  # attachments is a list
@@ -280,19 +284,14 @@ class Client:
         # logger.debug(f"payload:\n {payload}")
         while current_retry < max_retry:
             try:
-                # async for text in async_stream(
-                #     "POST",
-                #     httpx.URL(url),
-                #     headers=headers,
-                #     json=payload,
-                #     timeout=STREAM_TIMEOUT,
-                # ):
                 works_fine = False
                 async with httpx.AsyncClient(
                     timeout=STREAM_TIMEOUT, proxies=PROXIES if USE_PROXY else None
                 ) as client:
                     logger.debug(f"url:\n {url}")
                     logger.debug(f"headers:\n {headers}")
+                    decoder = SSEDecoder()
+
                     async with client.stream(
                         method="POST",
                         url=url,
@@ -372,9 +371,18 @@ class Client:
                                     "concurrent connections has exceeded the limit"
                                 )
 
-                            response_parse_text = await self.parse_text(
-                                text, client_type, client_idx, model
-                            )
+                            # response_parse_text = await self.parse_text(
+                            #     text, client_type, client_idx, model
+                            # )
+                            line = text.rstrip("\n")
+                            sse = decoder.decode(line)
+                            response_parse_text = ""
+                            if sse is not None:
+                                data = json.loads(sse.data)
+                                message = data["message"]
+                                response_parse_text = message
+
+
                             # logger.info(f"parsed text: {response_parse_text}")
                             if response_parse_text:
                                 client_manager.set_client_status(
