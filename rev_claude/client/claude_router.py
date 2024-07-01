@@ -183,7 +183,7 @@ async def chat(
         # )
         return StreamingResponse(
             build_sse_data(
-                message="您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
+                message="您的登录秘钥不是Plus 用户，请升级您的套餐以访问此账户。"
             ),
             media_type="text/event-stream",
         )
