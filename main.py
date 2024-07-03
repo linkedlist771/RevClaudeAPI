@@ -2,7 +2,6 @@ import argparse
 import fire
 import uvicorn
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from rev_claude.client.client_manager import ClientManager
 from rev_claude.lifespan import lifespan

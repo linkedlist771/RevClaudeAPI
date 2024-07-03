@@ -36,9 +36,6 @@ class APIKeyManager:
         if isinstance(api_key_type, bytes):
             api_key_type = api_key_type.decode("utf-8")
         api_key = f"sj-{str(uuid.uuid4()).replace('-', '')}"
-        # self.redis.setex(api_key, expiration_seconds, "active")
-        # self.redis.setex(f"{api_key}:usage", expiration_seconds, 0)
-        # self.redis.setex(f"{api_key}:type", expiration_seconds, api_key_type)
         self.redis.set(f"{api_key}:usage", 0)
         self.redis.set(f"{api_key}:type", api_key_type)
         self.redis.set(f"{api_key}:expiration", expiration_seconds)
@@ -66,7 +63,6 @@ class APIKeyManager:
         elif ttl == -2:
             return "APIKEY已经过期"
         else:
-
             return f"APIKEY已经激活, 还有{ttl}秒过期"
 
     def is_api_key_valid(self, api_key):
