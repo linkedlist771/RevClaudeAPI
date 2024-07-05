@@ -5,8 +5,8 @@ import altair as alt
 from tqdm import tqdm
 
 
-#
-BASE_URL = "https://claude3.edu.cn.ucas.life"
+# claude3.ucas.life
+BASE_URL = "http://101.132.169.133:1145"
 # 设置页面标题
 st.set_page_config(page_title="API密钥和Cookie管理")
 
