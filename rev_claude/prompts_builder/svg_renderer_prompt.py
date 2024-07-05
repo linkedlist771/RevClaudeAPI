@@ -25,9 +25,8 @@ class SvgRendererPrompt(BaseModel):
 
 
 async def main():
-    prompt = DuckDuckSearchPrompt(prompt="姜萍的事件是什么？")
+    prompt = SvgRendererPrompt(prompt="```mermaid\ngraph LR\n    A --> B\n```")
     print(await prompt.render_prompt())
-
 
 if __name__ == "__main__":
     import asyncio
