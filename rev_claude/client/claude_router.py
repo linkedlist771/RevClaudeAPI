@@ -9,13 +9,14 @@ from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 
 from rev_claude.client.claude import upload_attachment_for_fastapi
 from rev_claude.client.client_manager import ClientManager
-from rev_claude.configs import NEW_CONVERSATION_RETRY
+from rev_claude.configs import NEW_CONVERSATION_RETRY, USE_MERMAID_AND_SVG
 from rev_claude.history.conversation_history_manager import (
     conversation_history_manager,
     ConversationHistoryRequestInput,
     Message,
     RoleType,
 )
+from rev_claude.prompts_builder.svg_renderer_prompt import SvgRendererPrompt
 from rev_claude.schemas import ClaudeChatRequest
 from loguru import logger
 
@@ -219,6 +220,11 @@ async def chat(
                         f"Created new conversation with response: \n{conversation}"
                     )
                     conversation_id = conversation["uuid"]
+                    # now we can reredenert the user's prompt
+                    if USE_MERMAID_AND_SVG:
+                        prompt = claude_chat_request.message
+                        rendered_prompt = SvgRendererPrompt(prompt=prompt).render_prompt()
+                        claude_chat_request.message = rendered_prompt
                     await asyncio.sleep(2)  # 等待两秒秒,创建成功后
 
                     break  # 成功创建对话后跳出循环
