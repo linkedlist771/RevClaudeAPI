@@ -21,7 +21,6 @@ class ProxyValidator():
 
     async def validate_proxy(self):
         pay_load ={
-            "stream": True,
             "prompt": "画一只小猪",
             "model": "claude-3-5-sonnet-20240620",
 
