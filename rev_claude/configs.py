@@ -28,7 +28,7 @@ STREAM_TIMEOUT = Timeout(
 )
 
 USE_PROXY = False
-USE_MERMAID_AND_SVG = False
+USE_MERMAID_AND_SVG = True
 
 PROXIES = {"http://": "socks5://127.0.0.1:7891", "https://": "socks5://127.0.0.1:7891"}
 
