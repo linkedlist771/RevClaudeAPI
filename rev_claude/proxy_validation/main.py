@@ -28,6 +28,7 @@ class ProxyValidator():
             "attachments": None,
             "files": None,
         }
+        valid_proxies = []
         for idx, proxy in enumerate(PROXIES):
             # test the proxy one by one
             try:
@@ -46,10 +47,12 @@ class ProxyValidator():
                 async for _ in client.stream_message(**pay_load, timeout=120):
                     pass
                 # logger.debug(f"res: {res}")]
+                valid_proxies.append(proxy)
             except Exception as e:
 
                 logger.error(f"Error: {e}")
                 continue
+        logger.debug(f"Valid proxies: {valid_proxies}")
 
 async def main():
     await get_clients()
