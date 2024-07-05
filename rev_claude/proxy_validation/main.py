@@ -1,6 +1,7 @@
 from loguru import logger
 import httpx
 import asyncio
+from itertools import cycle
 
 from rev_claude.client.client_manager import ClientManager
 from rev_claude.proxy_validation.proxies import PROXIES
@@ -16,6 +17,7 @@ class ProxyValidator():
 
     def __init__(self):
         self.basic_clients, self.plus_clients = ClientManager().get_clients()
+        self.plus_clients_cycle = cycle(self.plus_clients)
 
     async def validate_proxy(self):
         pay_load ={
@@ -30,7 +32,8 @@ class ProxyValidator():
         for idx, proxy in enumerate(PROXIES):
             # test the proxy one by one
             logger.debug(f"Testing proxy, idx: {idx}, proxy: {proxy}")
-            res = await self.plus_clients[0].stream_message(**pay_load, timeout=120)
+            client = next(self.plus_clients_cycle)
+            res = await client.stream_message(**pay_load, timeout=120)
             # logger.debug(f"res: {res}")
 
 async def main():
