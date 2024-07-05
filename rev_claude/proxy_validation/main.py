@@ -30,22 +30,26 @@ class ProxyValidator():
         }
         for idx, proxy in enumerate(PROXIES):
             # test the proxy one by one
+            try:
+                logger.debug(f"Testing proxy, idx: {idx}, proxy: {proxy}")
+                # idx, client = next(self.plus_clients_cycle).items()
+                idx = next(self.plus_clients_idx_cycle)
+                client = self.plus_clients[idx]
+                conversation = await client.create_new_chat(model="claude-3-5-sonnet-20240620")
+                logger.debug(
+                    f"Created new conversation with response: \n{conversation}"
+                )
+                conversation_id = conversation["uuid"]
+                pay_load["conversation_id"] = conversation_id
+                pay_load["client_type"] = "plus"
+                pay_load["client_idx"] = idx
 
-            logger.debug(f"Testing proxy, idx: {idx}, proxy: {proxy}")
-            # idx, client = next(self.plus_clients_cycle).items()
-            idx = next(self.plus_clients_idx_cycle)
-            client = self.plus_clients[idx]
-            conversation = await client.create_new_chat(model="claude-3-5-sonnet-20240620")
-            logger.debug(
-                f"Created new conversation with response: \n{conversation}"
-            )
-            conversation_id = conversation["uuid"]
-            pay_load["conversation_id"] = conversation_id
-            pay_load["client_type"] = "plus"
-            pay_load["client_idx"] = idx
-
-            res = await client.stream_message(**pay_load, timeout=120)
-            # logger.debug(f"res: {res}")
+                res = await client.stream_message(**pay_load, timeout=120)
+                # logger.debug(f"res: {res}")]
+            except Exception as e:
+                
+                logger.error(f"Error: {e}")
+                continue
 
 async def main():
     await get_clients()
