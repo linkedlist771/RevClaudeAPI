@@ -43,7 +43,7 @@ class ProxyValidator():
                 pay_load["conversation_id"] = conversation_id
                 pay_load["client_type"] = "plus"
                 pay_load["client_idx"] = idx
-                async for _ in await client.stream_message(**pay_load, timeout=120):
+                async for _ in client.stream_message(**pay_load, timeout=120):
                     pass
                 # logger.debug(f"res: {res}")]
             except Exception as e:
