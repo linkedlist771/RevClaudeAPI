@@ -17,7 +17,7 @@ class ProxyValidator():
 
     def __init__(self):
         self.basic_clients, self.plus_clients = ClientManager().get_clients()
-        self.plus_clients_cycle = cycle(self.plus_clients)
+        self.plus_clients_cycle = cycle(self.plus_clients.values())
 
     async def validate_proxy(self):
         pay_load ={
