@@ -26,7 +26,6 @@ class ProxyValidator():
 
             "attachments": None,
             "files": None,
-            "need_web_search": False
         }
         for idx, proxy in enumerate(PROXIES):
             # test the proxy one by one
