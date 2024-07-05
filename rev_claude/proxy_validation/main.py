@@ -17,7 +17,8 @@ class ProxyValidator():
 
     def __init__(self):
         self.basic_clients, self.plus_clients = ClientManager().get_clients()
-        self.plus_clients_cycle = cycle(self.plus_clients)
+        # this is a dict\
+        self.plus_clients_idx_cycle = cycle(list(self.plus_clients.keys()))
 
     async def validate_proxy(self):
         pay_load ={
@@ -31,7 +32,9 @@ class ProxyValidator():
             # test the proxy one by one
 
             logger.debug(f"Testing proxy, idx: {idx}, proxy: {proxy}")
-            idx, client = next(self.plus_clients_cycle)
+            # idx, client = next(self.plus_clients_cycle).items()
+            idx = next(self.plus_clients_idx_cycle)
+            client = self.plus_clients[idx]
             conversation = await client.create_new_chat(model="claude-3-5-sonnet-20240620")
             logger.debug(
                 f"Created new conversation with response: \n{conversation}"
