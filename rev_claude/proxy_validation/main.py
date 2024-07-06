@@ -41,11 +41,11 @@ class ProxyValidator():
                     f"Created new conversation with response: \n{conversation}"
                 )
                 conversation_id = conversation["uuid"]
-                pay_load["conversation_id"] = conversation_id
-                pay_load["client_type"] = "plus"
-                pay_load["client_idx"] = idx
-                async for _ in client.stream_message(**pay_load, timeout=120):
-                    pass
+                # pay_load["conversation_id"] = conversation_id
+                # pay_load["client_type"] = "plus"
+                # pay_load["client_idx"] = idx
+                # async for _ in client.stream_message(**pay_load, timeout=120):
+                #     pass
                 # logger.debug(f"res: {res}")]
                 valid_proxies.append(proxy)
             except Exception as e:
