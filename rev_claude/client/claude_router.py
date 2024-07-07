@@ -221,7 +221,7 @@ async def chat(
                     )
                     conversation_id = conversation["uuid"]
                     # now we can reredenert the user's prompt
-                    if USE_MERMAID_AND_SVG:
+                    if USE_MERMAID_AND_SVG and (not claude_chat_request.need_web_search):
                         prompt = claude_chat_request.message
 
                         rendered_prompt = await SvgRendererPrompt(prompt=prompt).render_prompt()
