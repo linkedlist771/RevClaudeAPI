@@ -140,7 +140,7 @@ class Client:
         async with httpx.AsyncClient() as client:
             response = await client.get(url, headers=self.build_organization_headers())
             res_str = response.text
-            logger.debug(f"res_str : {res_str}")
+            # logger.debug(f"res_str : {res_str}")
             res = response.json()
             if "We are unable to serve your request" in res_str:
                 raise Exception("We are unable to serve your request")
@@ -310,7 +310,7 @@ class Client:
                             # logger.info(f"raw text: {text}")
                             # convert a byte string to a string
                             # logger.info(f"raw text: {text}")
-                            logger.debug(f"raw text: {text}")
+                            # logger.debug(f"raw text: {text}")
                             if "Invalid model" in text:
                                 logger.error(f"Invalid model : {text}")
 
