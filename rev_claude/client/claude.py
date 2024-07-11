@@ -139,8 +139,9 @@ class Client:
         url = "https://claude.ai/api/organizations"
         async with httpx.AsyncClient() as client:
             response = await client.get(url, headers=self.build_organization_headers())
-            res = response.json()
             res_str = response.text
+            logger.debug(f"res_str : {res_str}")
+            res = response.json()
             if "We are unable to serve your request" in res_str:
                 raise Exception("We are unable to serve your request")
             logger.debug(f"res : {res}")
