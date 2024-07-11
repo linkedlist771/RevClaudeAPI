@@ -369,6 +369,9 @@ class Client:
                                 raise Exception(
                                     "concurrent connections has exceeded the limit"
                                 )
+                            if "Rate exceeded" in text:
+                                logger.error(f"Rate exceeded: {text}")
+                                raise Exception("Rate exceeded")
 
                             # response_parse_text = await self.parse_text(
                             #     text, client_type, client_idx, model
