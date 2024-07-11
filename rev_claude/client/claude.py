@@ -309,7 +309,7 @@ class Client:
                             # logger.info(f"raw text: {text}")
                             # convert a byte string to a string
                             # logger.info(f"raw text: {text}")
-
+                            logger.debug(f"raw text: {text}")
                             if "Invalid model" in text:
                                 logger.error(f"Invalid model : {text}")
 
