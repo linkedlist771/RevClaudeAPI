@@ -16,6 +16,7 @@ from rev_claude.history.conversation_history_manager import (
     Message,
     RoleType,
 )
+from rev_claude.prompts_builder.artifacts_render_prompt import ArtifactsRendererPrompt
 from rev_claude.prompts_builder.svg_renderer_prompt import SvgRendererPrompt
 from rev_claude.schemas import ClaudeChatRequest
 from loguru import logger
@@ -208,7 +209,7 @@ async def chat(
         claude_client = plus_clients[client_idx]
     else:
         claude_client = basic_clients[client_idx]
-
+    raw_message = claude_chat_request.message
     max_retry = NEW_CONVERSATION_RETRY
     current_retry = 0
     while current_retry < max_retry:
@@ -221,10 +222,10 @@ async def chat(
                     )
                     conversation_id = conversation["uuid"]
                     # now we can reredenert the user's prompt
-                    if USE_MERMAID_AND_SVG and (not claude_chat_request.need_web_search):
+                    if USE_MERMAID_AND_SVG and claude_chat_request.need_artifacts:
                         prompt = claude_chat_request.message
 
-                        rendered_prompt = await SvgRendererPrompt(prompt=prompt).render_prompt()
+                        rendered_prompt = await ArtifactsRendererPrompt(prompt=prompt).render_prompt()
                         claude_chat_request.message = rendered_prompt
                     await asyncio.sleep(2)  # 等待两秒秒,创建成功后
 
@@ -266,7 +267,7 @@ async def chat(
     messages: list[Message] = []
     messages.append(
         Message(
-            content=claude_chat_request.message,
+            content=raw_message,
             role=RoleType.USER,
         )
     )
@@ -308,6 +309,7 @@ async def chat(
             attachments=attachments,
             files=files,
             call_back=call_back,
+
         )
         streaming_res = patched_generate_data(streaming_res, conversation_id, hrefs)
         return StreamingResponse(
