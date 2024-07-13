@@ -43,12 +43,6 @@ async def validate_api_key(
             status_code=HTTP_480_API_KEY_INVALID,
             detail="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
         )
-        #
-        # return JSONResponse(
-        #     status_code=HTTP_480_API_KEY_INVALID,
-        #     content="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
-        # )
-
     manager.increment_usage(api_key)
     logger.info(f"API key:\n{api_key}")
     logger.info(manager.get_apikey_information(api_key))
@@ -225,7 +219,9 @@ async def chat(
                     if USE_MERMAID_AND_SVG and claude_chat_request.need_artifacts:
                         prompt = claude_chat_request.message
 
-                        rendered_prompt = await ArtifactsRendererPrompt(prompt=prompt).render_prompt()
+                        rendered_prompt = await ArtifactsRendererPrompt(
+                            prompt=prompt
+                        ).render_prompt()
                         claude_chat_request.message = rendered_prompt
                     await asyncio.sleep(2)  # 等待两秒秒,创建成功后
 
@@ -309,7 +305,6 @@ async def chat(
             attachments=attachments,
             files=files,
             call_back=call_back,
-
         )
         streaming_res = patched_generate_data(streaming_res, conversation_id, hrefs)
         return StreamingResponse(

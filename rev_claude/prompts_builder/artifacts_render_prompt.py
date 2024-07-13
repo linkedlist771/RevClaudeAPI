@@ -7,8 +7,7 @@ from loguru import logger
 
 class ArtifactsRendererPrompt(BaseModel):
     prompt: str
-    base_prompt: str = \
-"""
+    base_prompt: str = """
 <claude_abilities>
 Claude has the following additional capabilities:
 
@@ -49,6 +48,7 @@ Claude utilizes these abilities when they would enhance its response to a user q
 async def main():
     prompt = SvgRendererPrompt(prompt="```mermaid\ngraph LR\n    A --> B\n```")
     print(await prompt.render_prompt())
+
 
 if __name__ == "__main__":
     import asyncio

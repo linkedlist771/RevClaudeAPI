@@ -331,16 +331,13 @@ class Client:
                                     dict_res = json.loads(text)
                                     error_message = dict_res["error"]
                                     resetAt = int(
-                                        json.loads(error_message["message"])[
-                                            "resetsAt"
-                                        ]
+                                        json.loads(error_message["message"])["resetsAt"]
                                     )
                                     refresh_time = resetAt
                                     start_time = int(refresh_time) - 8 * 3600
                                     client_manager = ClientsStatusManager()
                                     client_manager.set_client_limited(
-                                        client_type, client_idx, start_time,
-                                        model
+                                        client_type, client_idx, start_time, model
                                     )
                                 else:
                                     dict_res = json.loads(text)
@@ -385,7 +382,6 @@ class Client:
                                 if "completion" in list(data.keys()):
                                     message = data["completion"]
                                     response_parse_text = message
-
 
                             # logger.info(f"parsed text: {response_parse_text}")
                             if response_parse_text:

@@ -28,6 +28,7 @@ async def main():
     prompt = SvgRendererPrompt(prompt="```mermaid\ngraph LR\n    A --> B\n```")
     print(await prompt.render_prompt())
 
+
 if __name__ == "__main__":
     import asyncio
 

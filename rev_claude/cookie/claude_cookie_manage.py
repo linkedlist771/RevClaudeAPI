@@ -44,6 +44,7 @@ class CookieManager:
             return f"Organization ID for {cookie_key} has been deleted."
         else:
             return f"No organization found for {cookie_key}. Nothing to delete."
+
     def get_organization_id(self, cookie_key):
         organization_key = self.get_cookie_organization_key(cookie_key)
         organization_id = self.redis.get(organization_key)

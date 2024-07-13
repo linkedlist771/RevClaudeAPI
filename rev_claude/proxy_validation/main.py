@@ -7,13 +7,11 @@ from rev_claude.client.client_manager import ClientManager
 from rev_claude.proxy_validation.proxies import PROXIES
 
 
-
 async def get_clients():
     await ClientManager().load_clients(reload=False)
 
 
-
-class ProxyValidator():
+class ProxyValidator:
 
     def __init__(self):
         self.basic_clients, self.plus_clients = ClientManager().get_clients()
@@ -21,10 +19,9 @@ class ProxyValidator():
         self.plus_clients_idx_cycle = cycle(list(self.plus_clients.keys()))
 
     async def validate_proxy(self):
-        pay_load ={
+        pay_load = {
             "prompt": "画一只小猪",
             "model": "claude-3-5-sonnet-20240620",
-
             "attachments": None,
             "files": None,
         }
@@ -36,7 +33,9 @@ class ProxyValidator():
                 # idx, client = next(self.plus_clients_cycle).items()
                 idx = next(self.plus_clients_idx_cycle)
                 client = self.plus_clients[idx]
-                conversation = await client.create_new_chat(model="claude-3-5-sonnet-20240620")
+                conversation = await client.create_new_chat(
+                    model="claude-3-5-sonnet-20240620"
+                )
                 logger.debug(
                     f"Created new conversation with response: \n{conversation}"
                 )
@@ -54,10 +53,12 @@ class ProxyValidator():
                 continue
         logger.debug(f"Valid proxies: {valid_proxies}")
 
+
 async def main():
     await get_clients()
     validator = ProxyValidator()
     await validator.validate_proxy()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

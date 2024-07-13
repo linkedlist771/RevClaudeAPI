@@ -7,6 +7,9 @@ from rev_claude.status.clients_status_router import router as clients_status_rou
 from rev_claude.history.conversation_history_router import (
     router as conversation_history_router,
 )
+from rev_claude.artifacts_sharing.artifacts_sharing_router import (
+    router as artifacts_sharing_router,
+)
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(claude_router, prefix="/claude", tags=["claude"])
@@ -19,4 +22,7 @@ router.include_router(
     conversation_history_router,
     prefix="/conversation_history",
     tags=["conversation_history"],
+)
+router.include_router(
+    artifacts_sharing_router, prefix="/artifacts_sharing", tags=["artifacts_sharing"]
 )

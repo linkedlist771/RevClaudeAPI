@@ -36,6 +36,7 @@ class ClientsStatusManager:
         self.redis = redis.StrictRedis(
             host=host, port=port, db=db, decode_responses=True
         )
+
     def get_client_status_key(self, client_type, client_idx):
         return f"status-{client_type}-{client_idx}"
 
@@ -78,6 +79,7 @@ class ClientsStatusManager:
                 return res
         except (json.JSONDecodeError, TypeError):
             return {}
+
     def set_client_limited(self, client_type, client_idx, start_time, model):
 
         # 都得传入模型进行设置，我看这样设计就比较好了
@@ -131,10 +133,12 @@ class ClientsStatusManager:
             #     logger.debug(f"start_time_dict: {start_time_dict}")
             for model, start_time in start_time_dict.items():
                 time_elapsed = current_time - start_time
-                if not(time_elapsed > 8 * 3600):
+                if not (time_elapsed > 8 * 3600):
                     return False
 
-            self.set_client_active(client_type, client_idx)  # 有一个可用就是可用， 否则其他的都是CD
+            self.set_client_active(
+                client_type, client_idx
+            )  # 有一个可用就是可用， 否则其他的都是CD
             return True
 
             # passed_time = current_time - float(
@@ -162,10 +166,8 @@ class ClientsStatusManager:
 
             val = json.dumps({model: time.time() for model in models})
             self.redis.set(
-                self.get_client_status_start_time_key(client_type, client_idx),
-                val
+                self.get_client_status_start_time_key(client_type, client_idx), val
             )
-
 
     def get_all_clients_status(self, basic_clients, plus_clients):
         def process_clients(clients, client_type, models):
@@ -198,6 +200,10 @@ class ClientsStatusManager:
         from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 
         cookie_manager = get_cookie_manager()
-        process_clients(plus_clients, "plus", [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value])
+        process_clients(
+            plus_clients,
+            "plus",
+            [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
+        )
         process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
         return clients_status
