@@ -21,7 +21,6 @@ async def validate_api_key(request: Request):
         )
     # 尝试激活 API key
     active_message = api_manager.activate_api_key(api_key)
-    api_manager.info(active_message)
 
 
 def get_artifacts_code_manager():
