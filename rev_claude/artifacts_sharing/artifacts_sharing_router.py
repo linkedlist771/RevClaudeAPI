@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, Request
 
 from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 from rev_claude.artifacts_sharing.artifacts_code_manager import ArtifactsCodeManager
+from rev_claude.schemas import ArtifactsCodeUploadRequest
 from rev_claude.status_code.status_code_enum import HTTP_480_API_KEY_INVALID
 
 router = APIRouter()
@@ -30,12 +31,12 @@ def get_artifacts_code_manager():
 @router.post("/upload_code")
 async def upload_code(
     request: Request,
-    code: str,
+    artifacts_upload_request: ArtifactsCodeUploadRequest = Body(...),
     manager: ArtifactsCodeManager = Depends(get_artifacts_code_manager),
 ):
     """Upload a code snippet and return its hash."""
     await validate_api_key(request)
-    code_hash = await manager.upload_code(code)
+    code_hash = await manager.upload_code(artifacts_upload_request.code)
     return JSONResponse(
         content={"message": "Code uploaded successfully.", "code_hash": code_hash}
     )
