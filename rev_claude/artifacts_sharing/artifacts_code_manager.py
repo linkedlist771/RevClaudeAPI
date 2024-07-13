@@ -31,7 +31,9 @@ class ArtifactsCodeManager:
         if code is None:
             # raise ValueError("Code not found")
             code = "Code not found"
-        code = code.decode("utf-8")
+        if isinstance(code, bytes):
+            code = code.decode("utf-8")
+        # code = code.decode("utf-8")
         return code
 
     async def delete_code(self, code_hash: str) -> bool:
