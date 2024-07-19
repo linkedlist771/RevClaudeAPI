@@ -311,7 +311,7 @@ class Client:
                             # convert a byte string to a string
                             # logger.info(f"raw text: {text}")
                             # logger.debug(f"raw text: {text}")
-                            if "Invalid model" in text:
+                            if ("Invalid model" in text) or ("Organization has no active Self-Serve Stripe" in text):
                                 logger.error(f"Invalid model : {text}")
 
                                 client_manager = ClientsStatusManager()
