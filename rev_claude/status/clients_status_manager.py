@@ -27,6 +27,8 @@ class ClientsStatus(BaseModel):
     type: str
     idx: int
     message: str = ""
+    is_session_login: bool = False
+    meta_data: dict = {}
 
 
 class ClientsStatusManager:
@@ -170,30 +172,40 @@ class ClientsStatusManager:
             )
 
     def get_all_clients_status(self, basic_clients, plus_clients):
+        def retrieve_client_status(idx, client, client_type, models):
+            self.create_if_not_exist(client_type, idx, models)
+            account = cookie_manager.get_account(client.cookie_key)
+            is_active = self.set_client_active_when_cd(client_type, idx)
+
+            if is_active:
+                _status = ClientStatus.ACTIVE.value
+                _message = "可用"
+            else:
+                _status = ClientStatus.CD.value
+                key = self.get_client_status_start_time_key(client_type, idx)
+                _message = self.get_limited_message(key, client_type, idx)
+            client_type = "normal" if client_type == "basic" else client_type
+            status = ClientsStatus(
+                id=account,
+                status=_status,
+                type=client_type,
+                idx=idx,
+                message=_message,
+            )
+            return status
+
         def process_clients(clients, client_type, models):
             for idx, client in clients.items():
+                status = retrieve_client_status(idx, client, client_type, models)
+                clients_status.append(status)
 
-                self.create_if_not_exist(client_type, idx, models)
-                account = cookie_manager.get_account(client.cookie_key)
-                is_active = self.set_client_active_when_cd(client_type, idx)
-
-                if is_active:
-                    _status = ClientStatus.ACTIVE.value
-                    _message = "可用"
-                else:
-                    _status = ClientStatus.CD.value
-                    key = self.get_client_status_start_time_key(client_type, idx)
-                    _message = self.get_limited_message(key, client_type, idx)
-                # if 948928 == idx:
-                #     logger.debug(f"is_active: {is_active}")
-                client_type = "normal" if client_type == "basic" else client_type
-                status = ClientsStatus(
-                    id=account,
-                    status=_status,
-                    type=client_type,
-                    idx=idx,
-                    message=_message,
-                )
+        def add_session_login_account(clients, client_type, models):
+            for idx, client in clients.items():
+                status = retrieve_client_status(idx, client, client_type, models)
+                status.is_session_login = True
+                # 获取这个client的session key
+                session_key = client.retrieve_session_key()
+                status.meta_data["session_key"] = session_key
                 clients_status.append(status)
 
         clients_status = []
@@ -206,4 +218,25 @@ class ClientsStatusManager:
             [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
         )
         process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
+        # TODO: 添加获取用于处理session登录所使用的账号。
+        # 现在就取plus的最后一共和basic的第一个
+        # 添加获取用于处理session登录所使用的账号
+        # 取plus的最后一个和basic的第一个
+        # 分别添加 plus 和 basic 客户端的 session 登录账号
+        if plus_clients:
+            last_plus_idx = list(plus_clients.keys())[-1]
+            add_session_login_account(
+                {last_plus_idx: plus_clients[last_plus_idx]},
+                "plus",
+                [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
+            )
+
+        if basic_clients:
+            first_basic_idx = list(basic_clients.keys())[0]
+            add_session_login_account(
+                {first_basic_idx: basic_clients[first_basic_idx]},
+                "basic",
+                [ClaudeModels.SONNET_3_5.value],
+            )
+
         return clients_status

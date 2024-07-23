@@ -3,7 +3,6 @@
 
 import json, os, uuid
 import re
-
 # from curl_cffi import requests
 import httpx
 import asyncio
@@ -120,6 +119,13 @@ class Client:
     async def __set_organization_id__(self):
         self.organization_id = await self.__async_get_organization_id()
         return self.organization_id
+
+    def retrieve_session_key(self):
+        cookie_list = self.cookie.split(";")
+        for cookie_key_pair in cookie_list:
+            if "sk-ant-si" in cookie_key_pair:
+                return cookie_key_pair.strip().replace("sessionKey=", "")
+        return
 
     def build_organization_headers(self):
         return {
