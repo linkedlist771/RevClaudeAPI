@@ -206,9 +206,12 @@ class ClientsStatusManager:
                 # 获取这个client的session key
                 session_key = client.retrieve_session_key()
                 status.meta_data["session_key"] = session_key
-                # clients_status.append(status)
+                # clients_status.append(status) # 如何添加到列表的前面
+                clients_status.insert(0, status)
                 # 添加到最前面
-                clients_status = [status] + clients_status
+                # __clients_status = [status] + clients_status
+                # clients_status = __clients_status
+                # clients_status = [status] + clients_status
 
         clients_status = []
         from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
