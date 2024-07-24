@@ -212,6 +212,7 @@ class APIKeyManager:
         key_type = self.get_api_key_type(api_key)
         expire_time = self.redis.ttl(api_key)
         # turn the last_usage_time to a readable format: time step => time
+        is_key_valid = True
         if last_usage_time is not None:
             last_usage_time = time.strftime(
                 "%Y-%m-%d %H:%M:%S", time.localtime(last_usage_time)
@@ -222,6 +223,7 @@ class APIKeyManager:
             expire_time = "Never expire"
         elif expire_time == -2:
             expire_time = "Key does not exist or has expired"
+            is_key_valid = False
         else:
             expire_time = time.strftime(
                 "%Y-%m-%d %H:%M:%S", time.localtime(time.time() + expire_time)
@@ -232,6 +234,7 @@ class APIKeyManager:
             "last_usage_time": last_usage_time,
             "key_type": key_type,
             "expire_time": expire_time,
+            "is_key_valid": is_key_valid
         }
 
 
