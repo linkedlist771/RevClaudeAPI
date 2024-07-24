@@ -3,10 +3,21 @@ import requests
 import pandas as pd
 import altair as alt
 from tqdm import tqdm
+from urllib.request import urlopen
+
+def get_public_ip():
+    try:
+        response = urlopen('https://api.ipify.org')
+        return response.read().decode('utf-8')
+    except:
+        return None
+
+public_ip = get_public_ip()
+
 
 
 # claude3.ucas.life
-BASE_URL = "http://101.132.169.133:1145"
+BASE_URL = f"http://{public_ip}:1145"
 # 设置页面标题
 st.set_page_config(page_title="API密钥和Cookie管理")
 
