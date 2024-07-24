@@ -218,6 +218,14 @@ class ClientsStatusManager:
         from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 
         cookie_manager = get_cookie_manager()
+        if plus_clients:
+            last_plus_idx = list(plus_clients.keys())[-1]
+            add_session_login_account(
+                {last_plus_idx: plus_clients[last_plus_idx]},
+                "plus",
+                [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
+            )
+
         process_clients(
             plus_clients,
             "plus",
@@ -240,13 +248,6 @@ class ClientsStatusManager:
         # 添加获取用于处理session登录所使用的账号
         # 取plus的最后一个和basic的第一个
         # 分别添加 plus 和 basic 客户端的 session 登录账号
-        if plus_clients:
-            last_plus_idx = list(plus_clients.keys())[-1]
-            add_session_login_account(
-                {last_plus_idx: plus_clients[last_plus_idx]},
-                "plus",
-                [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
-            )
 
 
 
