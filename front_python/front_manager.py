@@ -12,12 +12,10 @@ def get_public_ip():
     except:
         return None
 
-public_ip = get_public_ip()
-print(public_ip)
 
 
 # claude3.ucas.life
-BASE_URL = f"http://{public_ip}:1145"
+BASE_URL = f"http://60.205.189.192:1145"
 # 设置页面标题
 st.set_page_config(page_title="API密钥和Cookie管理")
 
