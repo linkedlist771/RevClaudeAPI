@@ -13,7 +13,7 @@ def get_public_ip():
         return None
 
 public_ip = get_public_ip()
-
+print(public_ip)
 
 
 # claude3.ucas.life
