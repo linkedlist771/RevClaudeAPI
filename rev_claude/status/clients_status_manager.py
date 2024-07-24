@@ -207,7 +207,8 @@ class ClientsStatusManager:
                 session_key = client.retrieve_session_key()
                 status.meta_data["session_key"] = session_key
                 # clients_status.append(status) # 如何添加到列表的前面
-                clients_status.insert(0, status)
+                # clients_status.insert(0, status)
+                clients_status.append(status)
                 # 添加到最前面
                 # __clients_status = [status] + clients_status
                 # clients_status = __clients_status
@@ -222,6 +223,17 @@ class ClientsStatusManager:
             "plus",
             [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
         )
+
+        if basic_clients:
+            first_basic_idx = list(basic_clients.keys())[:10]
+            add_session_login_account(
+                # {first_basic_idx: basic_clients[first_basic_idx]},
+                {basic_idx: basic_clients[basic_idx] for basic_idx in first_basic_idx},
+                "basic",
+                [ClaudeModels.SONNET_3_5.value],
+            )
+
+
         process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
         # TODO: 添加获取用于处理session登录所使用的账号。
         # 现在就取plus的最后一共和basic的第一个
@@ -236,12 +248,6 @@ class ClientsStatusManager:
                 [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
             )
 
-        if basic_clients:
-            first_basic_idx = list(basic_clients.keys())[0]
-            add_session_login_account(
-                {first_basic_idx: basic_clients[first_basic_idx]},
-                "basic",
-                [ClaudeModels.SONNET_3_5.value],
-            )
+
 
         return clients_status
