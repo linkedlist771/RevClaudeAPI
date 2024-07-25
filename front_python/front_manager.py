@@ -88,6 +88,8 @@ if main_function == "API密钥管理":
 
         if st.button("批量删除API密钥"):
             # 先按换行符分割，然后对每个部分按逗号分割，最后去除空白
+            api_keys_to_delete = api_keys_to_delete.reaplace('"', '')
+            api_keys_to_delete = api_keys_to_delete.reaplace("'", '')
             api_keys_list = [
                 key.strip()
                 for line in api_keys_to_delete.split('\n')
