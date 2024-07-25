@@ -33,7 +33,8 @@ if main_function == "API密钥管理":
             "创建API密钥",
             "查看API密钥使用情况",
             "验证API密钥",
-            "删除API密钥",
+            "删除API密钥",        "批量删除API密钥",  # 新增这一行
+
             "获取所有API密钥",
         ],
     )
@@ -80,6 +81,35 @@ if main_function == "API密钥管理":
                 st.success("API密钥删除成功!")
             else:
                 st.error("API密钥删除失败。")
+
+    elif api_key_function == "批量删除API密钥":
+        st.subheader("批量删除API密钥")
+        api_keys_to_delete = st.text_area("输入要删除的API密钥（每行一个或用逗号分隔）")
+
+        if st.button("批量删除API密钥"):
+            # 先按换行符分割，然后对每个部分按逗号分割，最后去除空白
+            api_keys_list = [
+                key.strip()
+                for line in api_keys_to_delete.split('\n')
+                for key in line.split(',')
+                if key.strip()
+            ]
+
+            if api_keys_list:
+                url = f"{BASE_URL}/api/v1/api_key/delete_batch_keys"
+                headers = {"Content-Type": "application/json"}
+                data = {"api_keys": api_keys_list}
+
+                response = requests.delete(url, headers=headers, json=data)
+
+                if response.status_code == 200:
+                    st.success(f"成功删除 {len(api_keys_list)} 个API密钥。")
+                    st.write(response.json())
+                else:
+                    st.error("批量删除API密钥失败。")
+                    st.write(response.text)
+            else:
+                st.warning("请输入至少一个API密钥进行删除。")
 
     elif api_key_function == "获取所有API密钥":
         st.subheader("获取所有API密钥")
