@@ -61,8 +61,17 @@ async def delete_key(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Delete an API key and its usage count."""
-    manager.delete_api_key(api_key)
-    return {"message": f"API key {api_key} has been deleted."}
+    res = manager.delete_api_key(api_key)
+    return {"message": res}
+
+
+@router.delete("/delete_batch_keys")
+async def delete_batch_keys(
+    api_keys: list, manager: APIKeyManager = Depends(get_api_key_manager)
+):
+    """Delete a batch of API keys and their usage count."""
+    res = manager.batch_delete_api_keys(api_keys)
+    return {"message": res}
 
 
 @router.get("/list_keys")

@@ -179,14 +179,50 @@ class APIKeyManager:
         self.redis.set(type_key, _type)
         return f"API key {api_key} is now a {_type} user."
 
+    # def delete_api_key(self, api_key):
+    #     """Delete an API key and its associated usage count."""
+    #     usage_key = f"{api_key}:usage"
+    #     # Pipeline the delete operations to ensure both keys are deleted together
+    #     pipeline = self.redis.pipeline()
+    #     pipeline.delete(api_key)
+    #     pipeline.delete(usage_key)
+    #     pipeline.execute()
+    #
+    #
+    # def batch_delete_api_keys(self, api_keys: list[str]):
+    #     """Delete a batch of API keys and their associated usage counts."""
+    #     pipeline = self.redis.pipeline()
+    #     for api_key in api_keys:
+    #         usage_key = f"{api_key}:usage"
+    #         pipeline.delete(api_key)
+    #         pipeline.delete(usage_key)
+    #     pipeline.execute()
+
+    def get_associated_keys(self, api_key):
+        """获取与API密钥相关联的所有键。"""
+        return [
+            api_key,
+            f"{api_key}:usage",
+            f"{api_key}:type",
+            f"{api_key}:expiration",
+            f"{api_key}:current_usage",
+            f"{api_key}:last_usage_time"
+        ]
+
     def delete_api_key(self, api_key):
-        """Delete an API key and its associated usage count."""
-        usage_key = f"{api_key}:usage"
-        # Pipeline the delete operations to ensure both keys are deleted together
-        pipeline = self.redis.pipeline()
-        pipeline.delete(api_key)
-        pipeline.delete(usage_key)
-        pipeline.execute()
+        """删除单个API密钥及其所有关联数据。"""
+        keys_to_delete = self.get_associated_keys(api_key)
+        deleted_count = self.redis.delete(*keys_to_delete)
+        return f"已删除{deleted_count}个与API密钥相关的键。"
+
+    def batch_delete_api_keys(self, api_keys: list[str]):
+        """批量删除多个API密钥及其所有关联数据。"""
+        all_keys_to_delete = []
+        for api_key in api_keys:
+            all_keys_to_delete.extend(self.get_associated_keys(api_key))
+
+        deleted_count = self.redis.delete(*all_keys_to_delete)
+        return f"已删除{deleted_count}个与{len(api_keys)}个API密钥相关的键。"
 
     def add_api_key(
         self, api_key, expiration_seconds, api_key_type=APIKeyType.BASIC.value
