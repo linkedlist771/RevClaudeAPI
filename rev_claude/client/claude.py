@@ -144,14 +144,18 @@ class Client:
     async def __async_get_organization_id(self):
         url = "https://claude.ai/api/organizations"
         async with httpx.AsyncClient() as client:
-            response = await client.get(url, headers=self.build_organization_headers())
-            res_str = response.text
-            # logger.debug(f"res_str : {res_str}")
-            res = response.json()
-            if "We are unable to serve your request" in res_str:
-                raise Exception("We are unable to serve your request")
-            logger.debug(f"res : {res}")
-            uuid = res[0]["uuid"]
+            try:
+                response = await client.get(url, headers=self.build_organization_headers())
+                res_str = response.text
+                # logger.debug(f"res_str : {res_str}")
+                res = response.json()
+                if "We are unable to serve your request" in res_str:
+                    raise Exception("We are unable to serve your request")
+                logger.debug(f"res : {res}")
+                uuid = res[0]["uuid"]
+            except Exception as e:
+                import traceback
+                logger.error(traceback.format_exc())
             return uuid
 
     def get_content_type(self, file_path):
