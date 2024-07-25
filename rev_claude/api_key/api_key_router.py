@@ -2,7 +2,7 @@ from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
-from rev_claude.schemas import CreateAPIKeyRequest
+from rev_claude.schemas import CreateAPIKeyRequest, BatchAPIKeysDeleteRequest
 
 router = APIRouter()
 
@@ -67,10 +67,10 @@ async def delete_key(
 
 @router.delete("/delete_batch_keys")
 async def delete_batch_keys(
-    api_keys: list, manager: APIKeyManager = Depends(get_api_key_manager)
+    api_keys: BatchAPIKeysDeleteRequest, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Delete a batch of API keys and their usage count."""
-    res = manager.batch_delete_api_keys(api_keys)
+    res = manager.batch_delete_api_keys(api_keys.api_keys)
     return {"message": res}
 
 

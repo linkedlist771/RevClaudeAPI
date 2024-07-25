@@ -41,3 +41,7 @@ class CreateAPIKeyRequest(BaseModel):
 
 class ArtifactsCodeUploadRequest(BaseModel):
     code: str
+
+
+class BatchAPIKeysDeleteRequest(BaseModel):
+    api_keys: List[str]
