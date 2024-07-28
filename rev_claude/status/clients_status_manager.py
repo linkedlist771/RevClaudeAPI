@@ -219,9 +219,11 @@ class ClientsStatusManager:
 
         cookie_manager = get_cookie_manager()
         if plus_clients:
-            last_plus_idx = list(plus_clients.keys())[-1]
+            last_plus_idx = list(plus_clients.keys())[-3:]
+            if not isinstance(last_plus_idx, list):
+                last_plus_idx = [last_plus_idx]
             add_session_login_account(
-                {last_plus_idx: plus_clients[last_plus_idx]},
+                {__last_plus_idx: plus_clients[__last_plus_idx] for __last_plus_idx in last_plus_idx},
                 "plus",
                 [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
             )
