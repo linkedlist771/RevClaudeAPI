@@ -161,7 +161,7 @@ async def obtain_reverse_official_login_router(
     # 用他的api_key作为唯一标识符。
     client_idx = login_router_request.client_idx
     __client_type = login_router_request.client_type
-    __client_type.replace("normal", "basic")
+    __client_type = __client_type.replace("normal", "basic")
     client_type = __client_type + "_clients"
     client = clients[client_type][client_idx]
     # 这里还要加上使用次数， 差点忘了。
