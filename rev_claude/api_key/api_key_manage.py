@@ -75,7 +75,8 @@ class APIKeyManager:
         # self.redis.incr(usage_key)
         self.redis.incrby(usage_key, increment)
         current_usage_key = f"{api_key}:current_usage"
-        self.redis.incr(current_usage_key)
+        # self.redis.incr(current_usage_key)
+        self.redis.incrby(current_usage_key, increment)
         return (
             f"Usage count for API key {api_key} has been incremented.:\n"
             f"usage: {self.get_usage(api_key)}\n"
