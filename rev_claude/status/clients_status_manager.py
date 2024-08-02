@@ -204,8 +204,8 @@ class ClientsStatusManager:
                 status = retrieve_client_status(idx, client, client_type, models)
                 status.is_session_login = True
                 # 获取这个client的session key
-                session_key = client.retrieve_session_key()
-                status.meta_data["session_key"] = session_key
+                # session_key = client.retrieve_session_key()
+                # status.meta_data["session_key"] = session_key
                 # clients_status.append(status) # 如何添加到列表的前面
                 # clients_status.insert(0, status)
                 clients_status.append(status)
