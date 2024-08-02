@@ -161,7 +161,8 @@ async def obtain_reverse_official_login_router(
     # 只要传入的api_key是唯一标识符后面的也是唯一唯一标识符
     # 用他的api_key作为唯一标识符。
     client_idx = login_router_request.client_idx
-    client_type = login_router_request.client_type
+    __client_type = login_router_request.client_type
+    client_type =  __client_type + "_clients"
     client = clients[client_type][client_idx]
     # 这里还要加上使用次数， 差点忘了。
     manager.increment_usage(api_key, CLAUDE_OFFICIAL_USAGE_INCREASE)
