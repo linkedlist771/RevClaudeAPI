@@ -28,6 +28,11 @@ class ClaudeChatRequest(BaseChatRequest):
     need_artifacts: bool = False
 
 
+class ObtainReverseOfficialLoginRouterRequest(BaseModel):
+    client_idx: int = 0
+    client_type: str
+
+
 class FileConversionRequest(BaseModel):
     client_idx: int
     client_type: str

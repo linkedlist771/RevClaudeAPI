@@ -9,7 +9,11 @@ from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 
 from rev_claude.client.claude import upload_attachment_for_fastapi
 from rev_claude.client.client_manager import ClientManager
-from rev_claude.configs import NEW_CONVERSATION_RETRY, USE_MERMAID_AND_SVG
+from rev_claude.configs import (
+    NEW_CONVERSATION_RETRY,
+    USE_MERMAID_AND_SVG,
+    CLAUDE_OFFICIAL_USAGE_INCREASE,
+)
 from rev_claude.history.conversation_history_manager import (
     conversation_history_manager,
     ConversationHistoryRequestInput,
@@ -18,7 +22,10 @@ from rev_claude.history.conversation_history_manager import (
 )
 from rev_claude.prompts_builder.artifacts_render_prompt import ArtifactsRendererPrompt
 from rev_claude.prompts_builder.svg_renderer_prompt import SvgRendererPrompt
-from rev_claude.schemas import ClaudeChatRequest
+from rev_claude.schemas import (
+    ClaudeChatRequest,
+    ObtainReverseOfficialLoginRouterRequest,
+)
 from loguru import logger
 
 from rev_claude.models import ClaudeModels
@@ -125,6 +132,41 @@ async def push_assistant_message_callback(
         messages[-1].content += hrefs_str
 
     conversation_history_manager.push_message(request, messages)
+
+
+@router.post("/obtain_reverse_official_login_router")
+async def obtain_reverse_official_login_router(
+    request: Request,
+    login_router_request: ObtainReverseOfficialLoginRouterRequest,
+    clients=Depends(obtain_claude_client),
+    manager: APIKeyManager = Depends(get_api_key_manager),
+):
+    api_key = request.headers.get("Authorization")
+    has_reached_limit = manager.has_exceeded_limit(api_key)
+    if has_reached_limit:
+        # 首先check一下用户是不是被删除了
+        is_deleted = not manager.is_api_key_valid(api_key)
+        if is_deleted:
+            raise HTTPException(
+                status_code=403,
+                detail="由于滥用API key，已经被删除，如有疑问，请联系管理员。",
+            )
+        message = manager.generate_exceed_message(api_key)
+        logger.info(f"API {api_key} has reached the limit.")
+        return JSONResponse(
+            status_code=403,
+            content=message,
+        )
+        # 这里都check完成了
+    # 只要传入的api_key是唯一标识符后面的也是唯一唯一标识符
+    # 用他的api_key作为唯一标识符。
+    client_idx = login_router_request.client_idx
+    client_type = login_router_request.client_type
+    client = clients[client_type][client_idx]
+    # 这里还要加上使用次数， 差点忘了。
+    manager.increment_usage(api_key, CLAUDE_OFFICIAL_USAGE_INCREASE)
+    res = await client.retrieve_reverse_official_route(unique_name=api_key)
+    return res
 
 
 @router.post("/chat")

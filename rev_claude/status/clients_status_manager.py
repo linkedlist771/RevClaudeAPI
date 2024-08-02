@@ -223,7 +223,10 @@ class ClientsStatusManager:
             if not isinstance(last_plus_idx, list):
                 last_plus_idx = [last_plus_idx]
             add_session_login_account(
-                {__last_plus_idx: plus_clients[__last_plus_idx] for __last_plus_idx in last_plus_idx},
+                {
+                    __last_plus_idx: plus_clients[__last_plus_idx]
+                    for __last_plus_idx in last_plus_idx
+                },
                 "plus",
                 [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
             )
@@ -243,14 +246,11 @@ class ClientsStatusManager:
                 [ClaudeModels.SONNET_3_5.value],
             )
 
-
         process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
         # TODO: 添加获取用于处理session登录所使用的账号。
         # 现在就取plus的最后一共和basic的第一个
         # 添加获取用于处理session登录所使用的账号
         # 取plus的最后一个和basic的第一个
         # 分别添加 plus 和 basic 客户端的 session 登录账号
-
-
 
         return clients_status

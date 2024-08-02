@@ -38,3 +38,15 @@ REDIS_PORT = 6379
 
 DOCS_USERNAME = "claude-backend"
 DOCS_PASSWORD = "20Wd!!!!"
+
+
+# Claude 官方镜像的链接w
+
+CLAUDE_OFFICIAL_REVERSE_BASE_URL: str = "https://ai.liuli.arelay.com"
+
+# 三小时
+CLAUDE_OFFICIAL_EXPIRE_TIME = 3 * 60 * 60
+
+
+# 每次使用都会增加20次次数
+CLAUDE_OFFICIAL_USAGE_INCREASE = 20

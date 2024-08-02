@@ -5,13 +5,13 @@ import altair as alt
 from tqdm import tqdm
 from urllib.request import urlopen
 
+
 def get_public_ip():
     try:
-        response = urlopen('https://api.ipify.org')
-        return response.read().decode('utf-8')
+        response = urlopen("https://api.ipify.org")
+        return response.read().decode("utf-8")
     except:
         return None
-
 
 
 # claude3.ucas.life
@@ -33,8 +33,8 @@ if main_function == "API密钥管理":
             "创建API密钥",
             "查看API密钥使用情况",
             "验证API密钥",
-            "删除API密钥",        "批量删除API密钥",  # 新增这一行
-
+            "删除API密钥",
+            "批量删除API密钥",  # 新增这一行
             "获取所有API密钥",
         ],
     )
@@ -88,12 +88,12 @@ if main_function == "API密钥管理":
 
         if st.button("批量删除API密钥"):
             # 先按换行符分割，然后对每个部分按逗号分割，最后去除空白
-            api_keys_to_delete = api_keys_to_delete.replace('"', '')
-            api_keys_to_delete = api_keys_to_delete.replace("'", '')
+            api_keys_to_delete = api_keys_to_delete.replace('"', "")
+            api_keys_to_delete = api_keys_to_delete.replace("'", "")
             api_keys_list = [
                 key.strip()
-                for line in api_keys_to_delete.split('\n')
-                for key in line.split(',')
+                for line in api_keys_to_delete.split("\n")
+                for key in line.split(",")
                 if key.strip()
             ]
 

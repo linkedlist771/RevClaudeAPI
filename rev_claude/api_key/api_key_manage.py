@@ -69,10 +69,11 @@ class APIKeyManager:
         """Check if an API key is still valid (exists and has not expired)."""
         return self.redis.exists(api_key) == 1
 
-    def increment_usage(self, api_key):
+    def increment_usage(self, api_key, increment=1):
         """Increment the usage count for a given API key."""
         usage_key = f"{api_key}:usage"
-        self.redis.incr(usage_key)
+        # self.redis.incr(usage_key)
+        self.redis.incrby(usage_key, increment)
         current_usage_key = f"{api_key}:current_usage"
         self.redis.incr(current_usage_key)
         return (
@@ -206,7 +207,7 @@ class APIKeyManager:
             f"{api_key}:type",
             f"{api_key}:expiration",
             f"{api_key}:current_usage",
-            f"{api_key}:last_usage_time"
+            f"{api_key}:last_usage_time",
         ]
 
     def delete_api_key(self, api_key):
@@ -246,6 +247,14 @@ class APIKeyManager:
         current_usage = self.get_current_usage(api_key)
         last_usage_time = self.get_last_usage_time(api_key)
         key_type = self.get_api_key_type(api_key)
+
+        # BASIC_KEY_MAX_USAGE
+        # PLUS_KEY_MAX_USAGE
+        usage_limit = (
+            BASIC_KEY_MAX_USAGE
+            if key_type == APIKeyType.BASIC.value
+            else PLUS_KEY_MAX_USAGE
+        )
         expire_time = self.redis.ttl(api_key)
         # turn the last_usage_time to a readable format: time step => time
         is_key_valid = True
@@ -270,7 +279,8 @@ class APIKeyManager:
             "last_usage_time": last_usage_time,
             "key_type": key_type,
             "expire_time": expire_time,
-            "is_key_valid": is_key_valid
+            "is_key_valid": is_key_valid,
+            "usage_limit": usage_limit,
         }
 
 

@@ -67,7 +67,8 @@ async def delete_key(
 
 @router.delete("/delete_batch_keys")
 async def delete_batch_keys(
-    api_keys: BatchAPIKeysDeleteRequest, manager: APIKeyManager = Depends(get_api_key_manager)
+    api_keys: BatchAPIKeysDeleteRequest,
+    manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     """Delete a batch of API keys and their usage count."""
     res = manager.batch_delete_api_keys(api_keys.api_keys)

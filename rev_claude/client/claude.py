@@ -3,6 +3,7 @@
 
 import json, os, uuid
 import re
+
 # from curl_cffi import requests
 import httpx
 import asyncio
@@ -22,6 +23,8 @@ from rev_claude.configs import (
     STREAM_TIMEOUT,
     PROXIES,
     USE_PROXY,
+    CLAUDE_OFFICIAL_EXPIRE_TIME,
+    CLAUDE_OFFICIAL_REVERSE_BASE_URL,
 )
 from rev_claude.models import ClaudeModels
 from rev_claude.status.clients_status_manager import ClientsStatusManager
@@ -116,6 +119,22 @@ class Client:
         self.cookie_key = cookie_key
         # self.organization_id = self.get_organization_id()
 
+    async def retrieve_reverse_official_route(self, unique_name):
+        payload = {
+            "session_key": self.retrieve_session_key(),
+            "unique_name": unique_name,
+            "expires_in": CLAUDE_OFFICIAL_EXPIRE_TIME,
+        }
+        async with httpx.AsyncClient() as client:
+            login_url = (
+                CLAUDE_OFFICIAL_REVERSE_BASE_URL + "/manage-api/auth/oauth_token"
+            )
+            response = await client.post(login_url, json=payload)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return None
+
     async def __set_organization_id__(self):
         self.organization_id = await self.__async_get_organization_id()
         return self.organization_id
@@ -145,7 +164,9 @@ class Client:
         url = "https://claude.ai/api/organizations"
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.get(url, headers=self.build_organization_headers())
+                response = await client.get(
+                    url, headers=self.build_organization_headers()
+                )
                 res_str = response.text
                 logger.debug(f"res_str : {res_str}")
                 res = response.json()
@@ -157,6 +178,7 @@ class Client:
 
             except Exception as e:
                 import traceback
+
                 logger.error(traceback.format_exc())
 
     def get_content_type(self, file_path):
@@ -322,7 +344,9 @@ class Client:
                             # convert a byte string to a string
                             # logger.info(f"raw text: {text}")
                             # logger.debug(f"raw text: {text}")
-                            if ("Invalid model" in text) or ("Organization has no active Self-Serve Stripe" in text):
+                            if ("Invalid model" in text) or (
+                                "Organization has no active Self-Serve Stripe" in text
+                            ):
                                 logger.error(f"Invalid model : {text}")
 
                                 client_manager = ClientsStatusManager()
