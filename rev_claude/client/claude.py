@@ -324,6 +324,7 @@ class Client:
 
         if call_back:
             await call_back(response_text)
+            logger.info(f"Response text:\n {response_text}")
         # while current_retry < max_retry:
         #     try:
         #         works_fine = False
