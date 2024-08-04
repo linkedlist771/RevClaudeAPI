@@ -16,8 +16,12 @@ def get_public_ip():
 
 # claude3.ucas.life
 BASE_URL = f"http://60.205.189.192:1145"
+API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
+
 # 设置页面标题
 st.set_page_config(page_title="API密钥和Cookie管理")
+
+
 
 # 设置页面标题
 st.title("API密钥和Cookie管理")
@@ -48,7 +52,8 @@ if main_function == "API密钥管理":
         key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
 
         if st.button("创建API密钥"):
-            url = f"{BASE_URL}/api/v1/api_key/create_key"
+            # url = f"{BASE_URL}/api/v1/api_key/create_key"
+            url = f"{API_KEY_ROUTER}/create_key"
             payload = {
                 "expiration_days": expiration_days,
                 "key_type": key_type,
@@ -65,7 +70,8 @@ if main_function == "API密钥管理":
         api_key = st.text_input("API密钥")
 
         if st.button("验证API密钥"):
-            url = f"{BASE_URL}/api/v1/api_key/validate_key/{api_key}"
+            # url = f"{BASE_URL}/api/v1/api_key/validate_key/{api_key}"
+            url = f"{API_KEY_ROUTER}/validate_key/{api_key}"
             response = requests.get(url)
             if response.status_code == 200:
                 st.success("API密钥有效。")
@@ -77,7 +83,8 @@ if main_function == "API密钥管理":
         api_key_to_delete = st.text_input("要删除的API密钥")
 
         if st.button("删除API密钥"):
-            url = f"{BASE_URL}/api/v1/api_key/delete_key/{api_key_to_delete}"
+            # url = f"{BASE_URL}/api/v1/api_key/delete_key/{api_key_to_delete}"
+            url = f"{API_KEY_ROUTER}/delete_key/{api_key_to_delete}"
             response = requests.delete(url)
             if response.status_code == 200:
                 st.success("API密钥删除成功!")
@@ -100,7 +107,8 @@ if main_function == "API密钥管理":
             ]
 
             if api_keys_list:
-                url = f"{BASE_URL}/api/v1/api_key/delete_batch_keys"
+                # url = f"{BASE_URL}/api/v1/api_key/delete_batch_keys"
+                url = f"{API_KEY_ROUTER}/delete_batch_keys"
                 headers = {"Content-Type": "application/json"}
                 data = {"api_keys": api_keys_list}
 
@@ -119,7 +127,8 @@ if main_function == "API密钥管理":
         st.subheader("获取所有API密钥")
 
         if st.button("获取所有API密钥"):
-            url = f"{BASE_URL}/api/v1/api_key/list_keys"
+            # url = f"{BASE_URL}/api/v1/api_key/list_keys"
+            url = f"{API_KEY_ROUTER}/list_keys"
             headers = {"accept": "application/json"}
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
@@ -137,7 +146,8 @@ if main_function == "API密钥管理":
         )
 
         if st.button("绘制API密钥使用情况条状图"):
-            url = f"{BASE_URL}/api/v1/api_key/list_keys"
+            # url = f"{BASE_URL}/api/v1/api_key/list_keys"
+            url = f"{API_KEY_ROUTER}/list_keys"
             headers = {"accept": "application/json"}
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
@@ -180,7 +190,8 @@ if main_function == "API密钥管理":
         api_key = st.text_input("请输入要查看的API密钥")
 
         if st.button("查看API密钥使用情况"):
-            url = f"{BASE_URL}/api/v1/api_key/get_information/{api_key}"
+            # url = f"{BASE_URL}/api/v1/api_key/get_information/{api_key}"
+            url = f"{API_KEY_ROUTER}/get_information/{api_key}"
             headers = {"accept": "application/json"}
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
@@ -194,7 +205,8 @@ if main_function == "API密钥管理":
         api_key_to_reset = st.text_input("要重置的API密钥")
 
         if st.button("重置使用量"):
-            url = f"{BASE_URL}/api/v1/reset_current_usage/{api_key_to_reset}"
+            # url = f"{BASE_URL}/api/v1/reset_current_usage/{api_key_to_reset}"
+            url = f"{API_KEY_ROUTER}/reset_current_usage/{api_key_to_reset}"
             response = requests.post(url)
             if response.status_code == 200:
                 result = response.json()
@@ -208,7 +220,8 @@ if main_function == "API密钥管理":
         additional_days = st.number_input("要延长的天数", min_value=1, value=30, step=1)
 
         if st.button("延长过期时间"):
-            url = f"{BASE_URL}/api/v1/extend_expiration/{api_key_to_extend}"
+            # url = f"{BASE_URL}/api/v1/extend_expiration/{api_key_to_extend}"
+            url = f"{API_KEY_ROUTER}/extend_expiration/{api_key_to_extend}"
             payload = {"additional_days": additional_days}
             response = requests.post(url, json=payload)
             if response.status_code == 200:
