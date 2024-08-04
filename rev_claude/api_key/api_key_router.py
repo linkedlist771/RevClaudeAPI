@@ -2,7 +2,11 @@ from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
-from rev_claude.schemas import CreateAPIKeyRequest, BatchAPIKeysDeleteRequest
+from rev_claude.schemas import (
+    CreateAPIKeyRequest,
+    BatchAPIKeysDeleteRequest,
+    ExtendExpirationRequest,
+)
 
 router = APIRouter()
 
@@ -45,6 +49,32 @@ async def increment_usage(
         return {"api_key": api_key, "usage_count": usage}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/reset_current_usage/{api_key}")
+async def reset_current_usage(
+    api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
+):
+    """Reset the current usage count of an API key."""
+    try:
+        usage = manager.reset_current_usage(api_key)
+        return {"api_key": api_key, "usage_count": usage}
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/extend_expiration/{api_key}")
+async def extend_api_key_expiration(
+    api_key: str,
+    request: ExtendExpirationRequest,
+    manager: APIKeyManager = Depends(get_api_key_manager),
+):
+    """延长API密钥的过期时间。"""
+    try:
+        result = manager.extend_api_key_expiration(api_key, request.additional_days)
+        return {"message": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/get_information/{api_key}")

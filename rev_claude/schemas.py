@@ -50,3 +50,7 @@ class ArtifactsCodeUploadRequest(BaseModel):
 
 class BatchAPIKeysDeleteRequest(BaseModel):
     api_keys: List[str]
+
+
+class ExtendExpirationRequest(BaseModel):
+    additional_days: int

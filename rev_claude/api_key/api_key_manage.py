@@ -181,6 +181,12 @@ class APIKeyManager:
         self.redis.set(type_key, _type)
         return f"API key {api_key} is now a {_type} user."
 
+    def reset_current_usage(self, api_key):
+        """Reset the current usage count of an API key."""
+        current_usage_key = f"{api_key}:current_usage"
+        self.redis.set(current_usage_key, 0)
+        return self.get_current_usage(api_key)
+
     # def delete_api_key(self, api_key):
     #     """Delete an API key and its associated usage count."""
     #     usage_key = f"{api_key}:usage"
@@ -283,6 +289,33 @@ class APIKeyManager:
             "is_key_valid": is_key_valid,
             "usage_limit": usage_limit,
         }
+
+    def extend_api_key_expiration(self, api_key, additional_days):
+        """延长API密钥的过期时间。"""
+        if not self.is_api_key_valid(api_key):
+            return f"API密钥 {api_key} 无效或已过期。"
+
+        # 将天数转换为秒数
+        additional_seconds = additional_days * 24 * 60 * 60
+
+        # 获取当前的TTL
+        current_ttl = self.redis.ttl(api_key)
+
+        if current_ttl == -1:  # 密钥存在但没有过期时间
+            new_ttl = additional_seconds
+        elif current_ttl > 0:
+            new_ttl = current_ttl + additional_seconds
+        else:
+            return f"API密钥 {api_key} 已经过期，无法延长。"
+
+        # 延长主密钥和所有关联密钥的过期时间
+        pipeline = self.redis.pipeline()
+        for key in self.get_associated_keys(api_key):
+            pipeline.expire(key, new_ttl)
+        pipeline.execute()
+
+        new_expiration_days = new_ttl / (24 * 60 * 60)
+        return f"API密钥 {api_key} 的过期时间已延长 {additional_days} 天。新的过期时间还剩 {new_expiration_days:.2f} 天。"
 
 
 def get_api_key_manager():

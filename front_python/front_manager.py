@@ -36,6 +36,8 @@ if main_function == "API密钥管理":
             "删除API密钥",
             "批量删除API密钥",  # 新增这一行
             "获取所有API密钥",
+            "重置API密钥使用量",  # Add this line
+            "延长API密钥过期时间",  # 新增这一行
         ],
     )
 
@@ -186,6 +188,35 @@ if main_function == "API密钥管理":
                 st.write(api_key_info)
             else:
                 st.error("获取API密钥使用情况失败。")
+
+    elif api_key_function == "重置API密钥使用量":
+        st.subheader("重置API密钥使用量")
+        api_key_to_reset = st.text_input("要重置的API密钥")
+
+        if st.button("重置使用量"):
+            url = f"{BASE_URL}/reset_current_usage/{api_key_to_reset}"
+            response = requests.post(url)
+            if response.status_code == 200:
+                result = response.json()
+                st.success(f"API密钥 已重置： {result}")
+            else:
+                st.error("重置API密钥使用量失败。")
+
+    elif api_key_function == "延长API密钥过期时间":
+        st.subheader("延长API密钥过期时间")
+        api_key_to_extend = st.text_input("要延长的API密钥")
+        additional_days = st.number_input("要延长的天数", min_value=1, value=30, step=1)
+
+        if st.button("延长过期时间"):
+            url = f"{BASE_URL}/extend_expiration/{api_key_to_extend}"
+            payload = {"additional_days": additional_days}
+            response = requests.post(url, json=payload)
+            if response.status_code == 200:
+                result = response.json()
+                st.success(f"API密钥过期时间已延长：{result['message']}")
+            else:
+                st.error("延长API密钥过期时间失败。")
+                st.write(response.text)
 
 
 elif main_function == "Cookie管理":

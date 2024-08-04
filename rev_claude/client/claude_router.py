@@ -149,12 +149,15 @@ async def obtain_reverse_official_login_router(
         if is_deleted:
 
             return JSONResponse(
-                content={"message": "由于滥用API key，已经被删除，如有疑问，请联系管理员。", 'valid': False},
+                content={
+                    "message": "由于滥用API key，已经被删除，如有疑问，请联系管理员。",
+                    "valid": False,
+                },
             )
         message = manager.generate_exceed_message(api_key)
         logger.info(f"API {api_key} has reached the limit.")
         return JSONResponse(
-            content={"message": message, 'valid': False},
+            content={"message": message, "valid": False},
         )
         # 这里都check完成了
     # 只要传入的api_key是唯一标识符后面的也是唯一唯一标识符
@@ -168,7 +171,7 @@ async def obtain_reverse_official_login_router(
     manager.increment_usage(api_key, CLAUDE_OFFICIAL_USAGE_INCREASE)
     res = await client.retrieve_reverse_official_route(unique_name=api_key)
     return JSONResponse(
-        content={"data": res, 'valid': True},
+        content={"data": res, "valid": True},
     )
 
 
