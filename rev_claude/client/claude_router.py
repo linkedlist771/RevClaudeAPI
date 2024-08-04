@@ -1,5 +1,6 @@
 import asyncio
 from functools import partial
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -252,51 +253,8 @@ async def chat(
     else:
         claude_client = basic_clients[client_idx]
     raw_message = claude_chat_request.message
-    max_retry = NEW_CONVERSATION_RETRY
-    current_retry = 0
-    while current_retry < max_retry:
-        try:
-            if not conversation_id:
-                try:
-                    conversation = await claude_client.create_new_chat(model=model)
-                    logger.debug(
-                        f"Created new conversation with response: \n{conversation}"
-                    )
-                    conversation_id = conversation["uuid"]
-                    # now we can reredenert the user's prompt
-                    if USE_MERMAID_AND_SVG and claude_chat_request.need_artifacts:
-                        prompt = claude_chat_request.message
-
-                        rendered_prompt = await ArtifactsRendererPrompt(
-                            prompt=prompt
-                        ).render_prompt()
-                        claude_chat_request.message = rendered_prompt
-                    await asyncio.sleep(2)  # 等待两秒秒,创建成功后
-
-                    break  # 成功创建对话后跳出循环
-                except Exception as e:
-                    current_retry += 1
-                    logger.error(
-                        f"Failed to create conversation. Retry {current_retry}/{max_retry}. Error: {e}"
-                    )
-                    if current_retry == max_retry:
-                        logger.error(
-                            f"Failed to create conversation after {max_retry} retries."
-                        )
-                        return StreamingResponse(
-                            build_sse_data(message="创建对话失败，请重新尝试。"),
-                            media_type="text/event-stream",
-                        )
-                        # return ("error: ", e)
-                    else:
-                        logger.info("Retrying in 2 second...")
-                        await asyncio.sleep(2)
-            else:
-                logger.info(f"Using existing conversation with id: {conversation_id}")
-                break
-        except Exception as e:
-            logger.error(f"Meet an error: {e}")
-            return ("error: ", e)
+    if not conversation_id:
+        conversation_id = str(uuid4())
 
     message = claude_chat_request.message
     is_stream = claude_chat_request.stream
