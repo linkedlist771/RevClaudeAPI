@@ -83,7 +83,6 @@ class ClientsStatusManager:
             return {}
 
     def set_client_limited(self, client_type, client_idx, start_time, model):
-
         # 都得传入模型进行设置，我看这样设计就比较好了
         client_status_key = self.get_client_status_key(client_type, client_idx)
         # 设置键值对
@@ -218,18 +217,18 @@ class ClientsStatusManager:
         from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
 
         cookie_manager = get_cookie_manager()
-        if plus_clients:
-            last_plus_idx = list(plus_clients.keys())[-3:]
-            if not isinstance(last_plus_idx, list):
-                last_plus_idx = [last_plus_idx]
-            add_session_login_account(
-                {
-                    __last_plus_idx: plus_clients[__last_plus_idx]
-                    for __last_plus_idx in last_plus_idx
-                },
-                "plus",
-                [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
-            )
+        # if plus_clients:
+        #     last_plus_idx = list(plus_clients.keys())[-3:]
+        #     if not isinstance(last_plus_idx, list):
+        #         last_plus_idx = [last_plus_idx]
+        #     add_session_login_account(
+        #         {
+        #             __last_plus_idx: plus_clients[__last_plus_idx]
+        #             for __last_plus_idx in last_plus_idx
+        #         },
+        #         "plus",
+        #         [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
+        #     )
 
         process_clients(
             plus_clients,
@@ -237,16 +236,16 @@ class ClientsStatusManager:
             [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
         )
 
-        if basic_clients:
-            first_basic_idx = list(basic_clients.keys())[:10]
-            add_session_login_account(
-                # {first_basic_idx: basic_clients[first_basic_idx]},
-                {basic_idx: basic_clients[basic_idx] for basic_idx in first_basic_idx},
-                "basic",
-                [ClaudeModels.SONNET_3_5.value],
-            )
+        # if basic_clients:
+        #     first_basic_idx = list(basic_clients.keys())[:10]
+        #     add_session_login_account(
+        #         # {first_basic_idx: basic_clients[first_basic_idx]},
+        #         {basic_idx: basic_clients[basic_idx] for basic_idx in first_basic_idx},
+        #         "basic",
+        #         [ClaudeModels.SONNET_3_5.value],
+        #     )
 
-        process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
+        # process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
         # TODO: 添加获取用于处理session登录所使用的账号。
         # 现在就取plus的最后一共和basic的第一个
         # 添加获取用于处理session登录所使用的账号
