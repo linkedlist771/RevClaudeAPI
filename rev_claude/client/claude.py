@@ -347,7 +347,8 @@ class Client:
         
             # formatted_messages: list, bot_name: str
         messages = [{"role": "assistant", "content": prompt}]
-        messages = former_messages.extend(messages)
+        former_messages.extend(messages)
+        messages = former_messages
         response_text = ""
         async for text in poe_bot_streaming_message(
             formatted_messages=messages, bot_name=model
