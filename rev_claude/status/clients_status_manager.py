@@ -171,52 +171,68 @@ class ClientsStatusManager:
             )
 
     def get_all_clients_status(self, basic_clients, plus_clients):
-        def retrieve_client_status(idx, client, client_type, models):
-            self.create_if_not_exist(client_type, idx, models)
-            account = cookie_manager.get_account(client.cookie_key)
-            is_active = self.set_client_active_when_cd(client_type, idx)
+        return \
+            [
+                ClientsStatus(
+                        id="使用账号1",
+                        status=ClientsStatus.ACTIVE.value,
+                        type="plus",
+                        idx=0,
+                        message="可用",
+                    )
 
-            if is_active:
-                _status = ClientStatus.ACTIVE.value
-                _message = "可用"
-            else:
-                _status = ClientStatus.CD.value
-                key = self.get_client_status_start_time_key(client_type, idx)
-                _message = self.get_limited_message(key, client_type, idx)
-            client_type = "normal" if client_type == "basic" else client_type
-            status = ClientsStatus(
-                id=account,
-                status=_status,
-                type=client_type,
-                idx=idx,
-                message=_message,
-            )
-            return status
 
-        def process_clients(clients, client_type, models):
-            for idx, client in clients.items():
-                status = retrieve_client_status(idx, client, client_type, models)
-                clients_status.append(status)
+        ]
+        # 后面在优化这里
+        # def retrieve_client_status(idx, client, client_type, models):
+        #     self.create_if_not_exist(client_type, idx, models)
+        #     account = cookie_manager.get_account(client.cookie_key)
+        #     is_active = self.set_client_active_when_cd(client_type, idx)
+        #
+        #     if is_active:
+        #         _status = ClientStatus.ACTIVE.value
+        #         _message = "可用"
+        #     else:
+        #         _status = ClientStatus.CD.value
+        #         key = self.get_client_status_start_time_key(client_type, idx)
+        #         _message = self.get_limited_message(key, client_type, idx)
+        #     client_type = "normal" if client_type == "basic" else client_type
+        #     status = ClientsStatus(
+        #         id=account,
+        #         status=_status,
+        #         type=client_type,
+        #         idx=idx,
+        #         message=_message,
+        #     )
+        #     return status
+        #
+        #
 
-        def add_session_login_account(clients, client_type, models):
-            for idx, client in clients.items():
-                status = retrieve_client_status(idx, client, client_type, models)
-                status.is_session_login = True
-                # 获取这个client的session key
-                # session_key = client.retrieve_session_key()
-                # status.meta_data["session_key"] = session_key
-                # clients_status.append(status) # 如何添加到列表的前面
-                # clients_status.insert(0, status)
-                clients_status.append(status)
-                # 添加到最前面
-                # __clients_status = [status] + clients_status
-                # clients_status = __clients_status
-                # clients_status = [status] + clients_status
+        #
+        # def process_clients(clients, client_type, models):
+        #     for idx, client in clients.items():
+        #         status = retrieve_client_status(idx, client, client_type, models)
+        #         clients_status.append(status)
+        #
+        # def add_session_login_account(clients, client_type, models):
+        #     for idx, client in clients.items():
+        #         status = retrieve_client_status(idx, client, client_type, models)
+        #         status.is_session_login = True
+        #         # 获取这个client的session key
+        #         # session_key = client.retrieve_session_key()
+        #         # status.meta_data["session_key"] = session_key
+        #         # clients_status.append(status) # 如何添加到列表的前面
+        #         # clients_status.insert(0, status)
+        #         clients_status.append(status)
+        #         # 添加到最前面
+        #         # __clients_status = [status] + clients_status
+        #         # clients_status = __clients_status
+        #         # clients_status = [status] + clients_status
 
-        clients_status = []
-        from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
-
-        cookie_manager = get_cookie_manager()
+        # clients_status = []
+        # from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
+        #
+        # cookie_manager = get_cookie_manager()
         # if plus_clients:
         #     last_plus_idx = list(plus_clients.keys())[-3:]
         #     if not isinstance(last_plus_idx, list):
@@ -230,11 +246,11 @@ class ClientsStatusManager:
         #         [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
         #     )
 
-        process_clients(
-            plus_clients,
-            "plus",
-            [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
-        )
+        # process_clients(
+        #     plus_clients,
+        #     "plus",
+        #     [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
+        # )
 
         # if basic_clients:
         #     first_basic_idx = list(basic_clients.keys())[:10]

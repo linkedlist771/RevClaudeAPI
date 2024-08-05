@@ -314,7 +314,6 @@ class Client:
         #     # model: Optional[ClaudeModels] = None
         #     model: Optional[str] = None
 
-
         conversation_history_request = ConversationHistoryRequestInput(
             client_idx=client_idx,
             conversation_type=client_type,
@@ -331,7 +330,7 @@ class Client:
                 break
         if former_messages:
             former_messages = [{"role": message.role.value, "content": message.content} for message in former_messages]
-        logger.debug(f"former_messages: {former_messages}")
+        # logger.debug(f"former_messages: {former_messages}")
 
         # payload = json.dumps(__payload)
         # payload = __payload
