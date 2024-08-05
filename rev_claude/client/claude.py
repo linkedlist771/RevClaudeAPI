@@ -26,8 +26,7 @@ from rev_claude.configs import (
     CLAUDE_OFFICIAL_EXPIRE_TIME,
     CLAUDE_OFFICIAL_REVERSE_BASE_URL,
 )
-from rev_claude.history.conversation_history_manager import ConversationHistoryRequestInput, \
-    conversation_history_manager
+
 from rev_claude.models import ClaudeModels
 from rev_claude.poe_utils.utils import poe_bot_streaming_message
 from rev_claude.status.clients_status_manager import ClientsStatusManager
@@ -292,6 +291,8 @@ class Client:
         api_key=None,
         timeout=120,
     ):
+        from rev_claude.history.conversation_history_manager import ConversationHistoryRequestInput, \
+            conversation_history_manager
 
         # url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
         __payload = {
