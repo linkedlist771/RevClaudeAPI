@@ -26,6 +26,8 @@ from rev_claude.configs import (
     CLAUDE_OFFICIAL_EXPIRE_TIME,
     CLAUDE_OFFICIAL_REVERSE_BASE_URL,
 )
+from rev_claude.history.conversation_history_manager import ConversationHistoryRequestInput, \
+    conversation_history_manager
 from rev_claude.models import ClaudeModels
 from rev_claude.poe_utils.utils import poe_bot_streaming_message
 from rev_claude.status.clients_status_manager import ClientsStatusManager
@@ -287,6 +289,7 @@ class Client:
         attachments=None,
         files=None,
         call_back=None,
+        api_key=None,
         timeout=120,
     ):
 
@@ -301,6 +304,33 @@ class Client:
         }
         if client_type != "plus":
             __payload.pop("model")
+
+        # class ConversationHistoryRequestInput(BaseModel):
+        #     client_idx: int
+        #     conversation_type: CookieKeyType
+        #     api_key: str
+        #     conversation_id: Optional[str] = None
+        #     # model: Optional[ClaudeModels] = None
+        #     model: Optional[str] = None
+
+
+        conversation_history_request = ConversationHistoryRequestInput(
+            client_idx=client_idx,
+            conversation_type=client_type,
+            api_key=api_key,
+            conversation_id=conversation_id,
+            model=model,
+        )
+        all_histories = conversation_history_manager.get_conversation_histories(conversation_history_request)
+        former_messages = []
+        logger.debug(f"all_histories: {all_histories}")
+        for history in all_histories:
+            if history.conversation_id == conversation_id:
+                former_messages = history.messages
+                break
+        logger.debug(f"former_messages: {former_messages}")
+
+
         # payload = json.dumps(__payload)
         # payload = __payload
 

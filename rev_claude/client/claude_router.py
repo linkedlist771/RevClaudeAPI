@@ -311,6 +311,7 @@ async def chat(
             attachments=attachments,
             files=files,
             call_back=call_back,
+            api_key=api_key,
         )
         streaming_res = patched_generate_data(streaming_res, conversation_id, hrefs)
         return StreamingResponse(
