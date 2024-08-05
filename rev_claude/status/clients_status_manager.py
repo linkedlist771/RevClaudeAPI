@@ -171,11 +171,10 @@ class ClientsStatusManager:
             )
 
     def get_all_clients_status(self, basic_clients, plus_clients):
-        return \
-            [
+        return [
                 ClientsStatus(
                         id="使用账号1",
-                        status=ClientsStatus.ACTIVE.value,
+                        status=ClientStatus.ACTIVE.value,
                         type="plus",
                         idx=0,
                         message="可用",
@@ -268,4 +267,4 @@ class ClientsStatusManager:
         # 取plus的最后一个和basic的第一个
         # 分别添加 plus 和 basic 客户端的 session 登录账号
 
-        return clients_status
+        # return clients_status
