@@ -329,8 +329,9 @@ class Client:
             if history.conversation_id == conversation_id:
                 former_messages = history.messages
                 break
+        if former_messages:
+            former_messages = [message.model_dump() for message in former_messages]
         logger.debug(f"former_messages: {former_messages}")
-
 
         # payload = json.dumps(__payload)
         # payload = __payload
@@ -346,6 +347,7 @@ class Client:
         
             # formatted_messages: list, bot_name: str
         messages = [{"role": "assistant", "content": prompt}]
+        messages = former_messages.extend(messages)
         response_text = ""
         async for text in poe_bot_streaming_message(
             formatted_messages=messages, bot_name=model
