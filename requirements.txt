@@ -11,3 +11,4 @@ redis
 duckduckgo_search
 tqdm
 redis[hiredis]
+apscheduler
