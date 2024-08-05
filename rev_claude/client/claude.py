@@ -329,8 +329,8 @@ class Client:
             if history.conversation_id == conversation_id:
                 former_messages = history.messages
                 break
-        # if former_messages:
-        #     former_messages = [message.model_dump() for message in former_messages]
+        if former_messages:
+            former_messages = [{"role": message.role.value, "content": message.content} for message in former_messages]
         logger.debug(f"former_messages: {former_messages}")
 
         # payload = json.dumps(__payload)
