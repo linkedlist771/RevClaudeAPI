@@ -323,7 +323,7 @@ class Client:
         )
         all_histories = conversation_history_manager.get_conversation_histories(conversation_history_request)
         former_messages = []
-        logger.debug(f"all_histories: {all_histories}")
+        # logger.debug(f"all_histories: {all_histories}")
         for history in all_histories:
             if history.conversation_id == conversation_id:
                 former_messages = history.messages
@@ -346,6 +346,7 @@ class Client:
         
             # formatted_messages: list, bot_name: str
         messages = [{"role": "assistant", "content": prompt}]
+        logger.info(f"formatted_messages: {messages}")
         former_messages.extend(messages)
         messages = former_messages
         response_text = ""
