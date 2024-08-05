@@ -176,7 +176,8 @@ class ClientsStatusManager:
                         id="使用账号1",
                         status=ClientStatus.ACTIVE.value,
                         type="plus",
-                        idx=0,
+                    # find the firs idx
+                        idx= list(plus_clients.keys())[0],
                         message="可用",
                     )
 
