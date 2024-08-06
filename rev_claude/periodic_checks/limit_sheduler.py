@@ -13,7 +13,19 @@ limit_check_scheduler.add_job(
     id='check_usage_limits',
     name='Check API usage limits every 10 minutes',
     replace_existing=True,
-    next_run_time=datetime.now()  # 这会使任务立即运行一次
 )
+
+
+class LimitScheduler:
+    limit_check_scheduler = limit_check_scheduler
+
+    @staticmethod
+    async def start():
+        await check_reverse_official_usage_limits()
+        limit_check_scheduler.start()
+
+    @staticmethod
+    async def shutdown():
+        limit_check_scheduler.shutdown()
 
 
