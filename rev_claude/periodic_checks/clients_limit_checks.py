@@ -67,6 +67,7 @@ async def simple_new_chat(claude_client, client_type, client_idx):
             model=model,
             client_type=client_type,
             client_idx=client_idx,
+            attachments=[],
         ):
             logger.info(data)
     except Exception as e:
