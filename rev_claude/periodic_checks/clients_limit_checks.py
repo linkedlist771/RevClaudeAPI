@@ -88,6 +88,7 @@ async def check_reverse_official_usage_limits():
                 plus_clients[status.idx]
                 if status.type == "plus"
                 else basic_clients[status.idx]
+
             ),
             "type": status.type,
             "idx": status.idx,
@@ -95,7 +96,8 @@ async def check_reverse_official_usage_limits():
         for status in status_list
         if status.is_session_login
     ]
-    for client in clients:
+    for idx, client in enumerate(clients):
+        logger.debug(f"test client {idx}/ {len(clients)}")
         await simple_new_chat(client["client"], client["type"], client["idx"])
 
     # 完成了， 然后就是检测状态
