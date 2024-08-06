@@ -8,62 +8,93 @@ from rev_claude.utils.sse_utils import build_sse_data
 from utility import get_client_status
 from loguru import logger
 
+
 async def try_to_create_new_conversation(claude_client, model):
     max_retry = NEW_CONVERSATION_RETRY
     current_retry = 0
     while current_retry < max_retry:
         try:
-                try:
-                    conversation = await claude_client.create_new_chat(model=model)
-                    logger.debug(
-                        f"Created new conversation with response: \n{conversation}"
-                    )
-                    conversation_id = conversation["uuid"]
-                    # now we can reredenert the user's prompt
+            try:
+                conversation = await claude_client.create_new_chat(model=model)
+                logger.debug(
+                    f"Created new conversation with response: \n{conversation}"
+                )
+                conversation_id = conversation["uuid"]
+                # now we can reredenert the user's prompt
 
-                    await asyncio.sleep(2)  # 等待两秒秒,创建成功后
-                    return conversation_id
-                except Exception as e:
-                    current_retry += 1
+                await asyncio.sleep(2)  # 等待两秒秒,创建成功后
+                return conversation_id
+            except Exception as e:
+                current_retry += 1
+                logger.error(
+                    f"Failed to create conversation. Retry {current_retry}/{max_retry}. Error: {e}"
+                )
+                if current_retry == max_retry:
                     logger.error(
-                        f"Failed to create conversation. Retry {current_retry}/{max_retry}. Error: {e}"
+                        f"Failed to create conversation after {max_retry} retries."
                     )
-                    if current_retry == max_retry:
-                        logger.error(
-                            f"Failed to create conversation after {max_retry} retries."
-                        )
-                        return
-                        # return ("error: ", e)
-                    else:
-                        logger.info("Retrying in 2 second...")
-                        await asyncio.sleep(2)
+                    return
+                    # return ("error: ", e)
+                else:
+                    logger.info("Retrying in 2 second...")
+                    await asyncio.sleep(2)
 
         except Exception as e:
             logger.error(f"Meet an error: {e}")
             return
 
+    # async def stream_message(
+    #     self,
+    #     prompt,
+    #     conversation_id,
+    #     model,
+    #     client_type,
+    #     client_idx,
+    #     attachments=None,
+    #     files=None,
+    #     call_back=None,
+    #     timeout=120,
+    # ):
 
-async def simple_new_chat(claude_client):
+
+async def simple_new_chat(claude_client, client_type, client_idx):
     model = ClaudeModels.SONNET_3_5
     conversation_id = await try_to_create_new_conversation(claude_client, model)
+    try:
+        async for data in claude_client.stream_message(
+            prompt="Say, yes",
+            conversation_id=conversation_id,
+            model=model,
+            client_type=client_type,
+            client_idx=client_idx,
+        ):
+            logger.info(data)
+    except Exception as e:
+        from traceback import format_exc
+
+        logger.error(f"Error: {e}")
+        # logger.error(f"Error: {e}")
+
 
 async def check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
 
     basic_clients, plus_clients = ClientManager().get_clients()
     status_list = get_client_status(basic_clients, plus_clients)
-    clients = []
-    for status in status_list:
-        if status.is_session_login:
-            client_type = status.type
-            client_idx = status.idx
-            if client_type == "plus":
-                clients.append(plus_clients[client_idx])
-            else:
-                clients.append(basic_clients[client_idx])
+    clients = [
+        {
+            "client": (
+                plus_clients[status.idx]
+                if status.type == "plus"
+                else basic_clients[status.idx]
+            ),
+            "type": status.type,
+            "idx": status.idx,
+        }
+        for status in status_list
+        if status.is_session_login
+    ]
+    for client in clients:
+        await simple_new_chat(client["client"], client["type"], client["idx"])
+
     # 完成了， 然后就是检测状态
-
-
-
-
-
