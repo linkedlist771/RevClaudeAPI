@@ -58,7 +58,7 @@ async def try_to_create_new_conversation(claude_client, model):
 
 
 async def simple_new_chat(claude_client, client_type, client_idx):
-    model = ClaudeModels.SONNET_3_5
+    model = ClaudeModels.SONNET_3_5.value
     conversation_id = await try_to_create_new_conversation(claude_client, model)
     try:
         async for data in claude_client.stream_message(
