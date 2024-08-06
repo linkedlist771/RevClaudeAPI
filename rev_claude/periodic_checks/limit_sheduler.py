@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from rev_claude.configs import CLAUDE_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES
 from rev_claude.periodic_checks.clients_limit_checks import (
     check_reverse_official_usage_limits,
 )
@@ -11,9 +12,9 @@ limit_check_scheduler = AsyncIOScheduler()
 # 设置定时任务
 limit_check_scheduler.add_job(
     check_reverse_official_usage_limits,
-    trigger=IntervalTrigger(minutes=10),
+    trigger=IntervalTrigger(minutes=CLAUDE_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES),
     id="check_usage_limits",
-    name="Check API usage limits every 10 minutes",
+    name=f"Check API usage limits every {CLAUDE_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES} minutes",
     replace_existing=True,
 )
 

@@ -2,8 +2,7 @@ import asyncio
 
 from starlette.responses import StreamingResponse
 from tqdm.asyncio import tqdm
-
-from rev_claude.configs import NEW_CONVERSATION_RETRY
+from rev_claude.configs import NEW_CONVERSATION_RETRY, CLAUDE_CLIENT_LIMIT_CHECKS_PROMPT
 from rev_claude.models import ClaudeModels
 from rev_claude.utils.sse_utils import build_sse_data
 from utility import get_client_status
@@ -21,8 +20,6 @@ async def try_to_create_new_conversation(claude_client, model):
                     f"Created new conversation with response: \n{conversation}"
                 )
                 conversation_id = conversation["uuid"]
-                # now we can reredenert the user's prompt
-
                 await asyncio.sleep(2)  # 等待两秒秒,创建成功后
                 return conversation_id
             except Exception as e:
@@ -35,7 +32,6 @@ async def try_to_create_new_conversation(claude_client, model):
                         f"Failed to create conversation after {max_retry} retries."
                     )
                     return
-                    # return ("error: ", e)
                 else:
                     logger.info("Retrying in 2 second...")
                     await asyncio.sleep(2)
@@ -44,26 +40,13 @@ async def try_to_create_new_conversation(claude_client, model):
             logger.error(f"Meet an error: {e}")
             return
 
-    # async def stream_message(
-    #     self,
-    #     prompt,
-    #     conversation_id,
-    #     model,
-    #     client_type,
-    #     client_idx,
-    #     attachments=None,
-    #     files=None,
-    #     call_back=None,
-    #     timeout=120,
-    # ):
-
 
 async def simple_new_chat(claude_client, client_type, client_idx):
     model = ClaudeModels.SONNET_3_5.value
     conversation_id = await try_to_create_new_conversation(claude_client, model)
     try:
         async for data in claude_client.stream_message(
-            prompt="Say, yes",
+            prompt=CLAUDE_CLIENT_LIMIT_CHECKS_PROMPT,
             conversation_id=conversation_id,
             model=model,
             client_type=client_type,
