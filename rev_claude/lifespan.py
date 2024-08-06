@@ -7,7 +7,6 @@ from rev_claude.periodic_checks.limit_sheduler import LimitScheduler
 from rev_claude.utils.time_zone_utils import set_cn_time_zone
 
 
-
 async def on_startup():
     logger.info("Starting up")
     set_cn_time_zone()
@@ -15,7 +14,6 @@ async def on_startup():
     logger.info("Clients loaded")
     await LimitScheduler.start()
     logger.info("Scheduler started")
-
 
 
 async def on_shutdown():

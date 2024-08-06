@@ -1,6 +1,7 @@
 import asyncio
 
 from starlette.responses import StreamingResponse
+from tqdm.asyncio import tqdm
 
 from rev_claude.configs import NEW_CONVERSATION_RETRY
 from rev_claude.models import ClaudeModels
@@ -88,7 +89,6 @@ async def check_reverse_official_usage_limits():
                 plus_clients[status.idx]
                 if status.type == "plus"
                 else basic_clients[status.idx]
-
             ),
             "type": status.type,
             "idx": status.idx,
@@ -96,8 +96,20 @@ async def check_reverse_official_usage_limits():
         for status in status_list
         if status.is_session_login
     ]
-    for idx, client in enumerate(clients):
-        logger.debug(f"test client {idx}/ {len(clients)}")
-        await simple_new_chat(client["client"], client["type"], client["idx"])
+    logger.info(f"Found {len(clients)} active clients to check")
 
-    # 完成了， 然后就是检测状态
+    async def check_client(client):
+        try:
+            logger.debug(f"Testing client {client['type']} {client['idx']}")
+            await simple_new_chat(client["client"], client["type"], client["idx"])
+            logger.debug(f"Completed test for client {client['type']} {client['idx']}")
+        except Exception as e:
+            logger.error(f"Error testing client {client['type']} {client['idx']}: {e}")
+
+    try:
+        tasks = [check_client(client) for client in clients]
+        await tqdm.gather(*tasks, desc="Checking clients", unit="client")
+    except Exception as e:
+        logger.error(f"Error during client checks: {e}")
+
+    logger.info("Completed check_reverse_official_usage_limits")
