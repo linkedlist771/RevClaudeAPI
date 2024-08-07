@@ -43,7 +43,7 @@ def get_usage_icon(usage_type):
 
 def display_client_box(client):
     type_color = get_type_color(client['type'])
-    usage_icon = get_usage_icon(client['usage_type'])
+    # usage_icon = get_usage_icon(client['usage_type'])
 
     with st.container():
         client_container = st.empty()
@@ -55,7 +55,7 @@ def display_client_box(client):
                     <h3 style="margin: 0;">{client['account']}</h3>
                     <span style="background-color: {type_color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">{client['type']}</span>
                 </div>
-                <p style="margin: 5px 0;">使用类型: {usage_icon} {usage_type_map[client['usage_type']]}</p>
+                <p style="margin: 5px 0;">使用类型: {get_usage_icon(client['usage_type'])} {usage_type_map[client['usage_type']]}</p>
             </div>
             """, unsafe_allow_html=True)
 
