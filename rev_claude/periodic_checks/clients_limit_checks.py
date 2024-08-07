@@ -63,7 +63,7 @@ async def check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
 
     basic_clients, plus_clients = ClientManager().get_clients()
-    status_list = get_client_status(basic_clients, plus_clients)
+    status_list = await get_client_status(basic_clients, plus_clients)
     clients = [
         {
             "client": (

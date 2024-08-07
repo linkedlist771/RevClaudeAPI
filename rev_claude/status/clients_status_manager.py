@@ -171,10 +171,10 @@ class ClientsStatusManager:
                 self.get_client_status_start_time_key(client_type, client_idx), val
             )
 
-    def get_all_clients_status(self, basic_clients, plus_clients):
-        def retrieve_client_status(idx, client, client_type, models):
+    async def get_all_clients_status(self, basic_clients, plus_clients):
+        async def retrieve_client_status(idx, client, client_type, models):
             self.create_if_not_exist(client_type, idx, models)
-            account = cookie_manager.get_account(client.cookie_key)
+            account = await cookie_manager.get_account(client.cookie_key)
             is_active = self.set_client_active_when_cd(client_type, idx)
 
             if is_active:
@@ -194,14 +194,14 @@ class ClientsStatusManager:
             )
             return status
 
-        def process_clients(clients, client_type, models):
+        async def process_clients(clients, client_type, models):
             for idx, client in clients.items():
-                status = retrieve_client_status(idx, client, client_type, models)
+                status = await retrieve_client_status(idx, client, client_type, models)
                 clients_status.append(status)
 
-        def add_session_login_account(clients, client_type, models):
+        async def add_session_login_account(clients, client_type, models):
             for idx, client in clients.items():
-                status = retrieve_client_status(idx, client, client_type, models)
+                status = await retrieve_client_status(idx, client, client_type, models)
                 status.is_session_login = True
                 # 获取这个client的session key
                 # session_key = client.retrieve_session_key()
@@ -222,7 +222,7 @@ class ClientsStatusManager:
             last_plus_idx = list(plus_clients.keys())[-3:]
             if not isinstance(last_plus_idx, list):
                 last_plus_idx = [last_plus_idx]
-            add_session_login_account(
+            await add_session_login_account(
                 {
                     __last_plus_idx: plus_clients[__last_plus_idx]
                     for __last_plus_idx in last_plus_idx
@@ -231,7 +231,7 @@ class ClientsStatusManager:
                 [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
             )
 
-        process_clients(
+        await process_clients(
             plus_clients,
             "plus",
             [ClaudeModels.OPUS.value, ClaudeModels.SONNET_3_5.value],
@@ -239,14 +239,14 @@ class ClientsStatusManager:
 
         if basic_clients:
             first_basic_idx = list(basic_clients.keys())[:10]
-            add_session_login_account(
+            await add_session_login_account(
                 # {first_basic_idx: basic_clients[first_basic_idx]},
                 {basic_idx: basic_clients[basic_idx] for basic_idx in first_basic_idx},
                 "basic",
                 [ClaudeModels.SONNET_3_5.value],
             )
 
-        process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
+        await process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
         # TODO: 添加获取用于处理session登录所使用的账号。
         # 现在就取plus的最后一共和basic的第一个
         # 添加获取用于处理session登录所使用的账号

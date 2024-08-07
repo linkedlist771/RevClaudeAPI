@@ -23,18 +23,20 @@ async def _register_clients(
             client = Client(cookie, cookie_key)
             if not reload:
                 # first , try to obtain it from the reids, if not then register it
-                organization_id = cookie_manager.get_organization_id(cookie_key)
+                organization_id = await cookie_manager.get_organization_id(cookie_key)
                 if organization_id:
                     client.organization_id = organization_id
                 else:
                     logger.debug(f"organization_id got from redis: {organization_id}")
 
                     organization_id = await client.__set_organization_id__()
-                    cookie_manager.update_organization_id(cookie_key, organization_id)
+                    await cookie_manager.update_organization_id(
+                        cookie_key, organization_id
+                    )
                     logger.info(f"Registered the {cookie_type} client: {client}")
             else:
                 organization_id = await client.__set_organization_id__()
-                cookie_manager.update_organization_id(cookie_key, organization_id)
+                await cookie_manager.update_organization_id(cookie_key, organization_id)
                 logger.info(f"Reloaded the {cookie_type} client: {client}")
 
             return client
@@ -59,7 +61,7 @@ async def _register_clients(
                 )
                 # after all the retries, we still failed, we should delete the organization_id and if relad
                 if reload:
-                    cookie_manager.delete_organization_id(cookie_key)
+                    await cookie_manager.delete_organization_id(cookie_key)
 
                 return None
             await asyncio.sleep(REGISTER_WAIT)  # 在重试前暂停1秒

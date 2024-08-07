@@ -31,6 +31,7 @@ from rev_claude.utils.sse_utils import build_sse_data
 
 # This in only for claude router, I do not use the
 
+
 async def validate_api_key(
     request: Request, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
@@ -281,10 +282,12 @@ async def chat(
         model=model,
     )
 
-    messages: list[Message] = [Message(
-        content=raw_message,
-        role=RoleType.USER,
-    )]
+    messages: list[Message] = [
+        Message(
+            content=raw_message,
+            role=RoleType.USER,
+        )
+    ]
 
     # 处理文件的部分
     attachments = claude_chat_request.attachments
@@ -304,6 +307,7 @@ async def chat(
         from rev_claude.prompts_builder.duckduck_search_prompt import (
             DuckDuckSearchPrompt,
         )
+
         # here we choose a number from 3 to 5
         message, hrefs = await DuckDuckSearchPrompt(
             prompt=message,

@@ -7,6 +7,6 @@ def get_current_time() -> int:
     return int(time())
 
 
-def get_client_status(basic_clients, plus_clients) -> List[ClientsStatus]:
+async def get_client_status(basic_clients, plus_clients) -> List[ClientsStatus]:
     clients_status_manager = ClientsStatusManager()
     return clients_status_manager.get_all_clients_status(basic_clients, plus_clients)

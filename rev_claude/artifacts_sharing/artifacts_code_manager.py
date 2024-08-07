@@ -1,5 +1,4 @@
 import hashlib
-import redis
 from redis.asyncio import Redis
 from typing import List
 
@@ -9,7 +8,6 @@ from rev_claude.configs import REDIS_HOST, REDIS_PORT
 class ArtifactsCodeManager:
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=1):
         """Initialize the connection to Redis."""
-        self.redis = redis.StrictRedis(host=host, port=port, db=db)
         self.aioredis = None
 
     async def get_aioredis(self):

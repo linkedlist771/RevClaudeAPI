@@ -21,7 +21,7 @@ app = register_middleware(app)
 @app.get("/api/v1/clients_status")
 async def _get_client_status():
     basic_clients, plus_clients = ClientManager().get_clients()
-    return get_client_status(basic_clients, plus_clients)
+    return await get_client_status(basic_clients, plus_clients)
 
 
 def start_server(port=args.port, host=args.host):
