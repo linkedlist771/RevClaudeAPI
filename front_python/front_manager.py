@@ -4,7 +4,9 @@ import pandas as pd
 import altair as alt
 from tqdm import tqdm
 from urllib.request import urlopen
+import os
 
+# running: BASE_URL="http://101.132.169.133:1145" streamlit run front_python/front_manager.py --server.port 5000
 
 def get_public_ip():
     try:
@@ -14,8 +16,12 @@ def get_public_ip():
         return None
 
 
+# 获取环境变量
+
+
 # claude3.ucas.life
-BASE_URL = f"http://60.205.189.192:1145"
+BASE_URL = os.environ.get('BASE_URL',  f"http://60.205.189.192:1145")
+
 API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
 
 # 设置页面标题
@@ -235,7 +241,7 @@ elif main_function == "Cookie管理":
     # Cookie管理部分
     cookie_function = st.sidebar.radio(
         "Cookie管理",
-        ["上传Cookie", "删除Cookie", "刷新Cookie", "列出所有Cookie", "更新Cookie"],
+        ["上传Cookie", "删除Cookie", "刷新Cookie", "列出所有Cookie", "更新Cookie", "调整Cookie是否为官网1:1"],
     )
 
     if cookie_function == "上传Cookie":
@@ -303,3 +309,16 @@ elif main_function == "Cookie管理":
                 st.success("Cookie更新成功!")
             else:
                 st.error("Cookie更新失败。")
+
+    elif cookie_function == "调整Cookie是否为官网1:1":
+        st.subheader("调整Cookie是否为官网1:1")
+        # / api / v1 / cookie / clients_information
+        url = f"{BASE_URL}/api/v1/cookie/clients_information"
+
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            st.write(data)
+        else:
+            st.error("获取Cookie状态列表失败。")
+
