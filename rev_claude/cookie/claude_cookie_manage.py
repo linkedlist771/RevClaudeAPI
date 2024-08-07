@@ -153,9 +153,9 @@ class CookieManager:
                 actual_type = await redis_instance.get(key)
                 if isinstance(key, bytes):
                     key = key.decode("utf-8")
+                if isinstance(actual_type, bytes):
+                    actual_type = actual_type.decode("utf-8")
                 if actual_type == cookie_type:
-                    if isinstance(key, bytes):
-                        key = key.decode("utf-8")
                     base_key = key.split(":type")[0]
                     # cookie_value = self.redis.get(base_key)
                     cookie_value = await redis_instance.get(base_key)
