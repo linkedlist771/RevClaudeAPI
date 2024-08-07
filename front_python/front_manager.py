@@ -468,7 +468,8 @@ elif main_function == "Cookie管理":
         )
 
         if st.button("刷新客户列表"):
-            del st.session_state.clients
+            if st.session_state.clients:
+                del st.session_state.clients
             st.experimental_rerun()
 
         # 添加一键设置所有Cookie使用类型的按钮
