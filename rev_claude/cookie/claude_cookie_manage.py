@@ -31,6 +31,8 @@ class CookieManager:
     async def get_aioredis(self):
         if self.aioredis is None:
             # self.aioredis = await Redis.from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}/1")
+            # self.aioredis = await Redis.from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}/1")
+
             self.aioredis = await Redis.from_url(
                 f"redis://{self.host}:{self.port}/{self.db}"
             )
@@ -138,6 +140,7 @@ class CookieManager:
         while True:
             # cursor, keys = self.redis.scan(cursor, match=pattern, count=1000)
             cursor, keys = await redis_instance.scan(cursor, match=pattern, count=1000)
+            logger.debug(f"keys: {keys}")
             for key in keys:
                 # actual_type = self.redis.get(key).decode("utf-8")
                 actual_type = await redis_instance.get(key)
