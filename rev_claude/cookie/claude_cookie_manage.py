@@ -205,9 +205,14 @@ class CookieManager:
         _plus_cookies, _plus_cookie_keys = await self.get_all_cookies(
             CookieKeyType.PLUS.value
         )
+        logger.debug(f"basic_cookies: {_basic_cookies}")
+        logger.debug(f"basic_cookie_keys: {_basic_cookie_keys}")
+        logger.debug(f"plus_cookies: {_plus_cookies}")
+        logger.debug(f"plus_cookie_keys: {_plus_cookie_keys}")
         _basic_clients, _plus_clients = await register_clients(
             _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys, reload
         )
+
         return _basic_clients, _plus_clients
 
 
