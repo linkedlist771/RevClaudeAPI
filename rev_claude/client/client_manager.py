@@ -61,6 +61,6 @@ class ClientManager:
         plus_results = all_results[len(basic_cookie_keys):]
 
         return {
-            "basic_clients": basic_results,
             "plus_clients": plus_results,
+            "basic_clients": basic_results,
         }
