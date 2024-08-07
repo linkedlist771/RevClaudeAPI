@@ -16,6 +16,42 @@ def get_public_ip():
         return None
 
 
+def display_client_box(client):
+    with st.container():
+        st.markdown(f"""
+        <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:5px;">
+            <h3>{client['account']}</h3>
+            <p>类型: {client['type']}</p>
+            <p>使用类型: {'活跃' if client['usage_type'] == 1 else '非活跃'}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("只普通使用", key=f"normal_{client['cookie_key']}"):
+                update_usage_type(client['cookie_key'], 0)
+        with col2:
+            if st.button("只官网1:1", key=f"official_{client['cookie_key']}"):
+                update_usage_type(client['cookie_key'], 1)
+        with col3:
+            if st.button("都使用", key=f"both_{client['cookie_key']}"):
+                update_usage_type(client['cookie_key'], 2)
+
+
+def update_usage_type(cookie_key, usage_type):
+    # 这里应该调用API来更新使用类型
+    # 现在我们只显示一个成功消息作为演示
+    st.success(f"已将 {cookie_key} 的使用类型更新为 {usage_type}")
+
+
+def display_message(message, type="info"):
+    if type == "success":
+        st.success(message)
+    elif type == "error":
+        st.error(message)
+    else:
+        st.info(message)
+
 # 获取环境变量
 
 
@@ -312,13 +348,15 @@ elif main_function == "Cookie管理":
 
     elif cookie_function == "调整Cookie是否为官网1:1":
         st.subheader("调整Cookie是否为官网1:1")
-        # / api / v1 / cookie / clients_information
         url = f"{BASE_URL}/api/v1/cookie/clients_information"
 
         response = requests.get(url)
         if response.status_code == 200:
-            data = response.json()
-            st.write(data)
-        else:
-            st.error("获取Cookie状态列表失败。")
+            data = response.json()['data']
 
+            for client_type in ['basic_clients', 'plus_clients']:
+                st.subheader(f"{'基础' if client_type == 'basic_clients' else 'Plus'} 客户")
+                for client in data[client_type]:
+                    display_client_box(client)
+        else:
+            display_message("获取Cookie状态列表失败。", "error")
