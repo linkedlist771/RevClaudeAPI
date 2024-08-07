@@ -40,52 +40,66 @@ def get_usage_icon(usage_type):
     else:
         return "🔁"  # Recycle for both
 
+
 def display_client_box(client):
     type_color = get_type_color(client['type'])
     usage_icon = get_usage_icon(client['usage_type'])
 
     with st.container():
-        st.markdown(f"""
-        <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:5px; background-color: #f0f8ff;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0;">{client['account']}</h3>
-                <span style="background-color: {type_color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">{client['type']}</span>
+        client_container = st.empty()
+
+        def update_client_display():
+            client_container.markdown(f"""
+            <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:5px; background-color: #f0f8ff;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">{client['account']}</h3>
+                    <span style="background-color: {type_color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">{client['type']}</span>
+                </div>
+                <p style="margin: 5px 0;">使用类型: {usage_icon} {usage_type_map[client['usage_type']]}</p>
             </div>
-            <p style="margin: 5px 0;">使用类型: {usage_icon} {usage_type_map[client['usage_type']]}</p>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+
+        update_client_display()
 
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("🌐 只用于网页登录", key=f"normal_{client['cookie_key']}",
                          help="点击设置为只用于网页登录"):
-                update_usage_type(client['cookie_key'], 0)
+                if update_usage_type(client, 0):
+                    update_client_display()
         with col2:
             if st.button("🔒 只用于官网1:1登录", key=f"official_{client['cookie_key']}",
                          help="点击设置为只用于官网1:1登录"):
-                update_usage_type(client['cookie_key'], 1)
+                if update_usage_type(client, 1):
+                    update_client_display()
         with col3:
             if st.button("🔁 都使用", key=f"both_{client['cookie_key']}",
                          help="点击设置为两种登录都使用"):
-                update_usage_type(client['cookie_key'], 2)
+                if update_usage_type(client, 2):
+                    update_client_display()
 
         # Display message for this client
         if client['cookie_key'] in st.session_state.messages:
             message, message_type = st.session_state.messages[client['cookie_key']]
             display_message(message, message_type)
 
-def update_usage_type(cookie_key, usage_type):
-    # set_cookie_usage_type/{cookie_key}"
-    url = f"{BASE_URL}/api/v1/cookie/set_cookie_usage_type/{cookie_key}"
+
+def update_usage_type(client, usage_type):
+    url = f"{BASE_URL}/api/v1/cookie/set_cookie_usage_type/{client['cookie_key']}"
     try:
         response = requests.put(url, params={"usage_type": usage_type})
         if response.status_code == 200:
             result = response.json()
-            st.session_state.messages[cookie_key] = (f"成功更新：{result['message']}", "success")
+            st.session_state.messages[client['cookie_key']] = (f"成功更新：{result['message']}", "success")
+            # 更新本地客户数据
+            client['usage_type'] = usage_type
+            return True
         else:
-            st.session_state.messages[cookie_key] = (f"更新失败：HTTP {response.status_code}", "error")
+            st.session_state.messages[client['cookie_key']] = (f"更新失败：HTTP {response.status_code}", "error")
     except requests.RequestException as e:
-        st.session_state.messages[cookie_key] = (f"请求错误：{str(e)}", "error")
+        st.session_state.messages[client['cookie_key']] = (f"请求错误：{str(e)}", "error")
+    return False
+
 
 def display_message(message, type="info"):
     if type == "success":
@@ -402,15 +416,22 @@ elif main_function == "Cookie管理":
          - 都使用: 两种登录都使用, 也就是该账号既可以用于网页登录，也可以用于官网1:1登录。（状态页面会有两个同样的账号）
          """)
 
+
+        if st.button("刷新客户列表"):
+            del st.session_state.clients
+            st.experimental_rerun()
+
         url = f"{BASE_URL}/api/v1/cookie/clients_information"
 
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()['data']
+        if 'clients' not in st.session_state:
+            response = requests.get(url)
+            if response.status_code == 200:
+                st.session_state.clients = response.json()['data']
+            else:
+                display_message("获取Cookie状态列表失败。", "error")
 
-            for client_type in ['plus_clients', 'basic_clients']:
-                st.subheader(f"{'基础' if client_type == 'basic_clients' else 'Plus'} 客户")
-                for client in data[client_type]:
-                    display_client_box(client)
-        else:
-            display_message("获取Cookie状态列表失败。", "error")
+        for client_type in ['plus_clients', 'basic_clients']:
+            st.subheader(f"{'基础' if client_type == 'basic_clients' else 'Plus'} 客户")
+            for client in st.session_state.clients[client_type]:
+                display_client_box(client)
+
