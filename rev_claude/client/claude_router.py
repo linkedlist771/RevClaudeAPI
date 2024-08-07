@@ -1,12 +1,11 @@
 import asyncio
 from functools import partial
-
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi import HTTPException, File, UploadFile, Form
+from loguru import logger
 
 from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
-
 from rev_claude.client.claude import upload_attachment_for_fastapi
 from rev_claude.client.client_manager import ClientManager
 from rev_claude.configs import (
@@ -21,13 +20,10 @@ from rev_claude.history.conversation_history_manager import (
     RoleType,
 )
 from rev_claude.prompts_builder.artifacts_render_prompt import ArtifactsRendererPrompt
-from rev_claude.prompts_builder.svg_renderer_prompt import SvgRendererPrompt
 from rev_claude.schemas import (
     ClaudeChatRequest,
     ObtainReverseOfficialLoginRouterRequest,
 )
-from loguru import logger
-
 from rev_claude.models import ClaudeModels
 from rev_claude.status_code.status_code_enum import HTTP_480_API_KEY_INVALID
 from rev_claude.utils.sse_utils import build_sse_data
@@ -35,10 +31,6 @@ from rev_claude.utils.sse_utils import build_sse_data
 
 # This in only for claude router, I do not use the
 
-
-# async def validate_api_key(
-#     api_key: str = Header(None), manager: APIKeyManager = Depends(get_api_key_manager)
-# ):
 async def validate_api_key(
     request: Request, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
@@ -195,7 +187,6 @@ async def chat(
                 media_type="text/event-stream",
             )
         message = manager.generate_exceed_message(api_key)
-        # return JSONResponse(status_code=403, content=message)
         logger.info(f"API {api_key} has reached the limit.")
         return StreamingResponse(
             build_sse_data(message=message), media_type="text/event-stream"
@@ -206,25 +197,14 @@ async def chat(
     client_idx = claude_chat_request.client_idx
     model = claude_chat_request.model
     if model not in [model.value for model in ClaudeModels]:
-        # return JSONResponse(
-        #     status_code=400,
-        #     content={"message": f"Model: not found.\n" f"未找到模型:"},
-        # )
         return StreamingResponse(
             build_sse_data(message="Model: not found.\n" f"未找到模型:"),
             media_type="text/event-stream",
         )
     conversation_id = claude_chat_request.conversation_id
-
     client_type = claude_chat_request.client_type
     client_type = "plus" if client_type == "plus" else "basic"
     if (not manager.is_plus_user(api_key)) and (client_type == "plus"):
-        # return JSONResponse(
-        #     status_code=403,
-        #     content={
-        #         "message": f"您的 API key 不是 Plus 用户，请升级您的套餐以访问此账户。"
-        #     },
-        # )
         return StreamingResponse(
             build_sse_data(
                 message="您的登录秘钥不是Plus 用户，请升级您的套餐以访问此账户。"
@@ -233,19 +213,12 @@ async def chat(
         )
 
     if (client_type == "basic") and ClaudeModels.model_is_plus(model):
-        # return JSONResponse(
-        #     status_code=403,
-        #     content={
-        #         "message": f"客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
-        #     },
-        # )
         return StreamingResponse(
             build_sse_data(
                 message="客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
             ),
             media_type="text/event-stream",
         )
-    # logger.info(f"client_idx: {client_idx}, client_idx type: {type(client_idx)}")
 
     if client_type == "plus":
         claude_client = plus_clients[client_idx]
@@ -287,7 +260,6 @@ async def chat(
                             build_sse_data(message="创建对话失败，请重新尝试。"),
                             media_type="text/event-stream",
                         )
-                        # return ("error: ", e)
                     else:
                         logger.info("Retrying in 2 second...")
                         await asyncio.sleep(2)
@@ -296,7 +268,7 @@ async def chat(
                 break
         except Exception as e:
             logger.error(f"Meet an error: {e}")
-            return ("error: ", e)
+            return
 
     message = claude_chat_request.message
     is_stream = claude_chat_request.stream
@@ -308,13 +280,11 @@ async def chat(
         conversation_id=conversation_id,
         model=model,
     )
-    messages: list[Message] = []
-    messages.append(
-        Message(
-            content=raw_message,
-            role=RoleType.USER,
-        )
-    )
+
+    messages: list[Message] = [Message(
+        content=raw_message,
+        role=RoleType.USER,
+    )]
 
     # 处理文件的部分
     attachments = claude_chat_request.attachments
@@ -334,7 +304,6 @@ async def chat(
         from rev_claude.prompts_builder.duckduck_search_prompt import (
             DuckDuckSearchPrompt,
         )
-
         # here we choose a number from 3 to 5
         message, hrefs = await DuckDuckSearchPrompt(
             prompt=message,
@@ -358,9 +327,6 @@ async def chat(
         return StreamingResponse(
             streaming_res,
             media_type="text/event-stream",
-            # headers={
-            #     "conversation_id": conversation_id
-            # },  # 这里通过header返回conversation_id
         )
     else:
 

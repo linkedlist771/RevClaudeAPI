@@ -5,7 +5,7 @@ import redis
 import uuid
 from enum import Enum
 from loguru import logger
-from utility import get_current_time
+from rev_claude.utility import get_current_time
 from rev_claude.configs import (
     BASIC_KEY_MAX_USAGE,
     PLUS_KEY_MAX_USAGE,
@@ -95,6 +95,15 @@ class APIKeyManager:
         if current_usage is None:
             self.redis.set(current_usage_key, 0)
             return 0
+
+        last_usage_time = self.get_last_usage_time(api_key)
+        current_time = get_current_time()
+        time_diff = current_time - last_usage_time
+        if time_diff >= API_KEY_REFRESH_INTERVAL:
+            self.redis.set(current_usage_key, 0)
+            self.redis.set(f"{api_key}:last_usage_time", current_time)
+            current_usage = 0
+
         return int(current_usage)
 
     def get_last_usage_time(self, api_key):

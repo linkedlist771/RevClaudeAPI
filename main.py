@@ -7,7 +7,7 @@ from rev_claude.client.client_manager import ClientManager
 from rev_claude.lifespan import lifespan
 from rev_claude.middlewares.register_middlewares import register_middleware
 from rev_claude.router import router
-from utility import get_client_status
+from rev_claude.utility import get_client_status
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="0.0.0.0", help="host")
