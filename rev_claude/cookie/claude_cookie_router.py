@@ -36,6 +36,14 @@ async def refresh_cookies():
     )
 
 
+@router.get("/clients_information")
+async def get_clients_information():
+    data = await ClientManager().retrieve_clients_information()
+    return JSONResponse(
+        content={"message": "Clients information retrieved successfully.", "data": data}
+    )
+
+
 @router.post("/upload_cookie")
 async def upload_cookie(
     cookie: str,

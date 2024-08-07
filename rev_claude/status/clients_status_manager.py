@@ -172,7 +172,10 @@ class ClientsStatusManager:
             )
 
     async def get_all_clients_status(self, basic_clients, plus_clients):
-        from rev_claude.cookie.claude_cookie_manage import CookieUsageType, get_cookie_manager
+        from rev_claude.cookie.claude_cookie_manage import (
+            CookieUsageType,
+            get_cookie_manager,
+        )
 
         async def retrieve_client_status(idx, client, client_type, models):
             self.create_if_not_exist(client_type, idx, models)
@@ -203,9 +206,10 @@ class ClientsStatusManager:
             for idx, client in clients.items():
                 status = await retrieve_client_status(idx, client, client_type, models)
                 cookie_key = client.cookie_key
-                cookie_usage_type = await cookie_manager.get_cookie_usage_type(cookie_key)
+                cookie_usage_type = await cookie_manager.get_cookie_usage_type(
+                    cookie_key
+                )
                 if cookie_usage_type != CookieUsageType.REVERSE_API_ONLY:
-                    #
                     clients_status.append(status)
 
         async def add_session_login_account(clients, client_type, models):
@@ -216,7 +220,9 @@ class ClientsStatusManager:
                 status = await retrieve_client_status(idx, client, client_type, models)
                 status.is_session_login = True
                 cookie_key = client.cookie_key
-                cookie_usage_type = await cookie_manager.get_cookie_usage_type(cookie_key)
+                cookie_usage_type = await cookie_manager.get_cookie_usage_type(
+                    cookie_key
+                )
                 if cookie_usage_type != CookieUsageType.WEB_LOGIN_ONLY:
                     clients_status.append(status)
 

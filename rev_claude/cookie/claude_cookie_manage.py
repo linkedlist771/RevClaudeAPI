@@ -67,6 +67,7 @@ class CookieManager:
 
     def get_cookie_organization_key(self, cookie_key):
         return f"{cookie_key}:organization"
+
     def get_cookie_usage_type_key(self, cookie_key):
         return f"{cookie_key}:usage_type"
 
@@ -79,12 +80,14 @@ class CookieManager:
             return CookieUsageType.get_default()
 
         if isinstance(usage_type_value, bytes):
-            usage_type_value = usage_type_value.decode('utf-8')
+            usage_type_value = usage_type_value.decode("utf-8")
 
         try:
             return CookieUsageType(int(usage_type_value))
         except ValueError:
-            logger.warning(f"Invalid usage type value for cookie {cookie_key}: {usage_type_value}")
+            logger.warning(
+                f"Invalid usage type value for cookie {cookie_key}: {usage_type_value}"
+            )
             return CookieUsageType.get_default()
 
     async def set_cookie_usage_type(self, cookie_key: str, usage_type: CookieUsageType):
@@ -149,7 +152,13 @@ class CookieManager:
         account_key = self.get_cookie_account_key(cookie_key)
         _type = await self.decoded_get(type_key)
         account = await self.decoded_get(account_key)
-        return f"{cookie_key}: \n type: {_type} \n account: {account}"
+        usage_type = await self.get_cookie_usage_type(cookie_key)
+        return {
+            "cookie_key": cookie_key,
+            "type": _type,
+            "account": account,
+            "usage_type": usage_type.value,
+        }
 
     async def get_account(self, cookie_key: str):
         account_key = self.get_cookie_account_key(cookie_key)
