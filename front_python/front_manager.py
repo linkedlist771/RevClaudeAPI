@@ -40,7 +40,6 @@ def get_usage_icon(usage_type):
     else:
         return "🔁"  # Recycle for both
 
-
 def display_client_box(client):
     type_color = get_type_color(client['type'])
     usage_icon = get_usage_icon(client['usage_type'])
@@ -70,6 +69,10 @@ def display_client_box(client):
                          help="点击设置为两种登录都使用"):
                 update_usage_type(client['cookie_key'], 2)
 
+        # Display message for this client
+        if client['cookie_key'] in st.session_state.messages:
+            message, message_type = st.session_state.messages[client['cookie_key']]
+            display_message(message, message_type)
 
 def update_usage_type(cookie_key, usage_type):
     # set_cookie_usage_type/{cookie_key}"
@@ -78,12 +81,11 @@ def update_usage_type(cookie_key, usage_type):
         response = requests.put(url, params={"usage_type": usage_type})
         if response.status_code == 200:
             result = response.json()
-            st.success(f"成功更新：{result['message']}")
+            st.session_state.messages[cookie_key] = (f"成功更新：{result['message']}", "success")
         else:
-            st.error(f"更新失败：HTTP {response.status_code}")
+            st.session_state.messages[cookie_key] = (f"更新失败：HTTP {response.status_code}", "error")
     except requests.RequestException as e:
-        st.error(f"请求错误：{str(e)}")
-
+        st.session_state.messages[cookie_key] = (f"请求错误：{str(e)}", "error")
 
 def display_message(message, type="info"):
     if type == "success":
@@ -93,7 +95,9 @@ def display_message(message, type="info"):
     else:
         st.info(message)
 
-# 获取环境变量
+# Initialize session state for messages
+if 'messages' not in st.session_state:
+    st.session_state.messages = {}
 
 
 # claude3.ucas.life
@@ -404,7 +408,7 @@ elif main_function == "Cookie管理":
         if response.status_code == 200:
             data = response.json()['data']
 
-            for client_type in ['basic_clients', 'plus_clients']:
+            for client_type in ['plus_clients', 'basic_clients']:
                 st.subheader(f"{'基础' if client_type == 'basic_clients' else 'Plus'} 客户")
                 for client in data[client_type]:
                     display_client_box(client)
