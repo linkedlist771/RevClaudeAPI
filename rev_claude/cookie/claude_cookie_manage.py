@@ -145,11 +145,15 @@ class CookieManager:
                 # actual_type = self.redis.get(key).decode("utf-8")
                 actual_type = await redis_instance.get(key)
                 if actual_type == cookie_type:
-                    base_key = key.decode("utf-8").split(":type")[0]
+                    if isinstance(key, bytes):
+                        key = key.decode("utf-8")
+                    base_key = key.split(":type")[0]
                     # cookie_value = self.redis.get(base_key)
                     cookie_value = await redis_instance.get(base_key)
                     if cookie_value:
-                        cookies.append(cookie_value.decode("utf-8"))
+                        if isinstance(cookie_value, bytes):
+                            cookie_value = cookie_value.decode("utf-8")
+                        cookies.append(cookie_value)
                         cookies_keys.append(base_key)
 
             if cursor == 0:
@@ -168,7 +172,10 @@ class CookieManager:
             for key in keys:
                 # actual_type = self.redis.get(key).decode("utf-8")
                 actual_type = await redis_instance.get(key)
-                base_key = key.decode("utf-8").split(":type")[0]
+                # base_key = key.decode("utf-8").split(":type")[0]
+                if isinstance(key, bytes):
+                    key = key.decode("utf-8")
+                base_key = key.split(":type")[0]
                 # cookie_value = self.redis.get(base_key)
                 cookie_value = await redis_instance.get(base_key)
                 account_key = self.get_cookie_account_key(base_key)
