@@ -90,8 +90,8 @@ async def register_clients(
         )
         basic_tasks.append(task)
 
-    plus_clients = await asyncio.gather(*plus_tasks)
-    basic_clients = await asyncio.gather(*basic_tasks)
+    plus_clients = await tqdm.gather(*plus_tasks)
+    basic_clients = await tqdm.gather(*basic_tasks)
 
     _basic_clients.extend(filter(None, basic_clients))
     _plus_clients.extend(filter(None, plus_clients))
