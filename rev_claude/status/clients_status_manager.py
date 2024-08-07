@@ -7,7 +7,6 @@ import time
 from pydantic import BaseModel
 from loguru import logger
 from rev_claude.configs import REDIS_HOST
-from rev_claude.cookie.claude_cookie_manage import CookieUsageType
 from rev_claude.models import ClaudeModels
 
 
@@ -173,6 +172,8 @@ class ClientsStatusManager:
             )
 
     async def get_all_clients_status(self, basic_clients, plus_clients):
+        from rev_claude.cookie.claude_cookie_manage import CookieUsageType, get_cookie_manager
+
         async def retrieve_client_status(idx, client, client_type, models):
             self.create_if_not_exist(client_type, idx, models)
             account = await cookie_manager.get_account(client.cookie_key)
@@ -220,7 +221,6 @@ class ClientsStatusManager:
                     clients_status.append(status)
 
         clients_status = []
-        from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
         cookie_manager = get_cookie_manager()
         if plus_clients:
             # 当然是全部都要测试了， 但是这个for循环了两次， 感觉不太好， anyway。
