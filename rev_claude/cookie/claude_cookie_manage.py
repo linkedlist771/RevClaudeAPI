@@ -5,6 +5,7 @@ import uuid
 from enum import Enum
 from typing import Tuple, List
 from loguru import logger
+import random
 from rev_claude.client.claude import Client
 from rev_claude.configs import REDIS_HOST, REDIS_PORT
 from rev_claude.utils.async_utils import register_clients
@@ -15,6 +16,25 @@ class CookieKeyType(Enum):
     BASIC = "basic"
     TEST = "test"
     NORMAL = "normal"
+
+
+class CookieUsageType(Enum):
+    WEB_LOGIN_ONLY = 0
+    REVERSE_API_ONLY = 1
+    BOTH = 2
+
+    @classmethod
+    def get_default(cls):
+        if random.random() < 0.2:
+            return cls.REVERSE_API_ONLY
+        else:
+            return cls.WEB_LOGIN_ONLY
+
+    @classmethod
+    def from_redis_value(cls, value):
+        if value is None:
+            return cls.get_default()
+        return cls(int(value))
 
 
 class CookieManager:
@@ -47,6 +67,31 @@ class CookieManager:
 
     def get_cookie_organization_key(self, cookie_key):
         return f"{cookie_key}:organization"
+    def get_cookie_usage_type_key(self, cookie_key):
+        return f"{cookie_key}:usage_type"
+
+    async def get_cookie_usage_type(self, cookie_key: str) -> CookieUsageType:
+        """Retrieve the usage type for a specific cookie."""
+        usage_type_key = self.get_cookie_usage_type_key(cookie_key)
+        usage_type_value = await self.decoded_get(usage_type_key)
+
+        if usage_type_value is None:
+            return CookieUsageType.get_default()
+
+        if isinstance(usage_type_value, bytes):
+            usage_type_value = usage_type_value.decode('utf-8')
+
+        try:
+            return CookieUsageType(int(usage_type_value))
+        except ValueError:
+            logger.warning(f"Invalid usage type value for cookie {cookie_key}: {usage_type_value}")
+            return CookieUsageType.get_default()
+
+    async def set_cookie_usage_type(self, cookie_key: str, usage_type: CookieUsageType):
+        """Set the usage type for a specific cookie."""
+        usage_type_key = self.get_cookie_usage_type_key(cookie_key)
+        await (await self.get_aioredis()).set(usage_type_key, usage_type.value)
+        return f"Usage type for {cookie_key} has been set to {usage_type.value}."
 
     async def update_organization_id(self, cookie_key, organization_id):
         organization_key = self.get_cookie_organization_key(cookie_key)
@@ -122,7 +167,6 @@ class CookieManager:
         redis_instance = await self.get_aioredis()
         while True:
             cursor, keys = await redis_instance.scan(cursor, match=pattern, count=1000)
-            logger.debug(f"keys: {keys}")
             for key in keys:
                 if isinstance(key, bytes):
                     key = key.decode("utf-8")
@@ -177,10 +221,6 @@ class CookieManager:
         _plus_cookies, _plus_cookie_keys = await self.get_all_cookies(
             CookieKeyType.PLUS.value
         )
-        logger.debug(f"basic_cookies: {_basic_cookies}")
-        logger.debug(f"basic_cookie_keys: {_basic_cookie_keys}")
-        logger.debug(f"plus_cookies: {_plus_cookies}")
-        logger.debug(f"plus_cookie_keys: {_plus_cookie_keys}")
         _basic_clients, _plus_clients = await register_clients(
             _basic_cookies, _basic_cookie_keys, _plus_cookies, _plus_cookie_keys, reload
         )

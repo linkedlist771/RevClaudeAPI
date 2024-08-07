@@ -7,6 +7,7 @@ import time
 from pydantic import BaseModel
 from loguru import logger
 from rev_claude.configs import REDIS_HOST
+from rev_claude.cookie.claude_cookie_manage import CookieUsageType
 from rev_claude.models import ClaudeModels
 
 
@@ -195,31 +196,35 @@ class ClientsStatusManager:
             return status
 
         async def process_clients(clients, client_type, models):
+            """
+            这个只处理是否为普通login的账号， 也就是说不为REVERSE_API_ONLY 就是OK的
+            """
             for idx, client in clients.items():
                 status = await retrieve_client_status(idx, client, client_type, models)
-                clients_status.append(status)
+                cookie_key = client.cookie_key
+                cookie_usage_type = await cookie_manager.get_cookie_usage_type(cookie_key)
+                if cookie_usage_type != CookieUsageType.REVERSE_API_ONLY:
+                    #
+                    clients_status.append(status)
 
         async def add_session_login_account(clients, client_type, models):
+            """
+            同理， 这个只处理是否为session login的账号， 也就是说不为WEB_LOGIN_ONLY 就是OK的
+            """
             for idx, client in clients.items():
                 status = await retrieve_client_status(idx, client, client_type, models)
                 status.is_session_login = True
-                # 获取这个client的session key
-                # session_key = client.retrieve_session_key()
-                # status.meta_data["session_key"] = session_key
-                # clients_status.append(status) # 如何添加到列表的前面
-                # clients_status.insert(0, status)
-                clients_status.append(status)
-                # 添加到最前面
-                # __clients_status = [status] + clients_status
-                # clients_status = __clients_status
-                # clients_status = [status] + clients_status
+                cookie_key = client.cookie_key
+                cookie_usage_type = await cookie_manager.get_cookie_usage_type(cookie_key)
+                if cookie_usage_type != CookieUsageType.WEB_LOGIN_ONLY:
+                    clients_status.append(status)
 
         clients_status = []
         from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
-
         cookie_manager = get_cookie_manager()
         if plus_clients:
-            last_plus_idx = list(plus_clients.keys())[-3:]
+            # 当然是全部都要测试了， 但是这个for循环了两次， 感觉不太好， anyway。
+            last_plus_idx = list(plus_clients.keys())
             if not isinstance(last_plus_idx, list):
                 last_plus_idx = [last_plus_idx]
             await add_session_login_account(
@@ -238,7 +243,8 @@ class ClientsStatusManager:
         )
 
         if basic_clients:
-            first_basic_idx = list(basic_clients.keys())[:10]
+            # 当然是全部都要测试了， 但是这个for循环了两次， 感觉不太好， anyway。
+            first_basic_idx = list(basic_clients.keys())
             await add_session_login_account(
                 # {first_basic_idx: basic_clients[first_basic_idx]},
                 {basic_idx: basic_clients[basic_idx] for basic_idx in first_basic_idx},
