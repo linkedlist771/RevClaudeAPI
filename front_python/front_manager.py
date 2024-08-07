@@ -72,7 +72,8 @@ def display_client_box(client):
 
 
 def update_usage_type(cookie_key, usage_type):
-    url = f"{BASE_URL}/set_cookie_usage_type/{cookie_key}"
+    # set_cookie_usage_type/{cookie_key}"
+    url = f"{BASE_URL}/api/v1/cookie/set_cookie_usage_type/{cookie_key}"
     try:
         response = requests.put(url, params={"usage_type": usage_type})
         if response.status_code == 200:
