@@ -2,7 +2,7 @@ from rev_claude.client.client_manager import ClientManager
 from rev_claude.cookie.claude_cookie_manage import (
     CookieManager,
     CookieKeyType,
-    get_cookie_manager,
+    get_cookie_manager, CookieUsageType,
 )
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -42,6 +42,30 @@ async def get_clients_information():
     return JSONResponse(
         content={"message": "Clients information retrieved successfully.", "data": data}
     )
+
+
+    # async def set_cookie_usage_type(self, cookie_key: str, usage_type: CookieUsageType):
+    #     """Set the usage type for a specific cookie."""
+    #     usage_type_key = self.get_cookie_usage_type_key(cookie_key)
+    #     await (await self.get_aioredis()).set(usage_type_key, usage_type.value)
+    #     return f"Usage type for {cookie_key} has been set to {usage_type.value}."
+@router.put("/set_cookie_usage_type/{cookie_key}")
+async def set_cookie_usage_type(
+    cookie_key: str,
+    usage_type: int,
+    manager: CookieManager = Depends(get_cookie_manager),
+):
+    """Set the usage type for a specific cookie."""
+    usage_type = CookieUsageType(usage_type)
+    result = await manager.set_cookie_usage_type(cookie_key, usage_type)
+    return {"message": result}
+
+
+    # async def get_cookie_usage_type(self, cookie_key: str):
+    #     """Get the usage type for a specific cookie."""
+    #     usage_type_key = self.get_cookie_usage_type_key(cookie_key)
+    #     usage_type = await self.decoded_get(usage_type_key)
+    #     return usage_type
 
 
 @router.post("/upload_cookie")

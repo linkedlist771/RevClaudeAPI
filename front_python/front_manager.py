@@ -72,9 +72,16 @@ def display_client_box(client):
 
 
 def update_usage_type(cookie_key, usage_type):
-    # 这里应该调用API来更新使用类型
-    # 现在我们只显示一个成功消息作为演示
-    st.success(f"已将 {cookie_key} 的使用类型更新为 {usage_type}")
+    url = f"{BASE_URL}/set_cookie_usage_type/{cookie_key}"
+    try:
+        response = requests.put(url, params={"usage_type": usage_type})
+        if response.status_code == 200:
+            result = response.json()
+            st.success(f"成功更新：{result['message']}")
+        else:
+            st.error(f"更新失败：HTTP {response.status_code}")
+    except requests.RequestException as e:
+        st.error(f"请求错误：{str(e)}")
 
 
 def display_message(message, type="info"):
@@ -381,6 +388,15 @@ elif main_function == "Cookie管理":
 
     elif cookie_function == "调整Cookie是否为官网1:1":
         st.subheader("调整Cookie是否为官网1:1")
+        # 方法2：使用 st.info
+        st.markdown("""
+         **使用说明：** 在下方列表中，您可以查看所有Cookie的当前状态，并通过点击按钮来更改它们的使用类型。
+         更改将立即生效， 在状态栏中能看到对应的修改:
+         - 网页登录: 仅用于网页登录, 也就是该账号只用于网页登录。
+         - 官网1:1登录: 仅用于官网1:1登录, 也就是该账号只用于官网1:1登录。
+         - 都使用: 两种登录都使用, 也就是该账号既可以用于网页登录，也可以用于官网1:1登录。（状态页面会有两个同样的账号）
+         """)
+
         url = f"{BASE_URL}/api/v1/cookie/clients_information"
 
         response = requests.get(url)
