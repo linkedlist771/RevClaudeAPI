@@ -36,7 +36,6 @@ class ClientManager:
     def get_clients(self):
         return ClientManager.basic_clients, ClientManager.plus_clients
 
-
     async def retrieve_clients_information(self) -> Dict[str, List[Dict]]:
         basic_cookie_keys = [
             client.cookie_key for client in ClientManager.basic_clients.values()
@@ -58,7 +57,7 @@ class ClientManager:
         )
 
         basic_results = all_results[: len(basic_cookie_keys)]
-        plus_results = all_results[len(basic_cookie_keys):]
+        plus_results = all_results[len(basic_cookie_keys) :]
 
         return {
             "plus_clients": plus_results,

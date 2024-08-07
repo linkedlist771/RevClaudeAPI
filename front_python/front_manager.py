@@ -8,6 +8,7 @@ import os
 
 # running: BASE_URL="http://101.132.169.133:1145" streamlit run front_python/front_manager.py --server.port 5000
 
+
 def get_public_ip():
     try:
         response = urlopen("https://api.ipify.org")
@@ -16,16 +17,11 @@ def get_public_ip():
         return None
 
 
-
 # class CookieUsageType(Enum):
 #     WEB_LOGIN_ONLY = 0
 #     REVERSE_API_ONLY = 1
 #     BOTH = 2
-usage_type_map = {
-    0: '只用于网页登录',
-    1: '只用于官网1:1登录',
-    2: '都用'
-}
+usage_type_map = {0: "只用于网页登录", 1: "只用于官网1:1登录", 2: "都用"}
 
 
 def get_type_color(client_type):
@@ -42,14 +38,15 @@ def get_usage_icon(usage_type):
 
 
 def display_client_box(client):
-    type_color = get_type_color(client['type'])
+    type_color = get_type_color(client["type"])
     # usage_icon = get_usage_icon(client['usage_type'])
 
     with st.container():
         client_container = st.empty()
 
         def update_client_display():
-            client_container.markdown(f"""
+            client_container.markdown(
+                f"""
             <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:5px; background-color: #f0f8ff;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0;">{client['account']}</h3>
@@ -57,31 +54,66 @@ def display_client_box(client):
                 </div>
                 <p style="margin: 5px 0;">使用类型: {get_usage_icon(client['usage_type'])} {usage_type_map[client['usage_type']]}</p>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
         update_client_display()
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("🌐 只用于网页登录", key=f"normal_{client['cookie_key']}",
-                         help="点击设置为只用于网页登录"):
+            if st.button(
+                "🌐 只用于网页登录",
+                key=f"normal_{client['cookie_key']}",
+                help="点击设置为只用于网页登录",
+            ):
                 if update_usage_type(client, 0):
                     update_client_display()
         with col2:
-            if st.button("🔒 只用于官网1:1登录", key=f"official_{client['cookie_key']}",
-                         help="点击设置为只用于官网1:1登录"):
+            if st.button(
+                "🔒 只用于官网1:1登录",
+                key=f"official_{client['cookie_key']}",
+                help="点击设置为只用于官网1:1登录",
+            ):
                 if update_usage_type(client, 1):
                     update_client_display()
         with col3:
-            if st.button("🔁 都使用", key=f"both_{client['cookie_key']}",
-                         help="点击设置为两种登录都使用"):
+            if st.button(
+                "🔁 都使用",
+                key=f"both_{client['cookie_key']}",
+                help="点击设置为两种登录都使用",
+            ):
                 if update_usage_type(client, 2):
                     update_client_display()
 
         # Display message for this client
-        if client['cookie_key'] in st.session_state.messages:
-            message, message_type = st.session_state.messages[client['cookie_key']]
+        if client["cookie_key"] in st.session_state.messages:
+            message, message_type = st.session_state.messages[client["cookie_key"]]
             display_message(message, message_type)
+
+
+def update_all_usage_types(usage_type):
+    success_count = 0
+    total_count = sum(
+        len(st.session_state.clients[client_type])
+        for client_type in ["plus_clients", "basic_clients"]
+    )
+
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    for client_type in ["plus_clients", "basic_clients"]:
+        for i, client in enumerate(st.session_state.clients[client_type]):
+            if update_usage_type(client, usage_type):
+                success_count += 1
+
+            # 更新进度条和状态文本
+            progress = (i + 1) / total_count
+            progress_bar.progress(progress)
+            status_text.text(f"正在更新... {i + 1}/{total_count}")
+
+    status_text.text(f"更新完成: 成功 {success_count}/{total_count}")
+    return success_count == total_count
 
 
 def update_usage_type(client, usage_type):
@@ -90,14 +122,23 @@ def update_usage_type(client, usage_type):
         response = requests.put(url, params={"usage_type": usage_type})
         if response.status_code == 200:
             result = response.json()
-            st.session_state.messages[client['cookie_key']] = (f"成功更新：{result['message']}", "success")
+            st.session_state.messages[client["cookie_key"]] = (
+                f"成功更新：{result['message']}",
+                "success",
+            )
             # 更新本地客户数据
-            client['usage_type'] = usage_type
+            client["usage_type"] = usage_type
             return True
         else:
-            st.session_state.messages[client['cookie_key']] = (f"更新失败：HTTP {response.status_code}", "error")
+            st.session_state.messages[client["cookie_key"]] = (
+                f"更新失败：HTTP {response.status_code}",
+                "error",
+            )
     except requests.RequestException as e:
-        st.session_state.messages[client['cookie_key']] = (f"请求错误：{str(e)}", "error")
+        st.session_state.messages[client["cookie_key"]] = (
+            f"请求错误：{str(e)}",
+            "error",
+        )
     return False
 
 
@@ -109,13 +150,14 @@ def display_message(message, type="info"):
     else:
         st.info(message)
 
+
 # Initialize session state for messages
-if 'messages' not in st.session_state:
+if "messages" not in st.session_state:
     st.session_state.messages = {}
 
 
 # claude3.ucas.life
-BASE_URL = os.environ.get('BASE_URL',  f"http://60.205.189.192:1145")
+BASE_URL = os.environ.get("BASE_URL", f"http://60.205.189.192:1145")
 
 API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
 
@@ -336,7 +378,14 @@ elif main_function == "Cookie管理":
     # Cookie管理部分
     cookie_function = st.sidebar.radio(
         "Cookie管理",
-        ["上传Cookie", "删除Cookie", "刷新Cookie", "列出所有Cookie", "更新Cookie", "调整Cookie是否为官网1:1"],
+        [
+            "上传Cookie",
+            "删除Cookie",
+            "刷新Cookie",
+            "列出所有Cookie",
+            "更新Cookie",
+            "调整Cookie是否为官网1:1",
+        ],
     )
 
     if cookie_function == "上传Cookie":
@@ -408,30 +457,48 @@ elif main_function == "Cookie管理":
     elif cookie_function == "调整Cookie是否为官网1:1":
         st.subheader("调整Cookie是否为官网1:1")
         # 方法2：使用 st.info
-        st.markdown("""
+        st.markdown(
+            """
          **使用说明：** 在下方列表中，您可以查看所有Cookie的当前状态，并通过点击按钮来更改它们的使用类型。
          更改将立即生效， 在状态栏中能看到对应的修改:
          - 网页登录: 仅用于网页登录, 也就是该账号只用于网页登录。
          - 官网1:1登录: 仅用于官网1:1登录, 也就是该账号只用于官网1:1登录。
          - 都使用: 两种登录都使用, 也就是该账号既可以用于网页登录，也可以用于官网1:1登录。（状态页面会有两个同样的账号）
-         """)
-
+         """
+        )
 
         if st.button("刷新客户列表"):
             del st.session_state.clients
             st.experimental_rerun()
 
+        # 添加一键设置所有Cookie使用类型的按钮
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("🌐 全部设为只用于网页登录"):
+                if update_all_usage_types(0):
+                    st.success("所有Cookie已成功设置为只用于网页登录")
+                st.experimental_rerun()
+        with col2:
+            if st.button("🔒 全部设为只用于官网1:1登录"):
+                if update_all_usage_types(1):
+                    st.success("所有Cookie已成功设置为只用于官网1:1登录")
+                st.experimental_rerun()
+        with col3:
+            if st.button("🔁 全部设为都使用"):
+                if update_all_usage_types(2):
+                    st.success("所有Cookie已成功设置为都使用")
+                st.experimental_rerun()
+
         url = f"{BASE_URL}/api/v1/cookie/clients_information"
 
-        if 'clients' not in st.session_state:
+        if "clients" not in st.session_state:
             response = requests.get(url)
             if response.status_code == 200:
-                st.session_state.clients = response.json()['data']
+                st.session_state.clients = response.json()["data"]
             else:
                 display_message("获取Cookie状态列表失败。", "error")
 
-        for client_type in ['plus_clients', 'basic_clients']:
+        for client_type in ["plus_clients", "basic_clients"]:
             st.subheader(f"{'基础' if client_type == 'basic_clients' else 'Plus'} 客户")
             for client in st.session_state.clients[client_type]:
                 display_client_box(client)
-
