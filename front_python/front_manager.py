@@ -16,25 +16,58 @@ def get_public_ip():
         return None
 
 
+
+# class CookieUsageType(Enum):
+#     WEB_LOGIN_ONLY = 0
+#     REVERSE_API_ONLY = 1
+#     BOTH = 2
+usage_type_map = {
+    0: '只用于网页登录',
+    1: '只用于官网1:1登录',
+    2: '都用'
+}
+
+
+def get_type_color(client_type):
+    return "#FF69B4" if client_type == "plus" else "#90EE90"
+
+
+def get_usage_icon(usage_type):
+    if usage_type == 0:
+        return "🌐"  # Globe for web login
+    elif usage_type == 1:
+        return "🔒"  # Lock for official 1:1 login
+    else:
+        return "🔁"  # Recycle for both
+
+
 def display_client_box(client):
+    type_color = get_type_color(client['type'])
+    usage_icon = get_usage_icon(client['usage_type'])
+
     with st.container():
         st.markdown(f"""
-        <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:5px;">
-            <h3>{client['account']}</h3>
-            <p>类型: {client['type']}</p>
-            <p>使用类型: {'活跃' if client['usage_type'] == 1 else '非活跃'}</p>
+        <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:5px; background-color: #f0f8ff;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">{client['account']}</h3>
+                <span style="background-color: {type_color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">{client['type']}</span>
+            </div>
+            <p style="margin: 5px 0;">使用类型: {usage_icon} {usage_type_map[client['usage_type']]}</p>
         </div>
         """, unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("只普通使用", key=f"normal_{client['cookie_key']}"):
+            if st.button("🌐 只用于网页登录", key=f"normal_{client['cookie_key']}",
+                         help="点击设置为只用于网页登录"):
                 update_usage_type(client['cookie_key'], 0)
         with col2:
-            if st.button("只官网1:1", key=f"official_{client['cookie_key']}"):
+            if st.button("🔒 只用于官网1:1登录", key=f"official_{client['cookie_key']}",
+                         help="点击设置为只用于官网1:1登录"):
                 update_usage_type(client['cookie_key'], 1)
         with col3:
-            if st.button("都使用", key=f"both_{client['cookie_key']}"):
+            if st.button("🔁 都使用", key=f"both_{client['cookie_key']}",
+                         help="点击设置为两种登录都使用"):
                 update_usage_type(client['cookie_key'], 2)
 
 
