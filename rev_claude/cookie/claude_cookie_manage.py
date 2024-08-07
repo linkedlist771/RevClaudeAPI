@@ -35,9 +35,15 @@ class CookieManager:
 
             self.aioredis = await Redis.from_url(
                 f"redis://{self.host}:{self.port}/{self.db}"
-                , decode_responses=True
             )
         return self.aioredis
+
+    async def decoded_get(self, key):
+        res = await (await self.get_aioredis()).get(key)
+        if isinstance(res, bytes):
+            res = res.decode("utf-8")
+        return res
+
 
     def get_cookie_type_key(self, cookie_key):
         return f"{cookie_key}:type"
@@ -118,13 +124,15 @@ class CookieManager:
         account_key = self.get_cookie_account_key(cookie_key)
         # _type = self.redis.get(type_key)
         # account = self.redis.get(account_key)
-        redis_instance = await self.get_aioredis()
-        _type = await redis_instance.get(type_key)
-        account = await redis_instance.get(account_key)
-        if isinstance(_type, bytes):
-            _type = _type.decode("utf-8")
-        if isinstance(account, bytes):
-            account = account.decode("utf-8")
+        # redis_instance = await self.get_aioredis()
+        # _type = await redis_instance.get(type_key)
+        # account = await redis_instance.get(account_key)
+        _type = await self.decoded_get(type_key)
+        account = await self.decoded_get(account_key)
+        # if isinstance(_type, bytes):
+        #     _type = _type.decode("utf-8")
+        # if isinstance(account, bytes):
+        #     account = account.decode("utf-8")
 
         return f"{cookie_key}: \n type: {_type} \n account: {account}"
 
@@ -151,18 +159,19 @@ class CookieManager:
             logger.debug(f"keys: {keys}")
             for key in keys:
                 # actual_type = self.redis.get(key).decode("utf-8")
-                actual_type = await redis_instance.get(key)
-                # if isinstance(key, bytes):
-                #     key = key.decode("utf-8")
+                # actual_type = await redis_instance.get(key)
+                if isinstance(key, bytes):
+                    key = key.decode("utf-8")
                 # if isinstance(actual_type, bytes):
                 #     actual_type = actual_type.decode("utf-8")
+                actual_type = await self.decoded_get(key)
+
                 if actual_type == cookie_type:
                     base_key = key.split(":type")[0]
                     # cookie_value = self.redis.get(base_key)
-                    cookie_value = await redis_instance.get(base_key)
+                    # cookie_value = await redis_instance.get(base_key)
+                    cookie_value = await self.decoded_get(base_key)
                     if cookie_value:
-                        if isinstance(cookie_value, bytes):
-                            cookie_value = cookie_value.decode("utf-8")
                         cookies.append(cookie_value)
                         cookies_keys.append(base_key)
 
@@ -181,22 +190,25 @@ class CookieManager:
             cursor, keys = await redis_instance.scan(cursor, match=pattern, count=1000)
             for key in keys:
                 # actual_type = self.redis.get(key).decode("utf-8")
-                actual_type = await redis_instance.get(key)
+                # actual_type = await redis_instance.get(key)
                 # base_key = key.decode("utf-8").split(":type")[0]
-                if isinstance(actual_type, bytes):
-                    actual_type = actual_type.decode("utf-8")
+                # if isinstance(actual_type, bytes):
+                #     actual_type = actual_type.decode("utf-8")
+                actual_type = await self.decoded_get(key)
                 if isinstance(key, bytes):
                     key = key.decode("utf-8")
                 base_key = key.split(":type")[0]
                 # cookie_value = self.redis.get(base_key)
-                cookie_value = await redis_instance.get(base_key)
-                if isinstance(cookie_value, bytes):
-                    cookie_value = cookie_value.decode("utf-8")
+                # cookie_value = await redis_instance.get(base_key)
+                # if isinstance(cookie_value, bytes):
+                #     cookie_value = cookie_value.decode("utf-8")
+                cookie_value = await self.decoded_get(base_key)
                 account_key = self.get_cookie_account_key(base_key)
                 # account = self.redis.get(account_key).decode("utf-8")
-                account = await redis_instance.get(account_key)
-                if isinstance(account, bytes):
-                    account = account.decode("utf-8")
+                # account = await redis_instance.get(account_key)
+                # if isinstance(account, bytes):
+                #     account = account.decode("utf-8")
+                account = await self.decoded_get(account_key)
                 if cookie_value:
                     cookies.append(
                         {
