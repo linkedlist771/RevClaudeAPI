@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-import json, os, uuid
+import json
 import re
-
-# from curl_cffi import requests
 import httpx
 import asyncio
-
 from httpx_sse._decoders import SSEDecoder
 from loguru import logger
-from fastapi import HTTPException
+from fake_useragent import UserAgent
+from fastapi import UploadFile, status, HTTPException
+from fastapi.responses import JSONResponse
+import itertools
+import uuid
+import random
+import os
 
+
+from rev_claude.utils.file_utils import DocumentConverter
 from rev_claude.REMINDING_MESSAGE import (
     NO_EMPTY_PROMPT_MESSAGE,
     PROMPT_TOO_LONG_MESSAGE,
@@ -26,25 +30,11 @@ from rev_claude.configs import (
     CLAUDE_OFFICIAL_EXPIRE_TIME,
     CLAUDE_OFFICIAL_REVERSE_BASE_URL,
 )
-from rev_claude.models import ClaudeModels
 from rev_claude.status.clients_status_manager import ClientsStatusManager
-from fastapi import UploadFile, status, HTTPException
-from fastapi.responses import JSONResponse
-import itertools
 from rev_claude.status_code.status_code_enum import (
     HTTP_481_IMAGE_UPLOAD_FAILED,
     HTTP_482_DOCUMENT_UPLOAD_FAILED,
 )
-from rev_claude.utils.file_utils import DocumentConverter
-from rev_claude.utils.httpx_utils import async_stream
-from rev_claude.utils.sse_utils import build_sse_data
-
-
-from fake_useragent import UserAgent
-
-import uuid
-import random
-import os
 
 
 def generate_trace_id():
@@ -217,62 +207,6 @@ class Client:
             "Sec-Fetch-Site": "same-origin",
             "Sentry-Trace": generate_trace_id()[2:],
         }
-
-    async def parse_text(self, text, client_type, client_idx, model):
-        # TODO: add error handling for invalid model.
-        try:
-            # logger.debug(f"parsing_text: \n{text}")
-            parsed_response = json.loads(text)
-            if "error" in parsed_response:
-
-                # print("Error Message:", error_message)
-                logger.error(f"Error Message: {parsed_response}")
-                # raise Exception(error_message)
-                # ClientsStatusManager
-                if "exceeded_limit" in text:
-                    dict_res = json.loads(text)
-                    error_message = dict_res["error"]
-                    resetAt = int(json.loads(error_message["message"])["resetsAt"])
-                    refresh_time = resetAt
-                    start_time = int(refresh_time) - 8 * 3600
-                    client_manager = ClientsStatusManager()
-                    client_manager.set_client_limited(
-                        client_type, client_idx, start_time, model
-                    )
-                elif "Invalid" in text:
-                    logger.error(f"permission_error : {text}")
-
-                    client_manager = ClientsStatusManager()
-                    client_manager.set_client_error(client_type, client_idx)
-                    logger.error(f"设置账号状态为error")
-
-        except json.JSONDecodeError:
-            events = []
-            lines = text.split("\n")
-            for line in lines:
-                line = line.strip()
-                if line:
-                    parts = line.split(": ")
-                    if len(parts) == 2:
-                        event_type, data = parts
-                        if data != "completion" and data != "ping":
-                            try:
-                                event_data = json.loads(data)
-                                events.append(event_data["completion"])
-                            except json.JSONDecodeError:
-                                # logger.error(f"CLAUDE STREAM ERROR: {data}")
-                                if not data.endswith('"'):
-                                    data = data + '"'
-                                pattern = r'"completion":"(.*?)(?<!\\)"'
-                                match = re.search(pattern, data)
-                                if match:
-                                    completion_content = match.group(
-                                        1
-                                    )  # 提取第一个捕获组的内容
-                                    events.append(completion_content)
-                            except Exception as e:
-                                logger.error(f"Error: {e}")
-            return events
 
     # Send and Response Stream Message to Claude
 
