@@ -359,6 +359,7 @@ class Client:
                                 logger.error(f"permission_error : {text}")
                                 raise Exception(text)
                                 # ClientsStatusManager
+
                             if "exceeded_limit" in text:
                                 # 对于plus用户只opus model才设置
                                 if client_type == "plus":
@@ -405,6 +406,11 @@ class Client:
                             if "Rate exceeded" in text:
                                 logger.error(f"Rate exceeded: {text}")
                                 raise Exception("Rate exceeded")
+
+                            if "error" in text:
+                                logger.error(f"error: {text}")
+                                # 最后再捕获一下报错，如果好友就直接raise 一个error
+                                raise Exception(text)
 
                             # response_parse_text = await self.parse_text(
                             #     text, client_type, client_idx, model
