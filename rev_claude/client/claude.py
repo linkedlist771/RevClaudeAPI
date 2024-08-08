@@ -326,9 +326,10 @@ class Client:
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
                                 break
 
-                            if "prompt is too long" in text:
+                            if "too long" in text:
                                 yield PROMPT_TOO_LONG_MESSAGE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
+                                break # 忘了加break了
 
                             if "concurrent connections has" in text:
                                 logger.error(
