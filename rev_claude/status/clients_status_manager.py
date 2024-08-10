@@ -142,15 +142,6 @@ class ClientsStatusManager:
                 client_type, client_idx
             )  # 有一个可用就是可用， 否则其他的都是CD
             return True
-
-            # passed_time = current_time - float(
-            #     self.redis.get(client_status_start_time_key)
-            # )
-            # if passed_time > 8 * 3600:
-            #     self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
-            #     return True
-            # else:
-            #     return False
         elif status == ClientStatus.ACTIVE.value:
             return True
         else:
@@ -160,9 +151,6 @@ class ClientsStatusManager:
         client_status_key = self.get_client_status_key(client_type, client_idx)
         start_time_key = self.get_client_status_start_time_key(client_type, client_idx)
         start_times = self.get_dict_value(start_time_key)
-        # if client_idx == 948928:
-        #     logger.debug(f"start_times: {start_times}")
-        #     logger.debug(f"client_status_key: {client_status_key}")
         if (not self.redis.exists(client_status_key)) or (not start_times):
             self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
 
