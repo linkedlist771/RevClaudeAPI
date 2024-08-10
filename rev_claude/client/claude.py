@@ -282,7 +282,6 @@ class Client:
                                 "Organization has no active Self-Serve Stripe" in text
                             ):
                                 logger.error(f"Invalid model : {text}")
-
                                 client_manager = ClientsStatusManager()
                                 client_manager.set_client_error(client_type, client_idx)
                                 logger.error(f"设置账号状态为error")
@@ -342,7 +341,7 @@ class Client:
                                 logger.error(f"Rate exceeded: {text}")
                                 raise Exception("Rate exceeded")
 
-                            if "error" in text:
+                            if ("error" in text) and ("completion" not in text):
                                 logger.error(f"error: {text}")
                                 # 最后再捕获一下报错，如果好友就直接raise 一个error
                                 raise Exception(text)
