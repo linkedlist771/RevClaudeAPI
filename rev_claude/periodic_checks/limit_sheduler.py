@@ -24,7 +24,7 @@ class LimitScheduler:
 
     @staticmethod
     async def start():
-        await check_reverse_official_usage_limits()
+        # await check_reverse_official_usage_limits()
         limit_check_scheduler.start()
 
     @staticmethod
