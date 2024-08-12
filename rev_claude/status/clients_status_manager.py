@@ -1,6 +1,5 @@
 import json
 from uuid import uuid4
-
 import redis
 from enum import Enum
 import time
@@ -90,8 +89,6 @@ class ClientsStatusManager:
         client_status_start_time_key = self.get_client_status_start_time_key(
             client_type, client_idx
         )
-        # if client_idx == 948928:
-        #     logger.debug(f"status：{self.redis.get(client_status_key)}")
         # 首先判断这个是不是已经是cd状态了。
         if self.redis.get(client_status_key) == ClientStatus.CD.value:
             return
@@ -100,9 +97,6 @@ class ClientsStatusManager:
         # 这里就设计到另一个设计了，
         # 首先获取这个字典对应的值
         start_time_dict = self.get_dict_value(client_status_start_time_key)
-        # logger.debug(f"start_time_dict: {start_time_dict}")
-        # logger.debug(f"model: {model}")
-        # logger.debug(f"start_time: {start_time}")
         start_time_dict[model] = start_time
         self.redis.set(client_status_start_time_key, json.dumps(start_time_dict))
 
@@ -113,7 +107,6 @@ class ClientsStatusManager:
     def set_client_active(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
-        # client_status_start_time_key = self.get_client_status_start_time_key(client_type, client_idx
 
     def set_client_status(self, client_type, client_idx, status):
         client_status_key = self.get_client_status_key(client_type, client_idx)
@@ -122,17 +115,12 @@ class ClientsStatusManager:
     def set_client_active_when_cd(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         status = self.redis.get(client_status_key)
-        # if client_idx == 948928:
-        #     logger.debug(f"status: {status}")
-
         if status == ClientStatus.CD.value:
             client_status_start_time_key = self.get_client_status_start_time_key(
                 client_type, client_idx
             )
             current_time = time.time()
             start_time_dict = self.get_dict_value(client_status_start_time_key)
-            # if client_idx == 948928:
-            #     logger.debug(f"start_time_dict: {start_time_dict}")
             for model, start_time in start_time_dict.items():
                 time_elapsed = current_time - start_time
                 if not (time_elapsed > 8 * 3600):

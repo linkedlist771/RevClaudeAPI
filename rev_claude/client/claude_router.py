@@ -181,6 +181,7 @@ async def chat(
         # 首先check一下用户是不是被删除了
         is_deleted = not manager.is_api_key_valid(api_key)
         if is_deleted:
+            logger.critical(f"API key {api_key} has been deleted due to abuse.")
             return StreamingResponse(
                 build_sse_data(
                     message="由于滥用API key，已经被删除，如有疑问，请联系管理员。"
@@ -237,7 +238,7 @@ async def chat(
                         f"Created new conversation with response: \n{conversation}"
                     )
                     conversation_id = conversation["uuid"]
-                    # now we can reredenert the user's prompt
+                    # now we can render the user's prompt
                     if USE_MERMAID_AND_SVG and claude_chat_request.need_artifacts:
                         prompt = claude_chat_request.message
 
