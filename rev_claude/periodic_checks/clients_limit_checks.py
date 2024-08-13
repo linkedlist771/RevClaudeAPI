@@ -63,7 +63,7 @@ async def simple_new_chat(claude_client, client_type, client_idx):
     return messages
 
 
-async def __check_reverse_official_usage_limits():
+async def check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
 
     basic_clients, plus_clients = ClientManager().get_clients()
@@ -100,7 +100,8 @@ async def __check_reverse_official_usage_limits():
             return error_msg
 
     try:
-        tasks = [check_client(client) for client in clients]
+        tasks = [asyncio.create_task(check_client(client)) for client in clients]
+            # check_client(client) for client in clients]
         results = await tqdm.gather(*tasks, desc="Checking clients", unit="client")
     except Exception as e:
         logger.error(f"Error during client checks: {e}")
@@ -111,8 +112,3 @@ async def __check_reverse_official_usage_limits():
     logger.info("\nResults of client checks:")
     for result in results:
         logger.info(result)
-
-
-async def check_reverse_official_usage_limits():
-    task = asyncio.create_task(__check_reverse_official_usage_limits())
-    return {"message": "Check started in background"}
