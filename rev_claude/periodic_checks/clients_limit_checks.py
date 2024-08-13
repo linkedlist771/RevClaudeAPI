@@ -42,6 +42,7 @@ async def try_to_create_new_conversation(claude_client, model):
 async def simple_new_chat(claude_client, client_type, client_idx):
     model = ClaudeModels.SONNET_3_5.value
     conversation_id = await try_to_create_new_conversation(claude_client, model)
+    messages = ""
     try:
         async for data in claude_client.stream_message(
             prompt=CLAUDE_CLIENT_LIMIT_CHECKS_PROMPT,
@@ -51,13 +52,15 @@ async def simple_new_chat(claude_client, client_type, client_idx):
             client_idx=client_idx,
             attachments=[],
         ):
-            logger.info(data)
+            # logger.info(data)
+            messages += data
     except Exception as e:
         from traceback import format_exc
 
-        logger.error(f"Error: {e}")
         # logger.error(f"Error: {e}")
-
+        # logger.error(f"Error: {e}")
+        messages = f"Error: {e}\n{format_exc()}"
+    return messages
 
 async def check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
@@ -81,19 +84,44 @@ async def check_reverse_official_usage_limits():
 
 
     logger.info(f"Found {len(clients)} active clients to check")
+    #
+    # async def check_client(client):
+    #     try:
+    #         logger.debug(f"Testing client {client['type']} {client['idx']}")
+    #         res = await simple_new_chat(client["client"], client["type"], client["idx"])
+    #         logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
+    #     except Exception as e:
+    #         logger.error(f"Error testing client {client['type']} {client['idx']}: {e}")
+    #
+    # try:
+    #     tasks = [check_client(client) for client in clients]
+    #     await tqdm.gather(*tasks, desc="Checking clients", unit="client")
+    # except Exception as e:
+    #     logger.error(f"Error during client checks: {e}")
+    #
+    # logger.info("Completed check_reverse_official_usage_limits")
 
+    results = []
     async def check_client(client):
         try:
             logger.debug(f"Testing client {client['type']} {client['idx']}")
-            await simple_new_chat(client["client"], client["type"], client["idx"])
-            logger.debug(f"Completed test for client {client['type']} {client['idx']}")
+            res = await simple_new_chat(client["client"], client["type"], client["idx"])
+            logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
+            return f"Client {client['type']} {client['idx']}: {res}"
         except Exception as e:
-            logger.error(f"Error testing client {client['type']} {client['idx']}: {e}")
+            error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
+            logger.error(error_msg)
+            return error_msg
 
     try:
         tasks = [check_client(client) for client in clients]
-        await tqdm.gather(*tasks, desc="Checking clients", unit="client")
+        results = await tqdm.gather(*tasks, desc="Checking clients", unit="client")
     except Exception as e:
         logger.error(f"Error during client checks: {e}")
 
     logger.info("Completed check_reverse_official_usage_limits")
+
+    # Print all results at the end
+    logger.info("\nResults of client checks:")
+    for result in results:
+        logger.info(result)
