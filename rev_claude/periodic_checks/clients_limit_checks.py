@@ -1,5 +1,5 @@
 import asyncio
-
+import time
 from tqdm.asyncio import tqdm
 from rev_claude.configs import NEW_CONVERSATION_RETRY, CLAUDE_CLIENT_LIMIT_CHECKS_PROMPT
 from rev_claude.models import ClaudeModels
@@ -62,7 +62,7 @@ async def simple_new_chat(claude_client, client_type, client_idx):
 
 async def __check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
-
+    start_time = time.perf_counter()
     basic_clients, plus_clients = ClientManager().get_clients()
     status_list = await get_client_status(basic_clients, plus_clients)
     clients = [
@@ -148,6 +148,8 @@ async def __check_reverse_official_usage_limits():
 
     # Print all results at the end
     logger.info("\nResults of client checks:")
+    time_elapsed = time.perf_counter() - start_time
+    logger.debug(f"Time elapsed: {time_elapsed:.2f} seconds")
     for result in results:
         logger.info(result)
 
