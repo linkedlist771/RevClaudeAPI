@@ -1,6 +1,3 @@
-import asyncio
-from concurrent.futures import ProcessPoolExecutor
-
 from rev_claude.periodic_checks.clients_limit_checks import (
     check_reverse_official_usage_limits,
 )
@@ -31,10 +28,4 @@ async def update_cookie(
 
 @router.get("/check_clients_limits")
 async def check_clients_limits():
-    loop = asyncio.get_running_loop()
-    process_pool = ProcessPoolExecutor(max_workers=1)
-    try:
-        await loop.run_in_executor(process_pool, check_reverse_official_usage_limits)
-        return {"message": "Client limits check completed successfully"}
-    except Exception as e:
-        return {"error": f"An error occurred during the check: {str(e)}"}
+    await check_reverse_official_usage_limits()
