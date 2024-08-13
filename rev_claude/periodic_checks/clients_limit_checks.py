@@ -62,6 +62,7 @@ async def simple_new_chat(claude_client, client_type, client_idx):
         messages = f"Error: {e}\n{format_exc()}"
     return messages
 
+
 async def check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
 
@@ -81,16 +82,17 @@ async def check_reverse_official_usage_limits():
         # if status.is_session_login  就算不是官网登录的也要check。
     ]
 
-
-
     logger.info(f"Found {len(clients)} active clients to check")
 
     results = []
+
     async def check_client(client):
         try:
             logger.debug(f"Testing client {client['type']} {client['idx']}")
             res = await simple_new_chat(client["client"], client["type"], client["idx"])
-            logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
+            logger.debug(
+                f"Completed test for client {client['type']} {client['idx']}\n: {res}"
+            )
             return f"Client {client['type']} {client['idx']}: {res}"
         except Exception as e:
             error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"

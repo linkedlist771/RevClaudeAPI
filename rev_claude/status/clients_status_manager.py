@@ -179,14 +179,25 @@ class ClientsStatusManager:
             """
             这个只处理是否为普通login的账号， 也就是说不为REVERSE_API_ONLY 就是OK的
             """
+            active_statuses = []
+            cd_statuses = []
+
             for idx, client in clients.items():
                 status = await retrieve_client_status(idx, client, client_type, models)
                 cookie_key = client.cookie_key
                 cookie_usage_type = await cookie_manager.get_cookie_usage_type(
                     cookie_key
                 )
+
                 if cookie_usage_type != CookieUsageType.REVERSE_API_ONLY:
-                    clients_status.append(status)
+                    if status.status == ClientStatus.ACTIVE.value:
+                        active_statuses.append(status)
+                    else:
+                        cd_statuses.append(status)
+
+            # Extend clients_status with active statuses first, then CD statuses
+            clients_status.extend(active_statuses)
+            clients_status.extend(cd_statuses)
 
         async def add_session_login_account(clients, client_type, models):
             """
@@ -235,10 +246,5 @@ class ClientsStatusManager:
             )
 
         await process_clients(basic_clients, "basic", [ClaudeModels.SONNET_3_5.value])
-        # TODO: 添加获取用于处理session登录所使用的账号。
-        # 现在就取plus的最后一共和basic的第一个
-        # 添加获取用于处理session登录所使用的账号
-        # 取plus的最后一个和basic的第一个
-        # 分别添加 plus 和 basic 客户端的 session 登录账号
 
         return clients_status
