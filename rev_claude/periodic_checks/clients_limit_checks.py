@@ -63,76 +63,7 @@ async def simple_new_chat(claude_client, client_type, client_idx):
     return messages
 
 
-# async def check_reverse_official_usage_limits():
-#     from rev_claude.client.client_manager import ClientManager
-#
-#     basic_clients, plus_clients = ClientManager().get_clients()
-#     status_list = await get_client_status(basic_clients, plus_clients)
-#     clients = [
-#         {
-#             "client": (
-#                 plus_clients[status.idx]
-#                 if status.type == "plus"
-#                 else basic_clients[status.idx]
-#             ),
-#             "type": status.type,
-#             "idx": status.idx,
-#         }
-#         for status in status_list
-#         # if status.is_session_login  就算不是官网登录的也要check。
-#     ]
-#
-#     logger.info(f"Found {len(clients)} active clients to check")
-#
-#     results = []
-#
-#     async def check_client(client):
-#         try:
-#             logger.debug(f"Testing client {client['type']} {client['idx']}")
-#             res = await simple_new_chat(client["client"], client["type"], client["idx"])
-#             logger.debug(
-#                 f"Completed test for client {client['type']} {client['idx']}\n: {res}"
-#             )
-#             return f"Client {client['type']} {client['idx']}: {res}"
-#         except Exception as e:
-#             error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
-#             logger.error(error_msg)
-#             return error_msg
-#
-#     try:
-#         tasks = [check_client(client) for client in clients]
-#         results = await tqdm.gather(*tasks, desc="Checking clients", unit="client")
-#     except Exception as e:
-#         logger.error(f"Error during client checks: {e}")
-#
-#     logger.info("Completed check_reverse_official_usage_limits")
-#
-#     # Print all results at the end
-#     logger.info("\nResults of client checks:")
-#     for result in results:
-#         logger.info(result)
-
-
-async def check_client(client):
-    try:
-        logger.debug(f"Testing client {client['type']} {client['idx']}")
-        res = await simple_new_chat(client["client"], client["type"], client["idx"])
-        logger.debug(
-            f"Completed test for client {client['type']} {client['idx']}\n: {res}"
-        )
-        return f"Client {client['type']} {client['idx']}: {res}"
-    except Exception as e:
-        error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
-        logger.error(error_msg)
-        return error_msg
-
-
-async def process_batch(batch):
-    tasks = [check_client(client) for client in batch]
-    return await asyncio.gather(*tasks)
-
-
-async def check_reverse_official_usage_limits():
+async def __check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
 
     basic_clients, plus_clients = ClientManager().get_clients()
@@ -148,22 +79,31 @@ async def check_reverse_official_usage_limits():
             "idx": status.idx,
         }
         for status in status_list
+        # if status.is_session_login  就算不是官网登录的也要check。
     ]
 
     logger.info(f"Found {len(clients)} active clients to check")
 
     results = []
-    batch_size = 20
 
-    with tqdm(total=len(clients), desc="Checking clients", unit="client") as pbar:
-        for i in range(0, len(clients), batch_size):
-            batch = clients[i:i + batch_size]
-            batch_results = await process_batch(batch)
-            results.extend(batch_results)
-            pbar.update(len(batch))
+    async def check_client(client):
+        try:
+            logger.debug(f"Testing client {client['type']} {client['idx']}")
+            res = await simple_new_chat(client["client"], client["type"], client["idx"])
+            logger.debug(
+                f"Completed test for client {client['type']} {client['idx']}\n: {res}"
+            )
+            return f"Client {client['type']} {client['idx']}: {res}"
+        except Exception as e:
+            error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
+            logger.error(error_msg)
+            return error_msg
 
-            if i + batch_size < len(clients):
-                await asyncio.sleep(2)  # 在批次之间添加2秒延迟
+    try:
+        tasks = [check_client(client) for client in clients]
+        results = await tqdm.gather(*tasks, desc="Checking clients", unit="client")
+    except Exception as e:
+        logger.error(f"Error during client checks: {e}")
 
     logger.info("Completed check_reverse_official_usage_limits")
 
@@ -172,4 +112,7 @@ async def check_reverse_official_usage_limits():
     for result in results:
         logger.info(result)
 
-    return results
+
+async def check_reverse_official_usage_limits():
+    task = asyncio.create_task(__check_reverse_official_usage_limits())
+    return {"message": "Check started in background"}
