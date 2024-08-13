@@ -56,13 +56,16 @@ async def simple_new_chat(claude_client, client_type, client_idx):
             messages += data
     except Exception as e:
         from traceback import format_exc
+
         messages = f"Error: {e}\n{format_exc()}"
     return messages
 
 
 async def __check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
+
     start_time = time.perf_counter()
+    await ClientManager().load_clients(False)
     basic_clients, plus_clients = ClientManager().get_clients()
     status_list = await get_client_status(basic_clients, plus_clients)
     clients = [
@@ -81,49 +84,13 @@ async def __check_reverse_official_usage_limits():
 
     logger.info(f"Found {len(clients)} active clients to check")
 
-    results = []
-
-    # async def check_client(client):
-    #     try:
-    #         # logger.debug(f"Testing client {client['type']} {client['idx']}")
-    #         res = await simple_new_chat(client["client"], client["type"], client["idx"])
-    #         # logger.debug(
-    #         #     f"Completed test for client {client['type']} {client['idx']}\n: {res}"
-    #         # )
-    #         return f"Client {client['type']} {client['idx']}: {res}"
-    #     except Exception as e:
-    #         error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
-    #         logger.error(error_msg)
-    #         return error_msg
-    #
-    #
-    # try:
-    #     # tasks = [asyncio.create_task(check_client(client)) for client in clients]
-    #     #     # check_client(client) for client in clients]
-    #     # results = await tqdm.gather(*tasks, desc="Checking clients", unit="client")
-    #     results = []
-    #     for client in clients:
-    #         try:
-    #             logger.debug(f"Testing client {client['type']} {client['idx']}")
-    #             res = await simple_new_chat(client["client"], client["type"], client["idx"])
-    #             logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
-    #             results.append(f"Client {client['type']} {client['idx']}: {res}")
-    #         except Exception as e:
-    #             error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
-    #             logger.error(error_msg)
-    #             results.append(error_msg)
-    #
-    #         # 添加一个短暂的延迟，避免可能的限速问题
-    #         await asyncio.sleep(1)
-    #
-    # except Exception as e:
-    #     logger.error(f"Error during client checks: {e}")
-
     async def check_client(client):
         try:
             logger.debug(f"Testing client {client['type']} {client['idx']}")
             res = await simple_new_chat(client["client"], client["type"], client["idx"])
-            logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
+            logger.debug(
+                f"Completed test for client {client['type']} {client['idx']}\n: {res}"
+            )
             return f"Client {client['type']} {client['idx']}: {res}"
         except Exception as e:
             error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
@@ -134,15 +101,17 @@ async def __check_reverse_official_usage_limits():
         return await asyncio.gather(*[check_client(client) for client in batch])
 
     results = []
-    batch_size = 3  # 每批处理的客户端数量
+    batch_size = 3
     for i in range(0, len(clients), batch_size):
-        batch = clients[i:i + batch_size]
-        logger.info(f"Processing batch {i // batch_size + 1} of {len(clients) // batch_size + 1}")
+        batch = clients[i : i + batch_size]
+        logger.info(
+            f"Processing batch {i // batch_size + 1} of {len(clients) // batch_size + 1}"
+        )
         batch_results = await process_batch(batch)
         results.extend(batch_results)
         if i + batch_size < len(clients):
             logger.info("Waiting between batches...")
-            await asyncio.sleep(1)  # 批次之间的间隔
+            await asyncio.sleep(1)
 
     logger.info("Completed check_reverse_official_usage_limits")
 
@@ -152,7 +121,6 @@ async def __check_reverse_official_usage_limits():
     logger.debug(f"Time elapsed: {time_elapsed:.2f} seconds")
     for result in results:
         logger.info(result)
-
 
 
 async def check_reverse_official_usage_limits():
