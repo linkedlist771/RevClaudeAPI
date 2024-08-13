@@ -60,7 +60,7 @@ async def simple_new_chat(claude_client, client_type, client_idx):
     return messages
 
 
-async def check_reverse_official_usage_limits():
+async def __check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
 
     basic_clients, plus_clients = ClientManager().get_clients()
@@ -124,3 +124,10 @@ async def check_reverse_official_usage_limits():
     logger.info("\nResults of client checks:")
     for result in results:
         logger.info(result)
+
+
+
+async def check_reverse_official_usage_limits():
+    # 使用 create_task，但不等待它完成
+    asyncio.create_task(__check_reverse_official_usage_limits())
+    return {"message": "Check started in background"}
