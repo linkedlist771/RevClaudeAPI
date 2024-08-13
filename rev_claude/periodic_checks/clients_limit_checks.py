@@ -134,7 +134,7 @@ async def __check_reverse_official_usage_limits():
         return await asyncio.gather(*[check_client(client) for client in batch])
 
     results = []
-    batch_size = 5  # 每批处理的客户端数量
+    batch_size = 3  # 每批处理的客户端数量
     for i in range(0, len(clients), batch_size):
         batch = clients[i:i + batch_size]
         logger.info(f"Processing batch {i // batch_size + 1} of {len(clients) // batch_size + 1}")
@@ -142,7 +142,7 @@ async def __check_reverse_official_usage_limits():
         results.extend(batch_results)
         if i + batch_size < len(clients):
             logger.info("Waiting between batches...")
-            await asyncio.sleep(2)  # 批次之间的间隔
+            await asyncio.sleep(1)  # 批次之间的间隔
 
     logger.info("Completed check_reverse_official_usage_limits")
 
