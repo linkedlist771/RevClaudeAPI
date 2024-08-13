@@ -56,12 +56,14 @@ async def simple_new_chat(claude_client, client_type, client_idx):
             messages += data
     except Exception as e:
         from traceback import format_exc
+
         messages = f"Error: {e}\n{format_exc()}"
     return messages
 
 
 async def __check_reverse_official_usage_limits():
     from rev_claude.client.client_manager import ClientManager
+
     start_time = time.perf_counter()
     basic_clients, plus_clients = ClientManager().get_clients()
     status_list = await get_client_status(basic_clients, plus_clients)
@@ -123,7 +125,9 @@ async def __check_reverse_official_usage_limits():
         try:
             logger.debug(f"Testing client {client['type']} {client['idx']}")
             res = await simple_new_chat(client["client"], client["type"], client["idx"])
-            logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
+            logger.debug(
+                f"Completed test for client {client['type']} {client['idx']}\n: {res}"
+            )
             return f"Client {client['type']} {client['idx']}: {res}"
         except Exception as e:
             error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
@@ -136,8 +140,10 @@ async def __check_reverse_official_usage_limits():
     results = []
     batch_size = 3  # 每批处理的客户端数量
     for i in range(0, len(clients), batch_size):
-        batch = clients[i:i + batch_size]
-        logger.info(f"Processing batch {i // batch_size + 1} of {len(clients) // batch_size + 1}")
+        batch = clients[i : i + batch_size]
+        logger.info(
+            f"Processing batch {i // batch_size + 1} of {len(clients) // batch_size + 1}"
+        )
         batch_results = await process_batch(batch)
         results.extend(batch_results)
         if i + batch_size < len(clients):
@@ -152,7 +158,6 @@ async def __check_reverse_official_usage_limits():
     logger.debug(f"Time elapsed: {time_elapsed:.2f} seconds")
     for result in results:
         logger.info(result)
-
 
 
 async def check_reverse_official_usage_limits():

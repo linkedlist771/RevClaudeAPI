@@ -118,7 +118,12 @@ class CookieManager:
         logger.debug(f"organization_id from redis: {organization_id}")
         if organization_id is None:
             return None
-        return organization_id.decode("utf-8") if isinstance(organization_id, bytes) else organization_id
+        return (
+            organization_id.decode("utf-8")
+            if isinstance(organization_id, bytes)
+            else organization_id
+        )
+
     async def upload_cookie(
         self, cookie: str, cookie_type=CookieKeyType.BASIC.value, account=""
     ):

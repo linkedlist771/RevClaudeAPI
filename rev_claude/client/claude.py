@@ -153,19 +153,15 @@ class Client:
     async def __async_get_organization_id(self):
         url = "https://claude.ai/api/organizations"
         async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    url, headers=self.build_organization_headers()
-                )
-                res_str = response.text
-                logger.debug(f"res_str : {res_str}")
-                res = response.json()
-                if "We are unable to serve your request" in res_str:
-                    raise Exception("We are unable to serve your request")
-                logger.debug(f"res : {res}")
-                uuid = res[0]["uuid"]
-                return uuid
-
-
+            response = await client.get(url, headers=self.build_organization_headers())
+            res_str = response.text
+            logger.debug(f"res_str : {res_str}")
+            res = response.json()
+            if "We are unable to serve your request" in res_str:
+                raise Exception("We are unable to serve your request")
+            logger.debug(f"res : {res}")
+            uuid = res[0]["uuid"]
+            return uuid
 
     def get_content_type(self, file_path):
         # Function to determine content type based on file extension
@@ -275,7 +271,9 @@ class Client:
                             ):
                                 logger.error(f"Invalid model : {text}")
                                 client_manager = ClientsStatusManager()
-                                await client_manager.set_client_error(client_type, client_idx)
+                                await client_manager.set_client_error(
+                                    client_type, client_idx
+                                )
                                 logger.error(f"设置账号状态为error")
                                 yield PLUS_EXPIRE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限

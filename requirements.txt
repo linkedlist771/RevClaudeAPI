@@ -12,3 +12,4 @@ duckduckgo_search
 tqdm
 redis[hiredis]
 apscheduler
+limits

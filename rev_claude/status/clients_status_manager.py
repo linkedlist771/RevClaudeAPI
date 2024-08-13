@@ -47,11 +47,9 @@ class ClientsStatusManager:
     async def get_aioredis(self):
         if self.aioredis is None:
             self.aioredis = await Redis.from_url(
-                f"redis://{self.host}:{self.port}/{self.db}",
-                decode_responses=True
+                f"redis://{self.host}:{self.port}/{self.db}", decode_responses=True
             )
         return self.aioredis
-
 
     async def decoded_get(self, key):
         res = await (await self.get_aioredis()).get(key)
@@ -64,7 +62,6 @@ class ClientsStatusManager:
 
     async def exists_async(self, key):
         return await (await self.get_aioredis()).exists(key)
-
 
     def get_client_status_key(self, client_type, client_idx):
         return f"status-{client_type}-{client_idx}"
@@ -173,7 +170,9 @@ class ClientsStatusManager:
             )
             current_time = time.time()
             # start_time_dict = self.get_dict_value(client_status_start_time_key)
-            start_time_dict = await self.get_dict_value_async(client_status_start_time_key)
+            start_time_dict = await self.get_dict_value_async(
+                client_status_start_time_key
+            )
             for model, start_time in start_time_dict.items():
                 time_elapsed = current_time - start_time
                 if not (time_elapsed > 8 * 3600):
@@ -189,7 +188,9 @@ class ClientsStatusManager:
         else:
             return False
 
-    async def create_if_not_exist(self, client_type: str, client_idx: int, models: list[str]):
+    async def create_if_not_exist(
+        self, client_type: str, client_idx: int, models: list[str]
+    ):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         start_time_key = self.get_client_status_start_time_key(client_type, client_idx)
         # start_times = self.get_dict_value(start_time_key)
@@ -202,7 +203,9 @@ class ClientsStatusManager:
             # self.redis.set(
             #     self.get_client_status_start_time_key(client_type, client_idx), val
             # )
-            await self.set_async(self.get_client_status_start_time_key(client_type, client_idx), val)
+            await self.set_async(
+                self.get_client_status_start_time_key(client_type, client_idx), val
+            )
 
     async def get_all_clients_status(self, basic_clients, plus_clients):
         from rev_claude.cookie.claude_cookie_manage import (
