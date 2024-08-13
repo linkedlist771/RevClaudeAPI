@@ -62,6 +62,7 @@ async def _register_clients(
                 # after all the retries, we still failed, we should delete the organization_id and if relad
                 if reload:
                     await cookie_manager.delete_organization_id(cookie_key)
+                    await cookie_manager.delete_cookie(cookie_key)
 
                 return None
             await asyncio.sleep(REGISTER_WAIT)  # 在重试前暂停1秒
