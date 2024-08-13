@@ -83,40 +83,66 @@ async def __check_reverse_official_usage_limits():
 
     results = []
 
+    # async def check_client(client):
+    #     try:
+    #         # logger.debug(f"Testing client {client['type']} {client['idx']}")
+    #         res = await simple_new_chat(client["client"], client["type"], client["idx"])
+    #         # logger.debug(
+    #         #     f"Completed test for client {client['type']} {client['idx']}\n: {res}"
+    #         # )
+    #         return f"Client {client['type']} {client['idx']}: {res}"
+    #     except Exception as e:
+    #         error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
+    #         logger.error(error_msg)
+    #         return error_msg
+    #
+    #
+    # try:
+    #     # tasks = [asyncio.create_task(check_client(client)) for client in clients]
+    #     #     # check_client(client) for client in clients]
+    #     # results = await tqdm.gather(*tasks, desc="Checking clients", unit="client")
+    #     results = []
+    #     for client in clients:
+    #         try:
+    #             logger.debug(f"Testing client {client['type']} {client['idx']}")
+    #             res = await simple_new_chat(client["client"], client["type"], client["idx"])
+    #             logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
+    #             results.append(f"Client {client['type']} {client['idx']}: {res}")
+    #         except Exception as e:
+    #             error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
+    #             logger.error(error_msg)
+    #             results.append(error_msg)
+    #
+    #         # 添加一个短暂的延迟，避免可能的限速问题
+    #         await asyncio.sleep(1)
+    #
+    # except Exception as e:
+    #     logger.error(f"Error during client checks: {e}")
+
     async def check_client(client):
         try:
-            # logger.debug(f"Testing client {client['type']} {client['idx']}")
+            logger.debug(f"Testing client {client['type']} {client['idx']}")
             res = await simple_new_chat(client["client"], client["type"], client["idx"])
-            # logger.debug(
-            #     f"Completed test for client {client['type']} {client['idx']}\n: {res}"
-            # )
+            logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
             return f"Client {client['type']} {client['idx']}: {res}"
         except Exception as e:
             error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
             logger.error(error_msg)
             return error_msg
 
-    try:
-        # tasks = [asyncio.create_task(check_client(client)) for client in clients]
-        #     # check_client(client) for client in clients]
-        # results = await tqdm.gather(*tasks, desc="Checking clients", unit="client")
-        results = []
-        for client in clients:
-            try:
-                logger.debug(f"Testing client {client['type']} {client['idx']}")
-                res = await simple_new_chat(client["client"], client["type"], client["idx"])
-                logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
-                results.append(f"Client {client['type']} {client['idx']}: {res}")
-            except Exception as e:
-                error_msg = f"Error testing client {client['type']} {client['idx']}: {e}"
-                logger.error(error_msg)
-                results.append(error_msg)
+    async def process_batch(batch):
+        return await asyncio.gather(*[check_client(client) for client in batch])
 
-            # 添加一个短暂的延迟，避免可能的限速问题
-            await asyncio.sleep(1)
-
-    except Exception as e:
-        logger.error(f"Error during client checks: {e}")
+    results = []
+    batch_size = 5  # 每批处理的客户端数量
+    for i in range(0, len(clients), batch_size):
+        batch = clients[i:i + batch_size]
+        logger.info(f"Processing batch {i // batch_size + 1} of {len(clients) // batch_size + 1}")
+        batch_results = await process_batch(batch)
+        results.extend(batch_results)
+        if i + batch_size < len(clients):
+            logger.info("Waiting between batches...")
+            await asyncio.sleep(2)  # 批次之间的间隔
 
     logger.info("Completed check_reverse_official_usage_limits")
 
@@ -129,5 +155,5 @@ async def __check_reverse_official_usage_limits():
 
 async def check_reverse_official_usage_limits():
     # 使用 create_task，但不等待它完成
-    asyncio.create_task(__check_reverse_official_usage_limits())
+    task = asyncio.create_task(__check_reverse_official_usage_limits())
     return {"message": "Check started in background"}
