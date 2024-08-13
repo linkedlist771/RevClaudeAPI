@@ -20,7 +20,7 @@ async def update_cookie(
     """Update an existing cookie."""
     try:
         manager = ClientsStatusManager()
-        manager.set_client_status(client_type, client_idx, status)
+        await manager.set_client_status(client_type, client_idx, status)
         return {"message": "Set client status successfully."}
     except Exception as e:
         raise HTTPException(status_code=NORMAL_ERROR, detail=str(e))

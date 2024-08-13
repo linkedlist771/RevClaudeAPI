@@ -279,7 +279,7 @@ class Client:
                             ):
                                 logger.error(f"Invalid model : {text}")
                                 client_manager = ClientsStatusManager()
-                                client_manager.set_client_error(client_type, client_idx)
+                                await client_manager.set_client_error(client_type, client_idx)
                                 logger.error(f"设置账号状态为error")
                                 yield PLUS_EXPIRE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
@@ -302,7 +302,7 @@ class Client:
                                 refresh_time = resetAt
                                 start_time = int(refresh_time) - 8 * 3600
                                 client_manager = ClientsStatusManager()
-                                client_manager.set_client_limited(
+                                await client_manager.set_client_limited(
                                     client_type, client_idx, start_time, model
                                 )
 
@@ -346,7 +346,7 @@ class Client:
 
                             # logger.info(f"parsed text: {response_parse_text}")
                             if response_parse_text:
-                                client_manager.set_client_status(
+                                await client_manager.set_client_status(
                                     client_type, client_idx, "active"
                                 )
                                 resp_text = "".join(response_parse_text)

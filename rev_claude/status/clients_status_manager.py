@@ -5,6 +5,7 @@ from enum import Enum
 import time
 from pydantic import BaseModel
 from loguru import logger
+from redis.asyncio import Redis
 from rev_claude.configs import REDIS_HOST
 from rev_claude.models import ClaudeModels
 
@@ -34,9 +35,36 @@ class ClientsStatusManager:
 
     def __init__(self, host=REDIS_HOST, port=6379, db=2):
         """Initialize the connection to Redis."""
-        self.redis = redis.StrictRedis(
-            host=host, port=port, db=db, decode_responses=True
-        )
+        self.host = host
+        self.port = port
+        self.db = db
+        # self.redis = redis.StrictRedis(
+        #     host=host, port=port, db=db, decode_responses=True
+        # )
+
+        self.aioredis = None
+
+    async def get_aioredis(self):
+        if self.aioredis is None:
+            self.aioredis = await Redis.from_url(
+                f"redis://{self.host}:{self.port}/{self.db}",
+                decode_responses=True
+            )
+        return self.aioredis
+
+
+    async def decoded_get(self, key):
+        res = await (await self.get_aioredis()).get(key)
+        if isinstance(res, bytes):
+            res = res.decode("utf-8")
+        return res
+
+    async def set_async(self, key, value):
+        await (await self.get_aioredis()).set(key, value)
+
+    async def exists_async(self, key):
+        return await (await self.get_aioredis()).exists(key)
+
 
     def get_client_status_key(self, client_type, client_idx):
         return f"status-{client_type}-{client_idx}"
@@ -44,13 +72,15 @@ class ClientsStatusManager:
     def get_client_status_start_time_key(self, client_type, client_idx):
         return f"{self.get_client_status_key(client_type, client_idx)}:start_time"
 
-    def get_limited_message(self, start_time_key, type, idx):
+    async def get_limited_message(self, start_time_key, type, idx):
         # 获取账号状态
         client_status_key = self.get_client_status_key(type, idx)
-        status = self.redis.get(client_status_key)
+        # status = self.redis.get(client_status_key)
+        status = await self.decoded_get(client_status_key)
         if status == ClientStatus.ERROR.value:
             return "账号异常"
-        start_times = self.get_dict_value(start_time_key)
+        # start_times = self.get_dict_value(start_time_key)
+        start_times = await self.get_dict_value_async(start_time_key)
 
         message = ""
         current_time = time.time()
@@ -68,8 +98,21 @@ class ClientsStatusManager:
                 message += f"{mode}:已经恢复使用。\n"
         return message
 
-    def get_dict_value(self, key):
-        value = self.redis.get(key)
+    # def get_dict_value(self, key):
+    #     value = self.redis.get(key)
+    #     if value is None:
+    #         return {}
+    #     try:
+    #         res = json.loads(value)
+    #         if not isinstance(res, dict):
+    #             return {}
+    #         else:
+    #             return res
+    #     except (json.JSONDecodeError, TypeError):
+    #         return {}
+
+    async def get_dict_value_async(self, key):
+        value = await self.decoded_get(key)
         if value is None:
             return {}
         try:
@@ -81,7 +124,7 @@ class ClientsStatusManager:
         except (json.JSONDecodeError, TypeError):
             return {}
 
-    def set_client_limited(self, client_type, client_idx, start_time, model):
+    async def set_client_limited(self, client_type, client_idx, start_time, model):
 
         # 都得传入模型进行设置，我看这样设计就比较好了
         client_status_key = self.get_client_status_key(client_type, client_idx)
@@ -90,62 +133,76 @@ class ClientsStatusManager:
             client_type, client_idx
         )
         # 首先判断这个是不是已经是cd状态了。
-        if self.redis.get(client_status_key) == ClientStatus.CD.value:
+        # if self.redis.get(client_status_key) == ClientStatus.CD.value:
+        #     return
+        if await self.decoded_get(client_status_key) == ClientStatus.CD.value:
             return
 
-        self.redis.set(client_status_key, ClientStatus.CD.value)
+        # self.redis.set(client_status_key, ClientStatus.CD.value)
+        await self.set_async(client_status_key, ClientStatus.CD.value)
         # 这里就设计到另一个设计了，
         # 首先获取这个字典对应的值
-        start_time_dict = self.get_dict_value(client_status_start_time_key)
+        # start_time_dict = self.get_dict_value(client_status_start_time_key)
+        start_time_dict = await self.get_dict_value_async(client_status_start_time_key)
         start_time_dict[model] = start_time
-        self.redis.set(client_status_start_time_key, json.dumps(start_time_dict))
+        # self.redis.set(client_status_start_time_key, json.dumps(start_time_dict))
+        await self.set_async(client_status_start_time_key, json.dumps(start_time_dict))
 
-    def set_client_error(self, client_type, client_idx):
+    async def set_client_error(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
-        self.redis.set(client_status_key, ClientStatus.ERROR.value)
+        # self.redis.set(client_status_key, ClientStatus.ERROR.value)
+        await self.set_async(client_status_key, ClientStatus.ERROR.value)
 
-    def set_client_active(self, client_type, client_idx):
+    async def set_client_active(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
-        self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
+        # self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
+        await self.set_async(client_status_key, ClientStatus.ACTIVE.value)
 
-    def set_client_status(self, client_type, client_idx, status):
+    async def set_client_status(self, client_type, client_idx, status):
         client_status_key = self.get_client_status_key(client_type, client_idx)
-        self.redis.set(client_status_key, status)
+        # self.redis.set(client_status_key, status)
+        await self.set_async(client_status_key, status)
 
-    def set_client_active_when_cd(self, client_type, client_idx):
+    async def set_client_active_when_cd(self, client_type, client_idx):
         client_status_key = self.get_client_status_key(client_type, client_idx)
-        status = self.redis.get(client_status_key)
+        # status = self.redis.get(client_status_key)
+        status = await self.decoded_get(client_status_key)
         if status == ClientStatus.CD.value:
             client_status_start_time_key = self.get_client_status_start_time_key(
                 client_type, client_idx
             )
             current_time = time.time()
-            start_time_dict = self.get_dict_value(client_status_start_time_key)
+            # start_time_dict = self.get_dict_value(client_status_start_time_key)
+            start_time_dict = await self.get_dict_value_async(client_status_start_time_key)
             for model, start_time in start_time_dict.items():
                 time_elapsed = current_time - start_time
                 if not (time_elapsed > 8 * 3600):
                     return False
-
-            self.set_client_active(
-                client_type, client_idx
-            )  # 有一个可用就是可用， 否则其他的都是CD
+            #
+            # self.set_client_active(
+            #     client_type, client_idx
+            # )  # 有一个可用就是可用， 否则其他的都是CD
+            await self.set_client_active(client_type, client_idx)
             return True
         elif status == ClientStatus.ACTIVE.value:
             return True
         else:
             return False
 
-    def create_if_not_exist(self, client_type: str, client_idx: int, models: list[str]):
+    async def create_if_not_exist(self, client_type: str, client_idx: int, models: list[str]):
         client_status_key = self.get_client_status_key(client_type, client_idx)
         start_time_key = self.get_client_status_start_time_key(client_type, client_idx)
-        start_times = self.get_dict_value(start_time_key)
-        if (not self.redis.exists(client_status_key)) or (not start_times):
-            self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
-
+        # start_times = self.get_dict_value(start_time_key)
+        start_times = await self.get_dict_value_async(start_time_key)
+        # if (not self.redis.exists(client_status_key)) or (not start_times):
+        #     self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
+        if (not await self.exists_async(client_status_key)) or (not start_times):
+            await self.set_async(client_status_key, ClientStatus.ACTIVE.value)
             val = json.dumps({model: time.time() for model in models})
-            self.redis.set(
-                self.get_client_status_start_time_key(client_type, client_idx), val
-            )
+            # self.redis.set(
+            #     self.get_client_status_start_time_key(client_type, client_idx), val
+            # )
+            await self.set_async(self.get_client_status_start_time_key(client_type, client_idx), val)
 
     async def get_all_clients_status(self, basic_clients, plus_clients):
         from rev_claude.cookie.claude_cookie_manage import (
@@ -154,17 +211,21 @@ class ClientsStatusManager:
         )
 
         async def retrieve_client_status(idx, client, client_type, models):
-            self.create_if_not_exist(client_type, idx, models)
+            # self.create_if_not_exist(client_type, idx, models)
+            await self.create_if_not_exist(client_type, idx, models)
             account = await cookie_manager.get_account(client.cookie_key)
-            is_active = self.set_client_active_when_cd(client_type, idx)
+            # is_active = self.set_client_active_when_cd(client_type, idx)
+            is_active = await self.set_client_active_when_cd(client_type, idx)
 
             if is_active:
                 _status = ClientStatus.ACTIVE.value
                 _message = "可用"
             else:
                 _status = ClientStatus.CD.value
+                # key = self.get_client_status_start_time_key(client_type, idx)
+                # _message = self.get_limited_message(key, client_type, idx)
                 key = self.get_client_status_start_time_key(client_type, idx)
-                _message = self.get_limited_message(key, client_type, idx)
+                _message = await self.get_limited_message(key, client_type, idx)
             client_type = "normal" if client_type == "basic" else client_type
             status = ClientsStatus(
                 id=account,
