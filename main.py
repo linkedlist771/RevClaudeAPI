@@ -12,6 +12,7 @@ from rev_claude.utility import get_client_status
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="0.0.0.0", help="host")
 parser.add_argument("--port", default=6238, help="port")
+parser.add_argument("--workers", default=1, help="workers")
 args = parser.parse_args()
 logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
 app = FastAPI(lifespan=lifespan)
@@ -27,7 +28,7 @@ async def _get_client_status():
 def start_server(port=args.port, host=args.host):
     logger.info(f"Starting server at {host}:{port}")
     app.include_router(router)
-    config = uvicorn.Config(app, host=host, port=port)
+    config = uvicorn.Config(app, host=host, port=port, workers=args.workers)
     server = uvicorn.Server(config=config)
     try:
         server.run()
