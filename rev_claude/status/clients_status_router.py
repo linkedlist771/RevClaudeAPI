@@ -1,3 +1,4 @@
+from rev_claude.periodic_checks.clients_limit_checks import check_reverse_official_usage_limits
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -21,3 +22,8 @@ async def update_cookie(
         return {"message": "Set client status successfully."}
     except Exception as e:
         raise HTTPException(status_code=NORMAL_ERROR, detail=str(e))
+
+
+@router.get("/check_clients_limits")
+async def check_clients_limits():
+    await check_reverse_official_usage_limits()
