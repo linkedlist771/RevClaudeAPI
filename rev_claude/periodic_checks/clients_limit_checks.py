@@ -84,22 +84,6 @@ async def check_reverse_official_usage_limits():
 
 
     logger.info(f"Found {len(clients)} active clients to check")
-    #
-    # async def check_client(client):
-    #     try:
-    #         logger.debug(f"Testing client {client['type']} {client['idx']}")
-    #         res = await simple_new_chat(client["client"], client["type"], client["idx"])
-    #         logger.debug(f"Completed test for client {client['type']} {client['idx']}\n: {res}")
-    #     except Exception as e:
-    #         logger.error(f"Error testing client {client['type']} {client['idx']}: {e}")
-    #
-    # try:
-    #     tasks = [check_client(client) for client in clients]
-    #     await tqdm.gather(*tasks, desc="Checking clients", unit="client")
-    # except Exception as e:
-    #     logger.error(f"Error during client checks: {e}")
-    #
-    # logger.info("Completed check_reverse_official_usage_limits")
 
     results = []
     async def check_client(client):

@@ -291,31 +291,21 @@ class Client:
 
                             if "exceeded_limit" in text:
                                 # 对于plus用户只opus model才设置
-                                if client_type == "plus":
-                                    # if ClaudeModels.model_is_plus(model): 这个地方就不需要check了
-                                    dict_res = json.loads(text)
-                                    error_message = dict_res["error"]
-                                    resetAt = int(
-                                        json.loads(error_message["message"])["resetsAt"]
-                                    )
-                                    refresh_time = resetAt
-                                    start_time = int(refresh_time) - 8 * 3600
-                                    client_manager = ClientsStatusManager()
-                                    client_manager.set_client_limited(
-                                        client_type, client_idx, start_time, model
-                                    )
-                                else:
-                                    dict_res = json.loads(text)
-                                    error_message = dict_res["error"]
-                                    resetAt = int(
-                                        json.loads(error_message["message"])["resetsAt"]
-                                    )
-                                    refresh_time = resetAt
-                                    start_time = int(refresh_time) - 8 * 3600
-                                    client_manager = ClientsStatusManager()
-                                    client_manager.set_client_limited(
-                                        client_type, client_idx, start_time, model
-                                    )
+                                # if ClaudeModels.model_is_plus(model): 这个地方就不需要check了
+                                # logger.debug(f"client_type: {client_type}")
+                                client_type = client_type.replace("normal", "basic")
+                                dict_res = json.loads(text)
+                                error_message = dict_res["error"]
+                                resetAt = int(
+                                    json.loads(error_message["message"])["resetsAt"]
+                                )
+                                refresh_time = resetAt
+                                start_time = int(refresh_time) - 8 * 3600
+                                client_manager = ClientsStatusManager()
+                                client_manager.set_client_limited(
+                                    client_type, client_idx, start_time, model
+                                )
+
                                 logger.error(f"exceeded_limit : {text}")
                                 yield EXCEED_LIMIT_MESSAGE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
