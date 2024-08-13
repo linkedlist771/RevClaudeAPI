@@ -153,7 +153,6 @@ class Client:
     async def __async_get_organization_id(self):
         url = "https://claude.ai/api/organizations"
         async with httpx.AsyncClient() as client:
-            try:
                 response = await client.get(
                     url, headers=self.build_organization_headers()
                 )
@@ -166,10 +165,7 @@ class Client:
                 uuid = res[0]["uuid"]
                 return uuid
 
-            except Exception as e:
-                import traceback
 
-                logger.error(traceback.format_exc())
 
     def get_content_type(self, file_path):
         # Function to determine content type based on file extension
