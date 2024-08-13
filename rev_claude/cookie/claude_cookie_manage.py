@@ -115,8 +115,10 @@ class CookieManager:
         organization_key = self.get_cookie_organization_key(cookie_key)
         redis_instance = await self.get_aioredis()
         organization_id = await redis_instance.get(organization_key)
-        return organization_id.decode("utf-8") if organization_id else None
-
+        logger.debug(f"organization_id from redis: {organization_id}")
+        if organization_id is None:
+            return None
+        return organization_id.decode("utf-8") if isinstance(organization_id, bytes) else organization_id
     async def upload_cookie(
         self, cookie: str, cookie_type=CookieKeyType.BASIC.value, account=""
     ):
