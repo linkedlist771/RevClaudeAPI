@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from rev_claude.configs import REDIS_HOST, REDIS_PORT
 from rev_claude.cookie.claude_cookie_manage import CookieKeyType
 from rev_claude.models import ClaudeModels
+from rev_claude.utils.time_zone_utils import get_shanghai_time
 
 
 class RoleType(Enum):
@@ -87,13 +88,13 @@ class ConversationHistoryManager:
             # 确保所有消息都有时间戳
             for message in messages:
                 if message.timestamp is None:
-                    message.timestamp = datetime.utcnow()
+                    message.timestamp = get_shanghai_time()
             conversation_history.messages.extend(messages)
         else:
             # 确保所有消息都有时间戳
             for message in messages:
                 if message.timestamp is None:
-                    message.timestamp = datetime.utcnow()
+                    message.timestamp = get_shanghai_time()
             conversation_history = ConversationHistory(
                 conversation_id=request.conversation_id,
                 messages=messages,
@@ -128,16 +129,15 @@ class ConversationHistoryManager:
         for conversation_id, history_data in conversation_histories_data.items():
             history = ConversationHistory.model_validate_json(history_data)
 
-            # 处理可能缺失的时间戳
-            default_time = datetime.utcnow()
+            # 处理可能缺失的时间戳， 如果没有的话， 就返回初始时间戳, 就是刚开始的哪个1970年， 但是单位要和datetime.utcnow()一样
+
+            default_time = datetime(1970, 1, 1)
             for message in history.messages:
                 if message.timestamp is None:
                     message.timestamp = default_time
                     default_time = default_time.replace(microsecond=default_time.microsecond + 1)
-
-            # history.messages.sort(key=lambda x: x.timestamp)
             histories.append(history)
-        histories.sort(key=lambda h: h.messages[-1].timestamp if h.messages else datetime.min)
+        histories.sort(key=lambda h: h.messages[-1].timestamp if h.messages else datetime.min, reverse=True)
 
         return histories
 
