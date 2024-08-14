@@ -1,4 +1,5 @@
 import asyncio
+import json
 from functools import partial
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -195,7 +196,8 @@ async def chat(
         )
 
     logger.info(f"Input chat request request: \n{claude_chat_request.model_dump()}")
-    logger.debug(f"Request: {request.json()}")
+    body = await request.json()
+    logger.debug(f"Request: {json.dumps(body, indent=2)}")
     basic_clients = clients["basic_clients"]
     plus_clients = clients["plus_clients"]
     client_idx = claude_chat_request.client_idx
