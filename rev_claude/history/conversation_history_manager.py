@@ -137,7 +137,7 @@ class ConversationHistoryManager:
                     message.timestamp = default_time
                     default_time = default_time.replace(microsecond=default_time.microsecond + 1)
             histories.append(history)
-        histories.sort(key=lambda h: h.messages[-1].timestamp if h.messages else datetime.min, reverse=True)
+        histories.sort(key=lambda h: h.messages[-1].timestamp if h.messages else datetime.min)
 
         return histories
 
