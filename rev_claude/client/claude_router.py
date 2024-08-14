@@ -197,7 +197,18 @@ async def chat(
 
     logger.info(f"Input chat request request: \n{claude_chat_request.model_dump()}")
     body = await request.json()
-    logger.debug(f"Request: {json.dumps(body, indent=2)}")
+    client_ip = request.client.host if request.client else "Unknown"
+    headers = dict(request.headers)
+
+    log_data = {
+        "client_ip": client_ip,
+        "method": request.method,
+        "url": str(request.url),
+        "headers": headers,
+        "body": body
+    }
+
+    logger.debug(f"Request details: \n{json.dumps(log_data, indent=2)}")
     basic_clients = clients["basic_clients"]
     plus_clients = clients["plus_clients"]
     client_idx = claude_chat_request.client_idx
