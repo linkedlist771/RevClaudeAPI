@@ -1,6 +1,6 @@
 from datetime import datetime
-
 import redis
+from redis.asyncio import Redis
 from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel, Field
@@ -40,7 +40,40 @@ class ConversationHistoryManager:
 
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=0):
         """Initialize the connection to Redis."""
-        self.redis = redis.StrictRedis(host=host, port=port, db=db)
+        # self.redis = redis.StrictRedis(host=host, port=port, db=db)
+        self.host = host
+        self.port = port
+        self.db = db
+        # self.redis = redis.StrictRedis(
+        #     host=host, port=port, db=db, decode_responses=True
+        # )
+
+        self.aioredis = None
+
+    async def get_aioredis(self):
+        if self.aioredis is None:
+            self.aioredis = await Redis.from_url(
+                f"redis://{self.host}:{self.port}/{self.db}", decode_responses=True
+            )
+        return self.aioredis
+
+    async def decoded_get(self, key):
+        res = await (await self.get_aioredis()).get(key)
+        if isinstance(res, bytes):
+            res = res.decode("utf-8")
+        return res
+
+    async def set_async(self, key, value):
+        await (await self.get_aioredis()).set(key, value)
+
+    async def hgetall_async(self, key):
+        return await (await self.get_aioredis()).hgetall(key)
+
+    async def hget_async(self, key, field):
+        return await (await self.get_aioredis()).hget(key, field)
+
+    async def hset_async(self, key, field, value):
+        await (await self.get_aioredis()).hset(key, field, value)
 
     def get_conversation_history_key(self, request: ConversationHistoryRequestInput):
 
@@ -73,11 +106,14 @@ class ConversationHistoryManager:
     #         request.conversation_id,
     #         conversation_history.model_dump_json(),
     #     )
-    def push_message(
-            self, request: ConversationHistoryRequestInput, messages: list[Message]
+    async def push_message(
+        self, request: ConversationHistoryRequestInput, messages: list[Message]
     ):
         conversation_history_key = self.get_conversation_history_key(request)
-        conversation_history_data = self.redis.hget(
+        # conversation_history_data = self.redis.hget(
+        #     conversation_history_key, request.conversation_id
+        # )
+        conversation_history_data = await self.hget_async(
             conversation_history_key, request.conversation_id
         )
 
@@ -87,21 +123,26 @@ class ConversationHistoryManager:
             )
             # 确保所有消息都有时间戳
             for message in messages:
-                if message.timestamp is None:
-                    message.timestamp = get_shanghai_time()
+                # if message.timestamp is None:
+                message.timestamp = get_shanghai_time()
             conversation_history.messages.extend(messages)
         else:
             # 确保所有消息都有时间戳
             for message in messages:
-                if message.timestamp is None:
-                    message.timestamp = get_shanghai_time()
+                # if message.timestamp is None:
+                message.timestamp = get_shanghai_time()
             conversation_history = ConversationHistory(
                 conversation_id=request.conversation_id,
                 messages=messages,
                 model=request.model,
             )
 
-        self.redis.hset(
+        # self.redis.hset(
+        #     conversation_history_key,
+        #     request.conversation_id,
+        #     conversation_history.model_dump_json(),
+        # )
+        await self.hset_async(
             conversation_history_key,
             request.conversation_id,
             conversation_history.model_dump_json(),
@@ -119,11 +160,12 @@ class ConversationHistoryManager:
     #         histories.append(history)
     #
     #     return histories
-    def get_conversation_histories(
-            self, request: ConversationHistoryRequestInput
+    async def get_conversation_histories(
+        self, request: ConversationHistoryRequestInput
     ) -> List[ConversationHistory]:
         conversation_history_key = self.get_conversation_history_key(request)
-        conversation_histories_data = self.redis.hgetall(conversation_history_key)
+        # conversation_histories_data = self.redis.hgetall(conversation_history_key)
+        conversation_histories_data = await self.hgetall_async(conversation_history_key)
         histories = []
 
         for conversation_id, history_data in conversation_histories_data.items():
@@ -135,15 +177,20 @@ class ConversationHistoryManager:
             for message in history.messages:
                 if message.timestamp is None:
                     message.timestamp = default_time
-                    default_time = default_time.replace(microsecond=default_time.microsecond + 1)
+                    default_time = default_time.replace(
+                        microsecond=default_time.microsecond + 1
+                    )
             histories.append(history)
-        histories.sort(key=lambda h: h.messages[-1].timestamp if h.messages else datetime.min)
+        histories.sort(
+            key=lambda h: h.messages[-1].timestamp if h.messages else datetime.min
+        )
 
         return histories
 
-    def delete_all_conversations(self, request: ConversationHistoryRequestInput):
+    async def delete_all_conversations(self, request: ConversationHistoryRequestInput):
         conversation_history_key = self.get_conversation_history_key(request)
-        self.redis.delete(conversation_history_key)
+        # self.redis.delete(conversation_history_key)
+        await (await self.get_aioredis()).delete(conversation_history_key)
 
 
 def get_conversation_history_manager():

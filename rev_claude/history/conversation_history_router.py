@@ -21,7 +21,7 @@ async def push_message(
     messages: List[Message],
 ):
     """Push a message to conversation history."""
-    conversation_history_manager.push_message(request, messages)
+    await conversation_history_manager.push_message(request, messages)
     return {"message": "Message pushed successfully"}
 
 
@@ -30,7 +30,7 @@ async def get_conversation_histories(
     request: ConversationHistoryRequestInput,
 ) -> List[ConversationHistory]:
     """Get conversation histories."""
-    histories = conversation_history_manager.get_conversation_histories(request)
+    histories = await conversation_history_manager.get_conversation_histories(request)
     return histories
 
 
