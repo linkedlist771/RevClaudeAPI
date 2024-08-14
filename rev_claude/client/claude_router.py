@@ -193,7 +193,9 @@ async def chat(
         return StreamingResponse(
             build_sse_data(message=message), media_type="text/event-stream"
         )
+
     logger.info(f"Input chat request request: \n{claude_chat_request.model_dump()}")
+    logger.debug(f"Request: {request.json()}")
     basic_clients = clients["basic_clients"]
     plus_clients = clients["plus_clients"]
     client_idx = claude_chat_request.client_idx
