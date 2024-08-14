@@ -183,6 +183,7 @@ class ConversationHistoryManager:
             histories.append(history)
         histories.sort(
             key=lambda h: h.messages[-1].timestamp.replace(tzinfo=None) if h.messages else datetime.min,
+            reverse=True,
         )
 
         return histories
