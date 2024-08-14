@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import redis
 from redis.asyncio import Redis
 from enum import Enum
@@ -19,7 +19,7 @@ class RoleType(Enum):
 class Message(BaseModel):
     content: str
     role: RoleType
-    timestamp: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    timestamp: Optional[datetime] = Field(default_factory=lambda: datetime.utcnow() - timedelta(days=7))
 
 
 class ConversationHistory(BaseModel):
