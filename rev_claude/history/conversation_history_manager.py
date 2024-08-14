@@ -1,7 +1,9 @@
+from datetime import datetime
+
 import redis
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from rev_claude.configs import REDIS_HOST, REDIS_PORT
 from rev_claude.cookie.claude_cookie_manage import CookieKeyType
@@ -16,6 +18,7 @@ class RoleType(Enum):
 class Message(BaseModel):
     content: str
     role: RoleType
+    timestamp: Optional[datetime] = Field(default_factory=datetime.utcnow)
 
 
 class ConversationHistory(BaseModel):
@@ -44,8 +47,33 @@ class ConversationHistoryManager:
             return f"conversation_history-{request.api_key}-{request.client_idx}-basic"
         return f"conversation_history-{request.api_key}-{request.client_idx}-{request.conversation_type.value}"
 
+    # def push_message(
+    #     self, request: ConversationHistoryRequestInput, messages: list[Message]
+    # ):
+    #     conversation_history_key = self.get_conversation_history_key(request)
+    #     conversation_history_data = self.redis.hget(
+    #         conversation_history_key, request.conversation_id
+    #     )
+    #
+    #     if conversation_history_data:
+    #         conversation_history = ConversationHistory.model_validate_json(
+    #             conversation_history_data
+    #         )
+    #         conversation_history.messages.extend(messages)
+    #     else:
+    #         conversation_history = ConversationHistory(
+    #             conversation_id=request.conversation_id,
+    #             messages=messages,
+    #             model=request.model,
+    #         )
+    #
+    #     self.redis.hset(
+    #         conversation_history_key,
+    #         request.conversation_id,
+    #         conversation_history.model_dump_json(),
+    #     )
     def push_message(
-        self, request: ConversationHistoryRequestInput, messages: list[Message]
+            self, request: ConversationHistoryRequestInput, messages: list[Message]
     ):
         conversation_history_key = self.get_conversation_history_key(request)
         conversation_history_data = self.redis.hget(
@@ -56,8 +84,16 @@ class ConversationHistoryManager:
             conversation_history = ConversationHistory.model_validate_json(
                 conversation_history_data
             )
+            # 确保所有消息都有时间戳
+            for message in messages:
+                if message.timestamp is None:
+                    message.timestamp = datetime.utcnow()
             conversation_history.messages.extend(messages)
         else:
+            # 确保所有消息都有时间戳
+            for message in messages:
+                if message.timestamp is None:
+                    message.timestamp = datetime.utcnow()
             conversation_history = ConversationHistory(
                 conversation_id=request.conversation_id,
                 messages=messages,
@@ -70,8 +106,20 @@ class ConversationHistoryManager:
             conversation_history.model_dump_json(),
         )
 
+    # def get_conversation_histories(
+    #     self, request: ConversationHistoryRequestInput
+    # ) -> List[ConversationHistory]:
+    #     conversation_history_key = self.get_conversation_history_key(request)
+    #     conversation_histories_data = self.redis.hgetall(conversation_history_key)
+    #     histories = []
+    #
+    #     for conversation_id, history_data in conversation_histories_data.items():
+    #         history = ConversationHistory.model_validate_json(history_data)
+    #         histories.append(history)
+    #
+    #     return histories
     def get_conversation_histories(
-        self, request: ConversationHistoryRequestInput
+            self, request: ConversationHistoryRequestInput
     ) -> List[ConversationHistory]:
         conversation_history_key = self.get_conversation_history_key(request)
         conversation_histories_data = self.redis.hgetall(conversation_history_key)
@@ -79,6 +127,15 @@ class ConversationHistoryManager:
 
         for conversation_id, history_data in conversation_histories_data.items():
             history = ConversationHistory.model_validate_json(history_data)
+
+            # 处理可能缺失的时间戳
+            default_time = datetime.utcnow()
+            for message in history.messages:
+                if message.timestamp is None:
+                    message.timestamp = default_time
+                    default_time = default_time.replace(microsecond=default_time.microsecond + 1)
+
+            history.messages.sort(key=lambda x: x.timestamp)
             histories.append(history)
 
         return histories
