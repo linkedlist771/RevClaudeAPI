@@ -21,7 +21,6 @@ class Message(BaseModel):
     role: RoleType
     timestamp: Optional[datetime] = Field(default_factory=lambda: datetime.utcnow() - timedelta(days=7))
 
-
 class ConversationHistory(BaseModel):
     conversation_id: str
     messages: List[Message]
