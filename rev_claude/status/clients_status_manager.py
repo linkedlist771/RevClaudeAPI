@@ -28,6 +28,7 @@ class ClientsStatus(BaseModel):
     idx: int
     message: str = ""
     is_session_login: bool = False
+    usage: int = 0
     meta_data: dict = {}
 
 
@@ -66,8 +67,24 @@ class ClientsStatusManager:
     def get_client_status_key(self, client_type, client_idx):
         return f"status-{client_type}-{client_idx}"
 
+    def get_client_usage_key(self, client_type, client_idx):
+        return f"usage-{client_type}-{client_idx}"
+
     def get_client_status_start_time_key(self, client_type, client_idx):
         return f"{self.get_client_status_key(client_type, client_idx)}:start_time"
+
+    async def increment_usage(self, client_type, client_idx, increment=1):
+        usage_key = self.get_client_usage_key(client_type, client_idx)
+        return await (await self.get_aioredis()).incrby(usage_key, increment)
+
+    async def reset_usage(self, client_type, client_idx):
+        usage_key = self.get_client_usage_key(client_type, client_idx)
+        await (await self.get_aioredis()).set(usage_key, 0)
+
+    async def get_usage(self, client_type, client_idx):
+        usage_key = self.get_client_usage_key(client_type, client_idx)
+        usage = await self.decoded_get(usage_key)
+        return int(usage) if usage is not None else 0
 
     async def get_limited_message(self, start_time_key, type, idx):
         # 获取账号状态
@@ -184,6 +201,8 @@ class ClientsStatusManager:
             #     client_type, client_idx
             # )  # 有一个可用就是可用， 否则其他的都是CD
             await self.set_client_active(client_type, client_idx)
+            # 然后重置使用次数
+            await self.reset_usage(client_type, client_idx)
             # 这里把其设置为可用了
             return True
         elif status == ClientStatus.ACTIVE.value:
@@ -199,7 +218,8 @@ class ClientsStatusManager:
         # start_times = self.get_dict_value(start_time_key)
         start_times = await self.get_dict_value_async(start_time_key)
         # if (not self.redis.exists(client_status_key)) or (not start_times):
-        #     self.redis.set(client_status_key, ClientStatus.ACTIVE.value)
+        #     self.redis.set(client_status_key, ClientStatus.ACTIVE.value)'
+        usage_key = self.get_client_usage_key(client_type, client_idx)
         if (not await self.exists_async(client_status_key)) or (not start_times):
             await self.set_async(client_status_key, ClientStatus.ACTIVE.value)
             val = json.dumps({model: time.time() for model in models})
@@ -209,6 +229,7 @@ class ClientsStatusManager:
             await self.set_async(
                 self.get_client_status_start_time_key(client_type, client_idx), val
             )
+            await self.set_async(usage_key, 0)
 
     async def get_all_clients_status(self, basic_clients, plus_clients):
         from rev_claude.cookie.claude_cookie_manage import (
@@ -219,6 +240,8 @@ class ClientsStatusManager:
         async def retrieve_client_status(idx, client, client_type, models):
             # self.create_if_not_exist(client_type, idx, models)
             await self.create_if_not_exist(client_type, idx, models)
+            usage = await self.get_usage(client_type, idx)
+
             account = await cookie_manager.get_account(client.cookie_key)
             # is_active = self.set_client_active_when_cd(client_type, idx)
             is_active = await self.set_client_active_when_cd(client_type, idx)
@@ -239,6 +262,7 @@ class ClientsStatusManager:
                 type=client_type,
                 idx=idx,
                 message=_message,
+                usage=usage,
             )
             return status
 

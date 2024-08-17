@@ -26,6 +26,7 @@ from rev_claude.schemas import (
     ObtainReverseOfficialLoginRouterRequest,
 )
 from rev_claude.models import ClaudeModels
+from rev_claude.status.clients_status_manager import ClientsStatusManager
 from rev_claude.status_code.status_code_enum import HTTP_480_API_KEY_INVALID
 from rev_claude.utils.sse_utils import build_sse_data
 
@@ -45,6 +46,7 @@ async def validate_api_key(
             detail="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
         )
     manager.increment_usage(api_key)
+
     logger.info(f"API key:\n{api_key}")
     logger.info(manager.get_apikey_information(api_key))
     # 尝试激活 API key
@@ -163,6 +165,9 @@ async def obtain_reverse_official_login_router(
     client = clients[client_type][client_idx]
     # 这里还要加上使用次数， 差点忘了。
     manager.increment_usage(api_key, CLAUDE_OFFICIAL_USAGE_INCREASE)
+    # 还要添加对于client status manager里面对于usage的提升
+    clients_status_manager = ClientsStatusManager()
+    await clients_status_manager.increment_usage(client_type=client_type, client_idx=client_idx, increment=CLAUDE_OFFICIAL_USAGE_INCREASE)
     res = await client.retrieve_reverse_official_route(unique_name=api_key)
     return JSONResponse(
         content={"data": res, "valid": True},
@@ -221,6 +226,9 @@ async def chat(
     conversation_id = claude_chat_request.conversation_id
     client_type = claude_chat_request.client_type
     client_type = "plus" if client_type == "plus" else "basic"
+    # increase the usage count
+    clients_status_manager = ClientsStatusManager()
+    await clients_status_manager.increment_usage(client_type=client_type, client_idx=client_idx)
     if (not manager.is_plus_user(api_key)) and (client_type == "plus"):
         return StreamingResponse(
             build_sse_data(
