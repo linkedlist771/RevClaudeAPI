@@ -19,7 +19,10 @@ class RoleType(Enum):
 class Message(BaseModel):
     content: str
     role: RoleType
-    timestamp: Optional[datetime] = Field(default_factory=lambda: datetime.utcnow() - timedelta(days=7))
+    timestamp: Optional[datetime] = Field(
+        default_factory=lambda: datetime.utcnow() - timedelta(days=7)
+    )
+
 
 class ConversationHistory(BaseModel):
     conversation_id: str
@@ -181,7 +184,11 @@ class ConversationHistoryManager:
                     )
             histories.append(history)
         histories.sort(
-            key=lambda h: h.messages[-1].timestamp.replace(tzinfo=None) if h.messages else datetime.min,
+            key=lambda h: (
+                h.messages[-1].timestamp.replace(tzinfo=None)
+                if h.messages
+                else datetime.min
+            ),
             reverse=True,
         )
 
