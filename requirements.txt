@@ -13,3 +13,4 @@ tqdm
 redis[hiredis]
 apscheduler
 limits
+python-multipart

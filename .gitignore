@@ -10,8 +10,8 @@ claude_config.json
 
 
 Config.conf
-log_file.log
 checking/
+logs/
 # Distribution / packaging
 .Python
 build/

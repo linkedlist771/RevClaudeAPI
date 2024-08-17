@@ -4,6 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 from loguru import logger
 from rev_claude.client.client_manager import ClientManager
+from rev_claude.configs import LOGS_PATH
 from rev_claude.lifespan import lifespan
 from rev_claude.middlewares.register_middlewares import register_middleware
 from rev_claude.router import router
@@ -12,10 +13,9 @@ from rev_claude.utility import get_client_status
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="0.0.0.0", help="host")
 parser.add_argument("--port", default=6238, help="port")
-# parser.add_argument("--workers", default=1, help="workers") int 类型
 parser.add_argument("--workers", default=1, type=int, help="workers")
 args = parser.parse_args()
-logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
+logger.add(LOGS_PATH / "log_file.log", rotation="1 week")  # 每周轮换一次文件
 app = FastAPI(lifespan=lifespan)
 app = register_middleware(app)
 

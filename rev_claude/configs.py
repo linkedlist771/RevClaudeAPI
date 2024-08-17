@@ -1,4 +1,5 @@
 from httpx import Timeout
+from pathlib import Path
 
 
 API_KEY_REFRESH_INTERVAL_HOURS = 3
@@ -42,7 +43,7 @@ DOCS_PASSWORD = "20Wd!!!!"
 
 # Claude 官方镜像的链接w
 
-CLAUDE_OFFICIAL_REVERSE_BASE_URL: str = "https://ai.liuli.arelay.com"
+CLAUDE_OFFICIAL_REVERSE_BASE_URL: str = "https://demo.fuclaude.com" # https://ai.liuli.arelay.com"
 
 # 三小时
 CLAUDE_OFFICIAL_EXPIRE_TIME = 3 * 60 * 60
@@ -59,3 +60,13 @@ CLAUDE_CLIENT_LIMIT_CHECKS_PROMPT = "Say: OK."
 
 # IP访问的限制
 IP_REQUEST_LIMIT_PER_MINUTE = 40  # 一分钟40次
+
+# ROOT path
+ROOT = Path(__file__).parent.parent
+
+LOGS_PATH = ROOT / "logs"
+
+LOGS_PATH.mkdir(exist_ok=True)
+
+if __name__ == "__main__":
+    print(ROOT)

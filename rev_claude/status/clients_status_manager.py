@@ -182,6 +182,7 @@ class ClientsStatusManager:
             #     client_type, client_idx
             # )  # 有一个可用就是可用， 否则其他的都是CD
             await self.set_client_active(client_type, client_idx)
+            # 这里把其设置为可用了
             return True
         elif status == ClientStatus.ACTIVE.value:
             return True
