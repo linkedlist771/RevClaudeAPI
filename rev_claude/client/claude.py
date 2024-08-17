@@ -340,9 +340,9 @@ class Client:
 
                             # logger.info(f"parsed text: {response_parse_text}")
                             if response_parse_text:
-                                await client_manager.set_client_status(
-                                    client_type, client_idx, "active"
-                                )
+                                # await client_manager.set_client_status(
+                                #     client_type, client_idx, "active"
+                                # )
                                 resp_text = "".join(response_parse_text)
                                 response_text += resp_text
                                 yield resp_text
