@@ -107,7 +107,7 @@ class ClientsStatusManager:
             remaining_time = int(remaining_time)
             __mode = mode.replace("claude-3-opus-20240229", "claude-3-opus").replace(
                 "claude-3-5-sonnet-20240620", "claude-3.5-sonnet"
-            )
+            ).replace("claude-3-sonnet-20240229", "claude-3-sonnet")
             if remaining_time > 0:
                 message += f"{__mode}:需{remaining_time}秒。\n"
             else:
