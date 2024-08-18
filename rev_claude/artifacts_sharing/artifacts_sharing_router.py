@@ -14,13 +14,13 @@ async def validate_api_key(request: Request):
     api_manager = get_api_key_manager()
     api_key = request.headers.get("Authorization")
     # logger.info(f"checking api key: {api_key}")
-    if api_key is None or not api_manager.is_api_key_valid(api_key):
+    if api_key is None or (not await api_manager.is_api_key_valid(api_key)):
         raise HTTPException(
             status_code=HTTP_480_API_KEY_INVALID,
             detail="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
         )
     # 尝试激活 API key
-    active_message = api_manager.activate_api_key(api_key)
+    active_message = await api_manager.activate_api_key(api_key)
 
 
 def get_artifacts_code_manager():

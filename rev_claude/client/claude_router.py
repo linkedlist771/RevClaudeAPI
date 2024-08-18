@@ -40,17 +40,18 @@ async def validate_api_key(
 
     api_key = request.headers.get("Authorization")
     # logger.info(f"checking api key: {api_key}")
-    if api_key is None or not manager.is_api_key_valid(api_key):
+    if api_key is None or (not await manager.is_api_key_valid(api_key)):
         raise HTTPException(
             status_code=HTTP_480_API_KEY_INVALID,
             detail="APIKEY已经过期或者不存在，请检查您的APIKEY是否正确。",
         )
-    manager.increment_usage(api_key)
+    await manager.increment_usage(api_key)
 
     logger.info(f"API key:\n{api_key}")
-    logger.info(manager.get_apikey_information(api_key))
+    _infor = await manager.get_apikey_information(api_key)
+    logger.info(_infor)
     # 尝试激活 API key
-    active_message = manager.activate_api_key(api_key)
+    active_message = await manager.activate_api_key(api_key)
     logger.info(active_message)
 
 
@@ -138,10 +139,10 @@ async def obtain_reverse_official_login_router(
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     api_key = request.headers.get("Authorization")
-    has_reached_limit = manager.has_exceeded_limit(api_key)
+    has_reached_limit = await manager.has_exceeded_limit(api_key)
     if has_reached_limit:
         # 首先check一下用户是不是被删除了
-        is_deleted = not manager.is_api_key_valid(api_key)
+        is_deleted = not await manager.is_api_key_valid(api_key)
         if is_deleted:
 
             return JSONResponse(
@@ -150,7 +151,7 @@ async def obtain_reverse_official_login_router(
                     "valid": False,
                 },
             )
-        message = manager.generate_exceed_message(api_key)
+        message = await manager.generate_exceed_message(api_key)
         logger.info(f"API {api_key} has reached the limit.")
         return JSONResponse(
             content={"message": message, "valid": False},
@@ -164,10 +165,14 @@ async def obtain_reverse_official_login_router(
     client_type = __client_type + "_clients"
     client = clients[client_type][client_idx]
     # 这里还要加上使用次数， 差点忘了。
-    manager.increment_usage(api_key, CLAUDE_OFFICIAL_USAGE_INCREASE)
+    await manager.increment_usage(api_key, CLAUDE_OFFICIAL_USAGE_INCREASE)
     # 还要添加对于client status manager里面对于usage的提升
     clients_status_manager = ClientsStatusManager()
-    await clients_status_manager.increment_usage(client_type=__client_type, client_idx=client_idx, increment=CLAUDE_OFFICIAL_USAGE_INCREASE)
+    await clients_status_manager.increment_usage(
+        client_type=__client_type,
+        client_idx=client_idx,
+        increment=CLAUDE_OFFICIAL_USAGE_INCREASE,
+    )
     res = await client.retrieve_reverse_official_route(unique_name=api_key)
     return JSONResponse(
         content={"data": res, "valid": True},
@@ -182,10 +187,10 @@ async def chat(
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     api_key = request.headers.get("Authorization")
-    has_reached_limit = manager.has_exceeded_limit(api_key)
+    has_reached_limit = await manager.has_exceeded_limit(api_key)
     if has_reached_limit:
         # 首先check一下用户是不是被删除了
-        is_deleted = not manager.is_api_key_valid(api_key)
+        is_deleted = not await manager.is_api_key_valid(api_key)
         if is_deleted:
             logger.critical(f"API key {api_key} has been deleted due to abuse.")
             return StreamingResponse(
@@ -194,7 +199,7 @@ async def chat(
                 ),
                 media_type="text/event-stream",
             )
-        message = manager.generate_exceed_message(api_key)
+        message = await manager.generate_exceed_message(api_key)
         logger.info(f"API {api_key} has reached the limit.")
         return StreamingResponse(
             build_sse_data(message=message), media_type="text/event-stream"
@@ -228,8 +233,10 @@ async def chat(
     client_type = "plus" if client_type == "plus" else "basic"
     # increase the usage count
     clients_status_manager = ClientsStatusManager()
-    await clients_status_manager.increment_usage(client_type=client_type, client_idx=client_idx)
-    if (not manager.is_plus_user(api_key)) and (client_type == "plus"):
+    await clients_status_manager.increment_usage(
+        client_type=client_type, client_idx=client_idx
+    )
+    if (not await manager.is_plus_user(api_key)) and (client_type == "plus"):
         return StreamingResponse(
             build_sse_data(
                 message="您的登录秘钥不是Plus 用户，请升级您的套餐以访问此账户。"

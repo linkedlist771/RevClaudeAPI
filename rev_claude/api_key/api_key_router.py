@@ -25,7 +25,7 @@ async def create_key(
     expiration_seconds = create_apikey_request.expiration_days * 24 * 60 * 60
     api_keys = []
     for i in range(create_apikey_request.key_number):
-        api_key = manager.create_api_key(expiration_seconds, api_key_type)
+        api_key = await manager.create_api_key(expiration_seconds, api_key_type)
         api_keys.append(api_key)
     return {"api_key": api_keys}
 
@@ -35,7 +35,7 @@ async def validate_key(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Check if an API key is valid."""
-    is_valid = manager.is_api_key_valid(api_key)
+    is_valid = await manager.is_api_key_valid(api_key)
     return {"is_valid": is_valid}
 
 
@@ -45,7 +45,7 @@ async def increment_usage(
 ):
     """Increment the usage count of an API key."""
     try:
-        usage = manager.increment_usage(api_key)
+        usage = await manager.increment_usage(api_key)
         return {"api_key": api_key, "usage_count": usage}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -57,7 +57,7 @@ async def reset_current_usage(
 ):
     """Reset the current usage count of an API key."""
     try:
-        usage = manager.reset_current_usage(api_key)
+        usage = await manager.reset_current_usage(api_key)
         return {"api_key": api_key, "usage_count": usage}
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -71,7 +71,7 @@ async def extend_api_key_expiration(
 ):
     """延长API密钥的过期时间。"""
     try:
-        result = manager.extend_api_key_expiration(api_key, request.additional_days)
+        result = await manager.extend_api_key_expiration(api_key, request.additional_days)
         return {"message": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -82,7 +82,7 @@ async def get_information(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Get the usage count of an API key."""
-    key_information = manager.get_apikey_information(api_key)
+    key_information = await manager.get_apikey_information(api_key)
     return key_information
 
 
@@ -91,7 +91,7 @@ async def delete_key(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Delete an API key and its usage count."""
-    res = manager.delete_api_key(api_key)
+    res = await manager.delete_api_key(api_key)
     return {"message": res}
 
 
@@ -101,18 +101,18 @@ async def delete_batch_keys(
     manager: APIKeyManager = Depends(get_api_key_manager),
 ):
     """Delete a batch of API keys and their usage count."""
-    res = manager.batch_delete_api_keys(api_keys.api_keys)
+    res = await manager.batch_delete_api_keys(api_keys.api_keys)
     return {"message": res}
 
 
 @router.get("/list_keys")
 async def list_keys(manager: APIKeyManager = Depends(get_api_key_manager)):
     """List all active API keys."""
-    api_keys = manager.list_active_api_keys()
+    api_keys = await manager.list_active_api_keys()
     api_keys = [i.split(":")[0] for i in api_keys]
     key_information = {}
     for key in api_keys:
-        key_information[key] = manager.get_apikey_information(key)
+        key_information[key] = await manager.get_apikey_information(key)
     return key_information
 
 
@@ -122,7 +122,7 @@ async def set_key_type(
 ):
     """Set the type of an API key."""
     key_type = str(key_type.strip().lower())
-    result = manager.set_api_key_type(api_key, key_type)
+    result = await manager.set_api_key_type(api_key, key_type)
     return {"message": result}
 
 
@@ -131,7 +131,7 @@ async def get_key_type(
     api_key: str, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
     """Get the type of an API key."""
-    key_type = manager.get_api_key_type(api_key)
+    key_type = await manager.get_api_key_type(api_key)
     return {"api_key": api_key, "key_type": key_type}
 
 
@@ -144,5 +144,5 @@ async def add_key(
 ):
     """Add an existing API key with a specific expiration time."""
     api_key_type = str(api_key_type.strip().lower())
-    api_key = manager.add_api_key(api_key, expiration_seconds, api_key_type)
+    api_key = await manager.add_api_key(api_key, expiration_seconds, api_key_type)
     return {"api_key": api_key}
