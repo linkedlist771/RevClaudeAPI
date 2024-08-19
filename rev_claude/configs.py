@@ -44,7 +44,7 @@ DOCS_PASSWORD = "20Wd!!!!"
 # Claude 官方镜像的链接w
 
 CLAUDE_OFFICIAL_REVERSE_BASE_URL: str = (
-    "https://demo.fuclaude.com"  # https://ai.liuli.arelay.com"
+    "https://ai.liuli.arelay.com" #     "https://demo.fuclaude.com"  #
 )
 
 # 三小时
