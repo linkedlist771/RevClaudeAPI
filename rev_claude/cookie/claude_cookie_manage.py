@@ -217,9 +217,11 @@ class CookieManager:
                 if cookie_value:
                     cookies.append(
                         {
+                            "cookie_key": base_key,
                             "cookie": cookie_value,
                             "type": actual_type,
                             "account": account,
+
                         }
                     )
 
