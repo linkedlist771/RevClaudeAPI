@@ -248,7 +248,11 @@ class ClientsStatusManager:
 
             if is_active:
                 _status = ClientStatus.ACTIVE.value
-                _message = "可用"
+                key = self.get_client_status_start_time_key(client_type, idx)
+
+                _message = await self.get_limited_message(key, client_type, idx)
+                if  not "需" in _message:
+                    _message = "可用"
             else:
                 _status = ClientStatus.CD.value
                 # key = self.get_client_status_start_time_key(client_type, idx)
