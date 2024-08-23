@@ -268,6 +268,7 @@ async def chat(
                         rendered_prompt = await ArtifactsRendererPrompt(
                             prompt=prompt
                         ).render_prompt()
+                        logger.info(f"Prompt After rendering: \n{rendered_prompt}")
                         claude_chat_request.message = rendered_prompt
                     await asyncio.sleep(2)  # 等待两秒秒,创建成功后
 
