@@ -182,6 +182,7 @@ class Client:
 
     def build_stream_headers(self):
         return {
+            'X-Forwarded-Proto': 'https',
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",
             "Accept": "text/event-stream, text/event-stream",
             "Accept-Language": "en-US,en;q=0.5",
@@ -425,6 +426,7 @@ class Client:
     def build_new_chat_headers(self, uuid):
         return {
             # "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            'X-Forwarded-Proto': 'https',
             "User-Agent": get_random_user_agent(),
             "Accept-Language": "en-US,en;q=0.5",
             "Referer": f"https://claude.ai/chat/{uuid}",
