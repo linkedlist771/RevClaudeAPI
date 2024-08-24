@@ -236,9 +236,7 @@ if main_function == "API密钥管理":
                     st.success(f"API密钥 {api_key} 添加到Claude35成功!")
                 else:
                     st.error(f"API密钥 {api_key} 添加到Claude35失败。")
-            else:
-                st.error("API密钥创建失败。")
-
+      
 
 
 
