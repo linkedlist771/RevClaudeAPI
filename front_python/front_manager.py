@@ -278,7 +278,7 @@ if main_function == "API密钥管理":
                 st.error("API密钥创建失败。")
 
             # 如果选择不是"只适用于官网镜像"，则删除所有生成的密钥
-            if selected_option != options[1]:
+            if selected_option == options[1]:
                 delete_url = f"{API_KEY_ROUTER}/delete_batch_keys"
                 delete_payload = {"api_keys": api_keys}
                 delete_response = requests.delete(delete_url, json=delete_payload)
