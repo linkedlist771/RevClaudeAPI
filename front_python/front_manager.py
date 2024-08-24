@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta, time
 
 import streamlit as st
@@ -197,6 +198,15 @@ if main_function == "API密钥管理":
         expiration_days = st.number_input("过期天数", min_value=1, value=1, step=1)
         key_type = st.text_input("密钥类型", value="plus")
         key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
+        # 定义选项
+        options = [
+            "🌐 只适用于逆向网站",
+            "🔒 只适用于官网镜像",
+            "🔁 全部设为都使用"
+        ]
+
+        # 创建选择框
+        selected_option = st.selectbox("选择使用类型", options)
 
         if st.button("创建API密钥"):
             # url = f"{BASE_URL}/api/v1/api_key/create_key"
@@ -210,7 +220,6 @@ if main_function == "API密钥管理":
 
             # 然后还要添加新的
             new_payload = {
-
             }
             url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/add"
             # 添加新用户API密钥
@@ -220,27 +229,6 @@ if main_function == "API密钥管理":
             expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
             is_plus = 1 if key_type == "plus" else 0
 
-            # for api_key in api_keys:
-            #     # 添加新用户API密钥
-            #     new_payload = {
-            #         "userToken": api_key,
-            #         "expireTime":expire_time,
-            #         "isPlus":is_plus
-            #     }
-            #     new_headers = {
-            #         'APIAUTH': 'cccld',
-            #         'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
-            #         'Content-Type': 'application/json'
-            #     }
-            #
-            #     new_response = requests.post(url, json=new_payload, headers=new_headers)
-            #
-            #     if new_response.status_code == 200:
-            #         show_temp_message(f"API密钥 {api_key} 添加到Claude35成功!"
-            #                           )
-            #     else:
-            #         st.error(f"API密钥 {api_key} 添加到Claude35失败。")
-            # 在循环开始前创建进度条和状态显示
             progress_bar = st.progress(0)
             status = st.empty()
 
@@ -266,22 +254,30 @@ if main_function == "API密钥管理":
                     'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
                     'Content-Type': 'application/json'
                 }
+                if selected_option != options[0]:
 
-                new_response = requests.post(url, json=new_payload, headers=new_headers)
+                    new_response = requests.post(url, json=new_payload, headers=new_headers)
 
-                if new_response.status_code == 200:
-                    # st.success(f"API密钥 {api_key} 添加到Claude35成功!")
-                    pass
-                else:
-                    st.error(f"API密钥 {api_key} 添加到Claude35失败。")
+                    if new_response.status_code == 200:
+                        # st.success(f"API密钥 {api_key} 添加到Claude35成功!")
+                        pass
+                    else:
+                        st.error(f"API密钥 {api_key} 添加到Claude35失败。")
 
 
 
 
             if response.status_code == 200:
-                st.success(response.json())
+                st.success(json.dump(response.json(), indent=4))
             else:
                 st.error("API密钥创建失败。")
+
+            # 如果选择不是"只适用于官网镜像"，则删除所有生成的密钥
+            if selected_option != options[1]:
+                delete_url = f"{API_KEY_ROUTER}/delete_batch_keys"
+                delete_payload = {"api_keys": api_keys}
+                delete_response = requests.delete(delete_url, json=delete_payload)
+
 
     elif api_key_function == "验证API密钥":
         st.subheader("验证API密钥")
