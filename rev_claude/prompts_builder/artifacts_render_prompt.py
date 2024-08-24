@@ -67,53 +67,53 @@ Claude has the following additional capabilities:
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import {{ ref }} from 'vue';
 
 const username = ref('');
 const password = ref('');
 
-const handleLogin = () => {
+const handleLogin = () => {{
   // 这里处理登录逻辑
   console.log('Login attempt:', username.value, password.value);
-};
+}};
 </script>
 
 <style scoped>
-.login-container {
+.login-container {{
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   background-color: #F1F1F1;
   font-family: Arial, sans-serif;
-}
+}}
 
-.login-box {
+.login-box {{
   background-color: white;
   padding: 30px;
   border-radius: 4px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   width: 300px;
-}
+}}
 
-.logo {
+.logo {{
   text-align: center;
   margin-bottom: 20px;
-}
+}}
 
-form {
+form {{
   display: flex;
   flex-direction: column;
-}
+}}
 
-input {
+input {{
   margin-bottom: 10px;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
-}
+}}
 
-button {
+button {{
   background-color: #12B7F5;
   color: white;
   padding: 10px;
@@ -121,34 +121,34 @@ button {
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
-}
+}}
 
-button:hover {
+button:hover {{
   background-color: #0EA2E4;
-}
+}}
 
-.options {
+.options {{
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
-}
+}}
 
-.options a {
+.options a {{
   color: #12B7F5;
   text-decoration: none;
   font-size: 14px;
-}
+}}
 
-.alternative-login {
+.alternative-login {{
   margin-top: 20px;
   text-align: center;
   font-size: 14px;
   color: #999;
-}
+}}
 
-.icon {
+.icon {{
   margin-left: 10px;
-}
+}}
 </style>
 ```
 
