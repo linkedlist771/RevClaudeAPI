@@ -22,7 +22,7 @@ async def create_key(
 ):
     """Create an API key with a set expiration time."""
     api_key_type = str(create_apikey_request.key_type)
-    expiration_seconds = create_apikey_request.expiration_days * 24 * 60 * 60
+    expiration_seconds = int(create_apikey_request.expiration_days * 24 * 60 * 60)
     api_keys = []
     for i in range(create_apikey_request.key_number):
         api_key = manager.create_api_key(expiration_seconds, api_key_type)

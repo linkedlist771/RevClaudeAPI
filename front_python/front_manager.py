@@ -195,7 +195,8 @@ if main_function == "API密钥管理":
 
     if api_key_function == "创建API密钥":
         st.subheader("创建API密钥")
-        expiration_days = st.number_input("过期天数", min_value=1, value=1, step=1)
+        expiration_days = st.number_input("过期天数", min_value=0, value=0, step=1)
+        expiration_hours = st.number_input("过期小时数", min_value=1, value=1, step=1)
         key_type = st.text_input("密钥类型", value="plus")
         key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
         # 定义选项
@@ -207,12 +208,13 @@ if main_function == "API密钥管理":
 
         # 创建选择框
         selected_option = st.selectbox("选择使用类型", options)
-
+        total_hours = expiration_days * 24 + expiration_hours
+        expiration_days_float = total_hours / 24
         if st.button("创建API密钥"):
             # url = f"{BASE_URL}/api/v1/api_key/create_key"
             url = f"{API_KEY_ROUTER}/create_key"
             payload = {
-                "expiration_days": expiration_days,
+                "expiration_days": expiration_days_float,
                 "key_type": key_type,
                 "key_number": key_number,
             }
@@ -225,7 +227,7 @@ if main_function == "API密钥管理":
             # 添加新用户API密钥
 
             api_keys = response.json().get("api_key")
-            expire_date = datetime.now() + timedelta(days=expiration_days)
+            expire_date = datetime.now() + timedelta(hours=total_hours)
             expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
             is_plus = 1 if key_type == "plus" else 0
 
