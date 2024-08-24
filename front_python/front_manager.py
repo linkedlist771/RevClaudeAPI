@@ -152,6 +152,7 @@ def display_message(message, type="info"):
     else:
         st.info(message)
 
+import time
 
 def show_temp_message(message,):
     # 创建一个空的占位符
@@ -161,7 +162,7 @@ def show_temp_message(message,):
     with placeholder.container():
         st.success(message)
 
-
+    time.sleep(0.3)
 
     # 清除占位符中的内容
     placeholder.empty()
