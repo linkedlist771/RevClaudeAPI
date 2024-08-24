@@ -212,7 +212,7 @@ if main_function == "API密钥管理":
             url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/add"
             # 添加新用户API密钥
 
-            api_keys = response.json().get("api_keys")
+            api_keys = response.json().get("api_key")
             expire_date = datetime.now() + timedelta(days=expiration_days)
             expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
             is_plus = 1 if key_type == "plus" else 0
