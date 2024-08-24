@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import streamlit as st
 import requests
 import pandas as pd
@@ -202,6 +204,44 @@ if main_function == "API密钥管理":
                 "key_number": key_number,
             }
             response = requests.post(url, json=payload)
+
+            # 然后还要添加新的
+            new_payload = {
+
+            }
+            url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/add"
+            # 添加新用户API密钥
+
+            api_keys = response.json().get("api_keys")
+            expire_date = datetime.now() + timedelta(days=expiration_days)
+            expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
+            is_plus = 1 if key_type == "plus" else 0
+
+            for api_key in api_keys:
+                # 添加新用户API密钥
+                new_payload = {
+                    "userToken": api_key,
+                    "expireTime":expire_time,
+                    "isPlus":is_plus
+                }
+                new_headers = {
+                    'APIAUTH': 'cccld',
+                    'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
+                    'Content-Type': 'application/json'
+                }
+
+                new_response = requests.post(url, json=new_payload, headers=new_headers)
+
+                if new_response.status_code == 200:
+                    st.success(f"API密钥 {api_key} 添加到Claude35成功!")
+                else:
+                    st.error(f"API密钥 {api_key} 添加到Claude35失败。")
+            else:
+                st.error("API密钥创建失败。")
+
+
+
+
             if response.status_code == 200:
                 st.success(response.json())
             else:
