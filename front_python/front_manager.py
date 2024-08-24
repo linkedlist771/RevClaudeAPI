@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 import streamlit as st
 import requests
@@ -153,6 +153,19 @@ def display_message(message, type="info"):
         st.info(message)
 
 
+def show_temp_message(message,):
+    # 创建一个空的占位符
+    placeholder = st.empty()
+
+    # 在占位符中显示成功消息
+    with placeholder.container():
+        st.success(message)
+
+
+
+    # 清除占位符中的内容
+    placeholder.empty()
+
 # Initialize session state for messages
 if "messages" not in st.session_state:
     st.session_state.messages = {}
@@ -233,10 +246,11 @@ if main_function == "API密钥管理":
                 new_response = requests.post(url, json=new_payload, headers=new_headers)
 
                 if new_response.status_code == 200:
-                    st.success(f"API密钥 {api_key} 添加到Claude35成功!")
+                    show_temp_message(f"API密钥 {api_key} 添加到Claude35成功!"
+                                      )
                 else:
                     st.error(f"API密钥 {api_key} 添加到Claude35失败。")
-      
+
 
 
 
