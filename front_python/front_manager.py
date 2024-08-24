@@ -268,7 +268,8 @@ if main_function == "API密钥管理":
 
 
             if response.status_code == 200:
-                st.success(json.dump(response.json(), indent=4))
+                # st.success(json.dump(response.json(), indent=4))
+                json.dumps(response.json(), indent=4, ensure_ascii=False)
             else:
                 st.error("API密钥创建失败。")
 
