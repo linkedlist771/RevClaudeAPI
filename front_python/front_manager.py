@@ -154,18 +154,7 @@ def display_message(message, type="info"):
 
 import time
 
-def show_temp_message(message,):
-    # 创建一个空的占位符
-    placeholder = st.empty()
 
-    # 在占位符中显示成功消息
-    with placeholder.container():
-        st.success(message)
-
-    time.sleep(0.3)
-
-    # 清除占位符中的内容
-    placeholder.empty()
 
 # Initialize session state for messages
 if "messages" not in st.session_state:
@@ -231,12 +220,46 @@ if main_function == "API密钥管理":
             expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
             is_plus = 1 if key_type == "plus" else 0
 
-            for api_key in api_keys:
+            # for api_key in api_keys:
+            #     # 添加新用户API密钥
+            #     new_payload = {
+            #         "userToken": api_key,
+            #         "expireTime":expire_time,
+            #         "isPlus":is_plus
+            #     }
+            #     new_headers = {
+            #         'APIAUTH': 'cccld',
+            #         'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
+            #         'Content-Type': 'application/json'
+            #     }
+            #
+            #     new_response = requests.post(url, json=new_payload, headers=new_headers)
+            #
+            #     if new_response.status_code == 200:
+            #         show_temp_message(f"API密钥 {api_key} 添加到Claude35成功!"
+            #                           )
+            #     else:
+            #         st.error(f"API密钥 {api_key} 添加到Claude35失败。")
+            # 在循环开始前创建进度条和状态显示
+            progress_bar = st.progress(0)
+            status = st.empty()
+
+            # 获取API密钥的总数
+            total_keys = len(api_keys)
+
+            for index, api_key in enumerate(api_keys, start=1):
+                # 更新进度条
+                progress = int(index / total_keys * 100)
+                progress_bar.progress(progress)
+
+                # 更新状态信息
+                status.text(f"正在处理 API 密钥 {index}/{total_keys}: {api_key}")
+
                 # 添加新用户API密钥
                 new_payload = {
                     "userToken": api_key,
-                    "expireTime":expire_time,
-                    "isPlus":is_plus
+                    "expireTime": expire_time,
+                    "isPlus": is_plus
                 }
                 new_headers = {
                     'APIAUTH': 'cccld',
@@ -247,8 +270,7 @@ if main_function == "API密钥管理":
                 new_response = requests.post(url, json=new_payload, headers=new_headers)
 
                 if new_response.status_code == 200:
-                    show_temp_message(f"API密钥 {api_key} 添加到Claude35成功!"
-                                      )
+                    st.success(f"API密钥 {api_key} 添加到Claude35成功!")
                 else:
                     st.error(f"API密钥 {api_key} 添加到Claude35失败。")
 
