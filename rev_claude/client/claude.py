@@ -278,7 +278,7 @@ class Client:
                                 logger.error(f"设置账号状态为error")
                                 yield PLUS_EXPIRE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
-                                break
+                                return
                             elif "permission_error" in text:
                                 logger.error(f"permission_error : {text}")
                                 raise Exception(text)
@@ -304,12 +304,12 @@ class Client:
                                 logger.error(f"exceeded_limit : {text}")
                                 yield EXCEED_LIMIT_MESSAGE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
-                                break
+                                return
 
                             if "too long" in text:
                                 yield PROMPT_TOO_LONG_MESSAGE
                                 await asyncio.sleep(0)  # 模拟异步操作, 让出权限
-                                break  # 忘了加break了
+                                return  # 忘了加break了
 
                             if "concurrent connections has" in text:
                                 logger.error(
@@ -357,7 +357,7 @@ class Client:
                                             client_type, client_idx, remaining
                                         )
                                     else:
-                                        # 设置为 🤔 设置为什么比较好呢， 设置为一个非常大的值吧
+                                        # 设置为🤔设置为什么比较好呢， 设置为一个非常大的值吧
                                         await client_manager.set_remaining_usage(
                                             client_type, client_idx, 999999
                                         )

@@ -282,8 +282,16 @@ async def chat(
                         logger.error(
                             f"Failed to create conversation after {max_retry} retries."
                         )
+                        # return StreamingResponse(
+                        #     build_sse_data(message="创建对话失败，请重新尝试。"),
+                        #     media_type="text/event-stream",
+                        # )
+                        generate_data = build_sse_data(
+                            message="创建对话失败，请重新尝试。"
+                        )
+                        patched = patched_generate_data(generate_data, conversation_id)
                         return StreamingResponse(
-                            build_sse_data(message="创建对话失败，请重新尝试。"),
+                            patched,
                             media_type="text/event-stream",
                         )
                     else:
