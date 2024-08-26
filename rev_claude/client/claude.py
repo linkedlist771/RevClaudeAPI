@@ -14,6 +14,7 @@ import uuid
 import random
 import os
 
+from lxml.parser import remaining
 
 from rev_claude.utils.file_utils import DocumentConverter
 from rev_claude.REMINDING_MESSAGE import (
@@ -337,7 +338,32 @@ class Client:
                                 data = json.loads(sse.data)
                                 if "completion" in list(data.keys()):
                                     message = data["completion"]
+                                    # data: {"type": "completion", "id": "chatcompl_0173LfS1NTk4Q6nxNA6KTNq7",
+                                    #        "completion": " I", "stop_reason": null,
+                                    #        "model": "claude-3-5-sonnet-20240620", "stop": null,
+                                    #        "log_id": "chatcompl_0173LfS1NTk4Q6nxNA6KTNq7",
+                                    #        "messageLimit": {"type": "approaching_limit", "resetsAt": 1724709600,
+                                    #                         "remaining": 2, "perModelLimit": false},
+                                    #        "completion_type": "text"}
                                     response_parse_text = message
+                                    remaining = data.get("remaining", None)
+                                    if remaining is not None:
+                                        # 那么就把当前剩余的次数改为remaining
+                                        client_manager = ClientsStatusManager()
+
+                                        # async def set_remaining_usage(self, client_type, client_idx, remaining):
+                                        #     key = self.get_remaining_usage_key(client_type, client_idx)
+                                        #     await self.set_async(key, remaining)
+                                        await client_manager.set_remaining_usage(
+                                            client_type, client_idx, remaining
+                                        )
+                                    else:
+                                        # 设置为 🤔 设置为什么比较好呢， 设置为一个非常大的值吧
+                                        await client_manager.set_remaining_usage(
+                                            client_type, client_idx, 999999
+                                        )
+
+                                    # 那么证明现在是ok的。
 
                             # logger.info(f"parsed text: {response_parse_text}")
                             if response_parse_text:

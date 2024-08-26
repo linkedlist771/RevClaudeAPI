@@ -3,6 +3,8 @@ from uuid import uuid4
 import redis
 from enum import Enum
 import time
+
+from lxml.parser import remaining
 from pydantic import BaseModel
 from loguru import logger
 from redis.asyncio import Redis
@@ -29,6 +31,7 @@ class ClientsStatus(BaseModel):
     message: str = ""
     is_session_login: bool = False
     usage: int = 0
+    remaining: int = 0
     meta_data: dict = {}
 
 
@@ -69,6 +72,18 @@ class ClientsStatusManager:
 
     def get_client_usage_key(self, client_type, client_idx):
         return f"usage-{client_type}-{client_idx}"
+
+    # 先制作一个这个吧， 用于说明临近使用完了。
+    def get_remaining_usage_key(self, client_type, client_idx):
+        return f"remaining-{client_type}-{client_idx}"
+
+    async def set_remaining_usage(self, client_type, client_idx, remaining):
+        key = self.get_remaining_usage_key(client_type, client_idx)
+        await self.set_async(key, remaining)
+
+    async def get_remaining_usage(self, client_type, client_idx):
+        key = self.get_remaining_usage_key(client_type, client_idx)
+        return await self.decoded_get(key)
 
     def get_client_status_start_time_key(self, client_type, client_idx):
         return f"{self.get_client_status_key(client_type, client_idx)}:start_time"
@@ -260,6 +275,7 @@ class ClientsStatusManager:
                 key = self.get_client_status_start_time_key(client_type, idx)
                 _message = await self.get_limited_message(key, client_type, idx)
             client_type = "normal" if client_type == "basic" else client_type
+            remaining = await self.get_remaining_usage(client_type, idx)
             status = ClientsStatus(
                 id=account,
                 status=_status,
@@ -267,6 +283,7 @@ class ClientsStatusManager:
                 idx=idx,
                 message=_message,
                 usage=usage,
+                remaining=remaining,
             )
             return status
 
