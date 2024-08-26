@@ -4,7 +4,6 @@ import redis
 from enum import Enum
 import time
 
-from lxml.parser import remaining
 from pydantic import BaseModel
 from loguru import logger
 from redis.asyncio import Redis

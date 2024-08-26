@@ -14,7 +14,6 @@ import uuid
 import random
 import os
 
-from lxml.parser import remaining
 
 from rev_claude.utils.file_utils import DocumentConverter
 from rev_claude.REMINDING_MESSAGE import (
