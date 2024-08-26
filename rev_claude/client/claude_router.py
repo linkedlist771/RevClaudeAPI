@@ -289,9 +289,10 @@ async def chat(
                         generate_data = build_sse_data(
                             message="创建对话失败，请重新尝试。"
                         )
-                        patched = patched_generate_data(generate_data, conversation_id)
+                        done_data = build_sse_data(message="closed", id=conversation_id)
+
                         return StreamingResponse(
-                            patched,
+                            generate_data + done_data,
                             media_type="text/event-stream",
                         )
                     else:
