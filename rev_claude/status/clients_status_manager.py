@@ -275,6 +275,10 @@ class ClientsStatusManager:
                 _message = await self.get_limited_message(key, client_type, idx)
             client_type = "normal" if client_type == "basic" else client_type
             remaining = await self.get_remaining_usage(client_type, idx)
+            # 如果不存在就设置为9999
+            if not remaining:
+                await self.set_remaining_usage(client_type, idx, 9999)
+                remaining = 9999
             status = ClientsStatus(
                 id=account,
                 status=_status,
