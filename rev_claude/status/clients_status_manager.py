@@ -279,6 +279,8 @@ class ClientsStatusManager:
             if not remaining:
                 await self.set_remaining_usage(client_type, idx, 9999)
                 remaining = 9999
+            if remaining < 10:
+                _message = f"临近使用完了， 剩余{remaining}次。"
             status = ClientsStatus(
                 id=account,
                 status=_status,
