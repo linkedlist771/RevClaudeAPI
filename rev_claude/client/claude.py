@@ -510,8 +510,9 @@ class Client:
         payload = {"uuid": uuid, "name": ""}
 
         headers = self.build_new_chat_headers(uuid)
-        # logger.debug(f"headers: \n{headers}")
-        # logger.debug(f"payload: \n{payload}")
+        logger.debug(f"url: \n{url}")
+        logger.debug(f"headers: \n{headers}")
+        logger.debug(f"payload: \n{payload}")
         async with httpx.AsyncClient(
             # proxies=PROXIES if USE_PROXY else None,
             timeout=STREAM_CONNECTION_TIME_OUT,
