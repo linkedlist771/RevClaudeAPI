@@ -511,13 +511,13 @@ class Client:
 
         headers = self.build_new_chat_headers(uuid)
         logger.debug(f"url: \n{url}")
-        logger.debug(f"headers: \n{headers}")
-        logger.debug(f"payload: \n{payload}")
+        logger.debug(f"headers: \n{json.dumps(headers, indent=4)}")
+        logger.debug(f"payload: \n{json.dumps(payload, indent=4)}")
         async with httpx.AsyncClient(
             # proxies=PROXIES if USE_PROXY else None,
             timeout=STREAM_CONNECTION_TIME_OUT,
         ) as client:
-            response = await client.post(url, headers=headers, json=payload)
+            response = await client.post(url=url, headers=headers, json=payload)
         return response.json()
 
     # Resets all the conversations
