@@ -11,6 +11,63 @@ import os
 
 # running: BASE_URL="http://101.132.169.133:1145" streamlit run front_python/front_manager.py --server.port 5000
 
+import requests
+import json
+from typing import List
+
+
+def get_user_tokens() -> List[dict]:
+    url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
+
+    payload = json.dumps({})
+    headers = {
+        'APIAUTH': 'cccld',
+        'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(url, headers=headers, data=payload)
+    if response.status_code == 200:
+        return response.json()['data']
+    else:
+        raise Exception(f"Failed to fetch user tokens. Status code: {response.status_code}")
+
+
+def delete_sessions(ids: List[int]):
+    url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/session/delete"
+
+    payload = json.dumps({"ids": ids})
+    headers = {
+        'APIAUTH': 'cccld',
+        'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(url, headers=headers, data=payload)
+    if response.status_code != 200:
+        raise Exception(f"Failed to delete sessions. Status code: {response.status_code}")
+
+
+def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
+    # Get all user data
+    all_users = get_user_tokens()
+
+    # Create a mapping of user tokens to their IDs
+    token_to_id = {user['userToken']: user['id'] for user in all_users}
+
+    # Find IDs for the given user tokens
+    ids_to_delete = [token_to_id[token] for token in user_tokens if token in token_to_id]
+
+    # Delete in batches
+    for i in range(0, len(ids_to_delete), batch_size):
+        batch = ids_to_delete[i:i + batch_size]
+        delete_sessions(batch)
+        print(f"Deleted batch of {len(batch)} sessions")
+
+    message = f"Deleted a total of {len(ids_to_delete)} sessions"
+    return message
+
+
 
 def get_public_ip():
     try:
@@ -324,21 +381,27 @@ if main_function == "API密钥管理":
                 for key in line.split(",")
                 if key.strip()
             ]
+            try:
+                message = delete_batch_user_tokens(api_keys_list)
+                st.success(message)
+            except Exception as e:
+                st.error(f"批量删除API密钥失败: {str(e)}")
 
-            if api_keys_list:
-                # url = f"{BASE_URL}/api/v1/api_key/delete_batch_keys"
-                url = f"{API_KEY_ROUTER}/delete_batch_keys"
-                headers = {"Content-Type": "application/json"}
-                data = {"api_keys": api_keys_list}
+        # if api_keys_list:
+            #     # url = f"{BASE_URL}/api/v1/api_key/delete_batch_keys"
+            #     url = f"{API_KEY_ROUTER}/delete_batch_keys"
+            #     headers = {"Content-Type": "application/json"}
+            #     data = {"api_keys": api_keys_list}
+            #
+            #     response = requests.delete(url, headers=headers, json=data)
+            #
+            #     if response.status_code == 200:
+            #         st.success(f"成功删除 {len(api_keys_list)} 个API密钥。")
+            #         st.write(response.json())
+            #     else:
+            #         st.error("批量删除API密钥失败。")
+            #         st.write(response.text)
 
-                response = requests.delete(url, headers=headers, json=data)
-
-                if response.status_code == 200:
-                    st.success(f"成功删除 {len(api_keys_list)} 个API密钥。")
-                    st.write(response.json())
-                else:
-                    st.error("批量删除API密钥失败。")
-                    st.write(response.text)
             else:
                 st.warning("请输入至少一个API密钥进行删除。")
 
