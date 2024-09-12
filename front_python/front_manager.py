@@ -34,7 +34,7 @@ def get_user_tokens() -> List[dict]:
 
 
 def delete_sessions(ids: List[int]):
-    url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/session/delete"
+    url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/delete"
 
     payload = json.dumps({"ids": ids})
     headers = {
