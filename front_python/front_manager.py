@@ -381,29 +381,30 @@ if main_function == "API密钥管理":
                 for key in line.split(",")
                 if key.strip()
             ]
-            try:
-                message = delete_batch_user_tokens(api_keys_list)
-                st.success(message)
-            except Exception as e:
-                st.error(f"批量删除API密钥失败: {str(e)}")
 
-        # if api_keys_list:
-            #     # url = f"{BASE_URL}/api/v1/api_key/delete_batch_keys"
-            #     url = f"{API_KEY_ROUTER}/delete_batch_keys"
-            #     headers = {"Content-Type": "application/json"}
-            #     data = {"api_keys": api_keys_list}
-            #
-            #     response = requests.delete(url, headers=headers, json=data)
-            #
-            #     if response.status_code == 200:
-            #         st.success(f"成功删除 {len(api_keys_list)} 个API密钥。")
-            #         st.write(response.json())
-            #     else:
-            #         st.error("批量删除API密钥失败。")
-            #         st.write(response.text)
+            if api_keys_list:
+                try:
+                    message = delete_batch_user_tokens(api_keys_list)
+                    st.success(message)
+                except Exception as e:
+                    st.error(f"批量删除API密钥失败: {str(e)}")
+
+                    #     # url = f"{BASE_URL}/api/v1/api_key/delete_batch_keys"
+                    #     url = f"{API_KEY_ROUTER}/delete_batch_keys"
+                    #     headers = {"Content-Type": "application/json"}
+                    #     data = {"api_keys": api_keys_list}
+                    #
+                    #     response = requests.delete(url, headers=headers, json=data)
+                    #
+                    #     if response.status_code == 200:
+                    #         st.success(f"成功删除 {len(api_keys_list)} 个API密钥。")
+                    #         st.write(response.json())
+                    #     else:
+                    #         st.error("批量删除API密钥失败。")
+                    #         st.write(response.text)
 
             else:
-                st.warning("请输入至少一个API密钥进行删除。")
+                    st.warning("请输入至少一个API密钥进行删除。")
 
     elif api_key_function == "获取所有API密钥":
         st.subheader("获取所有API密钥")
