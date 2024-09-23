@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  node-serve-front:
+    image: llinkedlist/python-rev-front:v1
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/workspace
+    restart: always
+    command: streamlit run /workspace/front_python/front_manager.py --server.port 5000
