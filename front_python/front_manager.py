@@ -14,6 +14,23 @@ import os
 import requests
 import json
 from typing import List
+import os
+import time
+from loguru import logger
+from datetime import datetime
+import pytz
+
+
+def set_cn_time_zone():
+    """设置当前进程的时区为中国时区"""
+    os.environ["TZ"] = "Asia/Shanghai"
+    try:
+        time.tzset()
+        logger.info("Set time zone to Asia/Shanghai.")
+    except Exception as e:
+        logger.error(f"Failed to set time zone: {e}")
+
+set_cn_time_zone()
 
 
 def get_user_tokens() -> List[dict]:
