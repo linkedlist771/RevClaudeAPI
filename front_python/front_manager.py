@@ -30,7 +30,7 @@ def set_cn_time_zone():
     except Exception as e:
         logger.error(f"Failed to set time zone: {e}")
 
-set_cn_time_zone()
+# set_cn_time_zone()
 
 
 def get_user_tokens() -> List[dict]:
