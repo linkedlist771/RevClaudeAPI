@@ -333,7 +333,7 @@ if main_function == "API密钥管理":
                 if selected_option != options[0]:
 
                     new_response = requests.post(url, json=new_payload, headers=new_headers)
-
+                    logger.debug(new_response)
                     if new_response.status_code == 200:
                         # st.success(f"API密钥 {api_key} 添加到Claude35成功!")
                         pass
