@@ -38,7 +38,7 @@ def get_user_tokens() -> List[dict]:
 
     payload = json.dumps({})
     headers = {
-        'APIAUTH': 'cccld',
+        'APIAUTH': 'ccccld',
         'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
         'Content-Type': 'application/json'
     }
