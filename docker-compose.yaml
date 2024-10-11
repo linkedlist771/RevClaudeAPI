@@ -5,7 +5,21 @@ services:
     image: llinkedlist/python-rev-front:v1
     ports:
       - "5000:5000"
+      - "1145:1145"
     volumes:
       - .:/workspace
     restart: always
-    command: streamlit run /workspace/front_python/front_manager.py --server.port 5000
+    command: >
+      sh -c "streamlit run /workspace/front_python/front_manager.py --server.port 5000 &
+             python /workspace/main.py --port 1145"
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  redis_data:
