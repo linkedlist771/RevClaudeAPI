@@ -97,7 +97,7 @@ async def get_information(
         }
         url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
         # post data
-        res = await client.post(url, headers=headers)
+        res = await client.post(url, headers=headers, timeout=20.0)
         res_json = res.json()
         data = res_json.get("data")
         # userToken
