@@ -297,7 +297,7 @@ if main_function == "API密钥管理":
             # 然后还要添加新的
             new_payload = {
             }
-            url = "http://54.254.143.80:9300/adminapi/chatgpt/user/add"
+            url = "http://54.254.143.80:8300/adminapi/chatgpt/user/add"
             # 添加新用户API密钥
 
             api_keys = response.json().get("api_key")
@@ -333,7 +333,7 @@ if main_function == "API密钥管理":
                 # if selected_option != options[0]:
                 if True:
                     new_response = requests.post(url, json=new_payload, headers=new_headers)
-                    logger.debug(new_response)
+                    logger.debug(new_response.text)
                     if new_response.status_code == 200:
                         # st.success(f"API密钥 {api_key} 添加到Claude35成功!")
                         pass
