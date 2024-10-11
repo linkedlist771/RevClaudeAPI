@@ -237,7 +237,7 @@ if "messages" not in st.session_state:
 
 
 # claude3.ucas.life
-BASE_URL = os.environ.get("BASE_URL", f"http://60.205.189.192:1145")
+BASE_URL = os.environ.get("BASE_URL", f"http://54.254.143.80:1145")
 
 API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
 
