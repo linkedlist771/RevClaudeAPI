@@ -1,7 +1,7 @@
 from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
-
+from loguru import logger
 from rev_claude.schemas import (
     CreateAPIKeyRequest,
     BatchAPIKeysDeleteRequest,
@@ -90,21 +90,28 @@ async def get_information(
     api_key: str
 ):
     """Get the usage count of an API key."""
+    from traceback import print_exc
     from httpx import  AsyncClient
-    async with AsyncClient() as client:
-        headers = {
-            "APIAUTH": "ccccld"
-        }
-        url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
-        # post data
-        res = await client.post(url, headers=headers, timeout=20.0)
-        res_json = res.json()
-        data = res_json.get("data")
-        # userToken
-        for i in data:
-            if i.get("userToken") == api_key:
-                return i
-    return {"message": "not found"}
+    try:
+        async with AsyncClient() as client:
+            headers = {
+                "APIAUTH": "ccccld"
+            }
+            url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
+            # post data
+            res = await client.post(url, headers=headers, timeout=20.0)
+            res_json = res.json()
+            data = res_json.get("data")
+            # userToken
+            for i in data:
+                if i.get("userToken") == api_key:
+                    return i
+        return {"message": "not found"}
+    except Exception as e:
+        logger.error(f"error: \n{e}")
+        print_exc()
+        return {"message": "error"}
+
     #
     # key_information = manager.get_apikey_information(api_key)
     # return key_information
