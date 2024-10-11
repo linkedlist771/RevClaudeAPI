@@ -55,7 +55,7 @@ def delete_sessions(ids: List[int]):
 
     payload = json.dumps({"ids": ids})
     headers = {
-        'APIAUTH': 'cccld',
+        'APIAUTH': 'ccccld',
         'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
         'Content-Type': 'application/json'
     }

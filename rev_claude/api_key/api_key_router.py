@@ -93,7 +93,7 @@ async def get_information(
     from httpx import  AsyncClient
     async with AsyncClient() as client:
         headers = {
-            "APIAUTH": "cccld"
+            "APIAUTH": "ccccld"
         }
         url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
         # post data
