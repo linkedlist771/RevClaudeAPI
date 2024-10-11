@@ -99,14 +99,11 @@ async def get_information(
             }
             url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
             # post data
-            res = await client.post(url, headers=headers, timeout=20.0)
+            res = await client.post(url, headers=headers, timeout=60.0)
             res_json = res.json()
             data = res_json.get("data")
-            # userToken
-            for i in data:
-                if i.get("userToken") == api_key:
-                    return i
-        return {"message": "not found"}
+            result = next((i for i in data if i.get("userToken") == api_key), None)
+            return result
     except Exception as e:
         logger.error(f"error: \n{e}")
         print_exc()
