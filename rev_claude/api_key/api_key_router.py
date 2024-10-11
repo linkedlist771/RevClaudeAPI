@@ -85,6 +85,31 @@ async def get_information(
     key_information = manager.get_apikey_information(api_key)
     return key_information
 
+@router.get("/expirations_date/{api_key}")
+async def get_information(
+    api_key: str
+):
+    """Get the usage count of an API key."""
+    from httpx import  AsyncClient
+    async with AsyncClient() as client:
+        headers = {
+            "APIAUTH": "cccld"
+        }
+        url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
+        # post data
+        res = await client.post(url, headers=headers)
+        res_json = res.json()
+        data = res_json.get("data")
+        # userToken
+        for i in data:
+            if i.get("userToken") == api_key:
+                return i
+    return {"message": "not found"}
+    #
+    # key_information = manager.get_apikey_information(api_key)
+    # return key_information
+
+#
 
 @router.delete("/delete_key/{api_key}")
 async def delete_key(
