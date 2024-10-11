@@ -10,7 +10,7 @@ from urllib.request import urlopen
 import os
 
 # running: BASE_URL="http://101.132.169.133:1145" streamlit run front_python/front_manager.py --server.port 5000
-
+TOKEN = 'ccccld'
 import requests
 import json
 from typing import List
@@ -38,7 +38,7 @@ def get_user_tokens() -> List[dict]:
 
     payload = json.dumps({})
     headers = {
-        'APIAUTH': 'ccccld',
+        'APIAUTH': TOKEN,
         'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
         'Content-Type': 'application/json'
     }
@@ -55,7 +55,7 @@ def delete_sessions(ids: List[int]):
 
     payload = json.dumps({"ids": ids})
     headers = {
-        'APIAUTH': 'ccccld',
+        'APIAUTH': TOKEN,
         'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
         'Content-Type': 'application/json'
     }
@@ -326,7 +326,7 @@ if main_function == "API密钥管理":
                     "isPlus": is_plus
                 }
                 new_headers = {
-                    'APIAUTH': 'cccld',
+                    'APIAUTH': TOKEN,
                     'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
                     'Content-Type': 'application/json'
                 }
