@@ -43,6 +43,6 @@ def register_docs_auth(app: FastAPI):
 def register_middleware(app: FastAPI):
     app = register_cross_origin(app)
     app = register_docs_auth(app)
-    app.add_middleware(NotFoundResponseMiddleware)
+    # app.add_middleware(NotFoundResponseMiddleware)
     # app.add_middleware(RateLimitMiddleware, rate_per_minute=IP_REQUEST_LIMIT_PER_MINUTE)
     return app
