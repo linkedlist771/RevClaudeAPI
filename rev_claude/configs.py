@@ -1,6 +1,6 @@
 from httpx import Timeout
 from pathlib import Path
-
+import os
 
 API_KEY_REFRESH_INTERVAL_HOURS = 3
 
@@ -33,8 +33,8 @@ USE_MERMAID_AND_SVG = True
 
 PROXIES = {"http://": "socks5://127.0.0.1:7891", "https://": "socks5://127.0.0.1:7891"}
 
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 
 
 DOCS_USERNAME = "claude-backend"
