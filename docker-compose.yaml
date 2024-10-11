@@ -12,12 +12,23 @@ services:
     command: >
       sh -c "streamlit run /workspace/front_python/front_manager.py --server.port 5000 &
              python /workspace/main.py --port 1145"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
   redis:
     image: redis:latest
     volumes:
       - redis_data:/data
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   redis_data:
