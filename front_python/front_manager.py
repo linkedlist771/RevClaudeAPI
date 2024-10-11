@@ -297,7 +297,7 @@ if main_function == "API密钥管理":
             # 然后还要添加新的
             new_payload = {
             }
-            url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/add"
+            url = "http://54.254.143.80:9300/adminapi/chatgpt/user/add"
             # 添加新用户API密钥
 
             api_keys = response.json().get("api_key")
