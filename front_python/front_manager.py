@@ -10,7 +10,7 @@ from tqdm import tqdm
 from urllib.request import urlopen
 import os
 
-from .front_utils import create_sorux_accounts
+from front_utils import create_sorux_accounts
 
 # running: BASE_URL="http://101.132.169.133:1145" streamlit run front_python/front_manager.py --server.port 5000
 TOKEN = "ccccld"
