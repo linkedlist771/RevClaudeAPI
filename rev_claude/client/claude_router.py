@@ -167,7 +167,11 @@ async def obtain_reverse_official_login_router(
     manager.increment_usage(api_key, CLAUDE_OFFICIAL_USAGE_INCREASE)
     # 还要添加对于client status manager里面对于usage的提升
     clients_status_manager = ClientsStatusManager()
-    await clients_status_manager.increment_usage(client_type=__client_type, client_idx=client_idx, increment=CLAUDE_OFFICIAL_USAGE_INCREASE)
+    await clients_status_manager.increment_usage(
+        client_type=__client_type,
+        client_idx=client_idx,
+        increment=CLAUDE_OFFICIAL_USAGE_INCREASE,
+    )
     res = await client.retrieve_reverse_official_route(unique_name=api_key)
     return JSONResponse(
         content={"data": res, "valid": True},
@@ -228,7 +232,9 @@ async def chat(
     client_type = "plus" if client_type == "plus" else "basic"
     # increase the usage count
     clients_status_manager = ClientsStatusManager()
-    await clients_status_manager.increment_usage(client_type=client_type, client_idx=client_idx)
+    await clients_status_manager.increment_usage(
+        client_type=client_type, client_idx=client_idx
+    )
     if (not manager.is_plus_user(api_key)) and (client_type == "plus"):
         return StreamingResponse(
             build_sse_data(

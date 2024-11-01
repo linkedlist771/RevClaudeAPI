@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import datetime, timedelta, time
 
@@ -9,8 +10,10 @@ from tqdm import tqdm
 from urllib.request import urlopen
 import os
 
+from front_python.front_utils import create_sorux_accounts
+
 # running: BASE_URL="http://101.132.169.133:1145" streamlit run front_python/front_manager.py --server.port 5000
-TOKEN = 'ccccld'
+TOKEN = "ccccld"
 import requests
 import json
 from typing import List
@@ -30,6 +33,7 @@ def set_cn_time_zone():
     except Exception as e:
         logger.error(f"Failed to set time zone: {e}")
 
+
 set_cn_time_zone()
 
 
@@ -38,16 +42,18 @@ def get_user_tokens() -> List[dict]:
 
     payload = json.dumps({})
     headers = {
-        'APIAUTH': TOKEN,
-        'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
-        'Content-Type': 'application/json'
+        "APIAUTH": TOKEN,
+        "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
+        "Content-Type": "application/json",
     }
 
     response = requests.post(url, headers=headers, data=payload)
     if response.status_code == 200:
-        return response.json()['data']
+        return response.json()["data"]
     else:
-        raise Exception(f"Failed to fetch user tokens. Status code: {response.status_code}")
+        raise Exception(
+            f"Failed to fetch user tokens. Status code: {response.status_code}"
+        )
 
 
 def delete_sessions(ids: List[int]):
@@ -55,14 +61,16 @@ def delete_sessions(ids: List[int]):
 
     payload = json.dumps({"ids": ids})
     headers = {
-        'APIAUTH': TOKEN,
-        'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
-        'Content-Type': 'application/json'
+        "APIAUTH": TOKEN,
+        "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
+        "Content-Type": "application/json",
     }
 
     response = requests.post(url, headers=headers, data=payload)
     if response.status_code != 200:
-        raise Exception(f"Failed to delete sessions. Status code: {response.status_code}")
+        raise Exception(
+            f"Failed to delete sessions. Status code: {response.status_code}"
+        )
 
 
 def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
@@ -70,20 +78,21 @@ def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
     all_users = get_user_tokens()
 
     # Create a mapping of user tokens to their IDs
-    token_to_id = {user['userToken']: user['id'] for user in all_users}
+    token_to_id = {user["userToken"]: user["id"] for user in all_users}
 
     # Find IDs for the given user tokens
-    ids_to_delete = [token_to_id[token] for token in user_tokens if token in token_to_id]
+    ids_to_delete = [
+        token_to_id[token] for token in user_tokens if token in token_to_id
+    ]
 
     # Delete in batches
     for i in range(0, len(ids_to_delete), batch_size):
-        batch = ids_to_delete[i:i + batch_size]
+        batch = ids_to_delete[i : i + batch_size]
         delete_sessions(batch)
         print(f"Deleted batch of {len(batch)} sessions")
 
     message = f"Deleted a total of {len(ids_to_delete)} sessions"
     return message
-
 
 
 def get_public_ip():
@@ -227,8 +236,8 @@ def display_message(message, type="info"):
     else:
         st.info(message)
 
-import time
 
+import time
 
 
 # Initialize session state for messages
@@ -273,90 +282,166 @@ if main_function == "API密钥管理":
         expiration_hours = st.number_input("过期小时数", min_value=1, value=1, step=1)
         key_type = st.text_input("密钥类型", value="plus")
         key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
-        # 定义选项
-        options = [
-            "🔒 只适用于官网镜像",
-            "🌐 只适用于逆向网站",
-            "🔁 全部设为都使用"
-        ]
 
-        # 创建选择框
+        options = ["🔒 只适用于官网镜像", "🌐 只适用于逆向网站", "🔁 全部设为都使用", "🤖 适用于ChatGPT镜像"]
         selected_option = st.selectbox("选择使用类型", options)
+
         total_hours = expiration_days * 24 + expiration_hours
         expiration_days_float = total_hours / 24
+
         if st.button("创建API密钥"):
-            # url = f"{BASE_URL}/api/v1/api_key/create_key"
-            url = f"{API_KEY_ROUTER}/create_key"
-            payload = {
-                "expiration_days": expiration_days_float,
-                "key_type": key_type,
-                "key_number": key_number,
-            }
-            response = requests.post(url, json=payload)
+            api_keys = []
+            sorux_accounts = []
 
-            # 然后还要添加新的
-            new_payload = {
-            }
-            url = "http://54.254.143.80:8300/adminapi/chatgpt/user/add"
-            # 添加新用户API密钥
+            # Create official API keys if needed
+            if selected_option in [options[0], options[2]]:
+                url = f"{API_KEY_ROUTER}/create_key"
+                payload = {
+                    "expiration_days": expiration_days_float,
+                    "key_type": key_type,
+                    "key_number": key_number,
+                }
+                response = requests.post(url, json=payload)
+                if response.status_code == 200:
+                    api_keys = response.json().get("api_key", [])
 
-            api_keys = response.json().get("api_key")
-            expire_date = datetime.now() + timedelta(hours=total_hours)
-            expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
-            is_plus = 1 if key_type == "plus" else 0
+            # Create SoruxGPT accounts if needed
+            if selected_option in [options[3], options[2]]:
+                sorux_accounts = asyncio.run(create_sorux_accounts(key_number, total_hours))
 
             progress_bar = st.progress(0)
             status = st.empty()
 
-            # 获取API密钥的总数
-            total_keys = len(api_keys)
+            # Process official API keys
+            if api_keys:
+                expire_date = datetime.now() + timedelta(hours=total_hours)
+                expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
+                is_plus = 1 if key_type == "plus" else 0
 
-            for index, api_key in enumerate(api_keys, start=1):
-                # 更新进度条
-                progress = int(index / total_keys * 100)
-                progress_bar.progress(progress)
+                total_keys = len(api_keys)
+                for index, api_key in enumerate(api_keys, start=1):
+                    progress = int(index / total_keys * 100)
+                    progress_bar.progress(progress)
+                    status.text(f"正在处理 API 密钥 {index}/{total_keys}: {api_key}")
 
-                # 更新状态信息
-                status.text(f"正在处理 API 密钥 {index}/{total_keys}: {api_key}")
+                    if selected_option != options[1]:  # Not "只适用于逆向网站"
+                        new_payload = {
+                            "userToken": api_key,
+                            "expireTime": expire_time,
+                            "isPlus": is_plus,
+                        }
+                        new_headers = {
+                            "APIAUTH": TOKEN,
+                            "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
+                            "Content-Type": "application/json",
+                        }
+                        new_response = requests.post(
+                            "http://54.254.143.80:8300/adminapi/chatgpt/user/add",
+                            json=new_payload,
+                            headers=new_headers
+                        )
+                        logger.debug(new_response.text)
 
-                # 添加新用户API密钥
-                new_payload = {
-                    "userToken": api_key,
-                    "expireTime": expire_time,
-                    "isPlus": is_plus
-                }
-                new_headers = {
-                    'APIAUTH': TOKEN,
-                    'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
-                    'Content-Type': 'application/json'
-                }
-                # if selected_option != options[0]:
-                if True:
-                    new_response = requests.post(url, json=new_payload, headers=new_headers)
-                    logger.debug(new_response.text)
-                    if new_response.status_code == 200:
-                        # st.success(f"API密钥 {api_key} 添加到Claude35成功!")
-                        pass
-                    else:
-                        st.error(f"API密钥 {api_key} 添加到Claude35失败。")
-
-
-
-
-            if response.status_code == 200:
-                # st.success(json.dump(response.json(), indent=4))
-                formatted_json = json.dumps(response.json(), indent=4, ensure_ascii=False)
+            # Display results
+            if api_keys:
                 st.success("API密钥创建成功。")
+                formatted_json = json.dumps({"api_key": api_keys}, indent=4, ensure_ascii=False)
                 st.code(formatted_json, language="json")
-            else:
-                st.error("API密钥创建失败。")
 
-            # 如果选择不是"只适用于官网镜像"，则删除所有生成的密钥
-            if selected_option == options[1]:
+            if sorux_accounts:
+                st.success("SoruxGPT账号创建成功。")
+                formatted_accounts = "\n".join([account["formatted"] for account in sorux_accounts])
+                st.code(formatted_accounts, language="text")
+
+            # Delete API keys if only reverse proxy is needed
+            if selected_option == options[1] and api_keys:
                 delete_url = f"{API_KEY_ROUTER}/delete_batch_keys"
                 delete_payload = {"api_keys": api_keys}
                 delete_response = requests.delete(delete_url, json=delete_payload)
 
+
+    # if api_key_function == "创建API密钥":
+    #     st.subheader("创建API密钥")
+    #     expiration_days = st.number_input("过期天数", min_value=0, value=0, step=1)
+    #     expiration_hours = st.number_input("过期小时数", min_value=1, value=1, step=1)
+    #     key_type = st.text_input("密钥类型", value="plus")
+    #     key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
+    #     # 定义选项
+    #     options = ["🔒 只适用于官网镜像", "🌐 只适用于逆向网站", "🔁 全部设为都使用"]
+    #     # 创建选择框
+    #     selected_option = st.selectbox("选择使用类型", options)
+    #     total_hours = expiration_days * 24 + expiration_hours
+    #     expiration_days_float = total_hours / 24
+    #     if st.button("创建API密钥"):
+    #         url = f"{API_KEY_ROUTER}/create_key"
+    #         payload = {
+    #             "expiration_days": expiration_days_float,
+    #             "key_type": key_type,
+    #             "key_number": key_number,
+    #         }
+    #         response = requests.post(url, json=payload)
+    #         # 然后还要添加新的
+    #         new_payload = {}
+    #         url = "http://54.254.143.80:8300/adminapi/chatgpt/user/add"
+    #         # 添加新用户API密钥
+    #
+    #         api_keys = response.json().get("api_key")
+    #         expire_date = datetime.now() + timedelta(hours=total_hours)
+    #         expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
+    #         is_plus = 1 if key_type == "plus" else 0
+    #
+    #         progress_bar = st.progress(0)
+    #         status = st.empty()
+    #
+    #         # 获取API密钥的总数
+    #         total_keys = len(api_keys)
+    #
+    #         for index, api_key in enumerate(api_keys, start=1):
+    #             # 更新进度条
+    #             progress = int(index / total_keys * 100)
+    #             progress_bar.progress(progress)
+    #
+    #             # 更新状态信息
+    #             status.text(f"正在处理 API 密钥 {index}/{total_keys}: {api_key}")
+    #
+    #             # 添加新用户API密钥
+    #             new_payload = {
+    #                 "userToken": api_key,
+    #                 "expireTime": expire_time,
+    #                 "isPlus": is_plus,
+    #             }
+    #             new_headers = {
+    #                 "APIAUTH": TOKEN,
+    #                 "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
+    #                 "Content-Type": "application/json",
+    #             }
+    #             # if selected_option != options[0]:
+    #             if True:
+    #                 new_response = requests.post(
+    #                     url, json=new_payload, headers=new_headers
+    #                 )
+    #                 logger.debug(new_response.text)
+    #                 if new_response.status_code == 200:
+    #                     # st.success(f"API密钥 {api_key} 添加到Claude35成功!")
+    #                     pass
+    #                 else:
+    #                     st.error(f"API密钥 {api_key} 添加到Claude35失败。")
+    #
+    #         if response.status_code == 200:
+    #             # st.success(json.dump(response.json(), indent=4))
+    #             formatted_json = json.dumps(
+    #                 response.json(), indent=4, ensure_ascii=False
+    #             )
+    #             st.success("API密钥创建成功。")
+    #             st.code(formatted_json, language="json")
+    #         else:
+    #             st.error("API密钥创建失败。")
+    #
+    #         # 如果选择不是"只适用于官网镜像"，则删除所有生成的密钥
+    #         if selected_option == options[1]:
+    #             delete_url = f"{API_KEY_ROUTER}/delete_batch_keys"
+    #             delete_payload = {"api_keys": api_keys}
+    #             delete_response = requests.delete(delete_url, json=delete_payload)
 
     elif api_key_function == "验证API密钥":
         st.subheader("验证API密钥")
@@ -421,7 +506,7 @@ if main_function == "API密钥管理":
                     #         st.write(response.text)
 
             else:
-                    st.warning("请输入至少一个API密钥进行删除。")
+                st.warning("请输入至少一个API密钥进行删除。")
 
     elif api_key_function == "获取所有API密钥":
         st.subheader("获取所有API密钥")

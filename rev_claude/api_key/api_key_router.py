@@ -85,18 +85,16 @@ async def get_information(
     key_information = manager.get_apikey_information(api_key)
     return key_information
 
+
 @router.get("/expirations_date/{api_key}")
-async def get_information(
-    api_key: str
-):
+async def get_information(api_key: str):
     """Get the usage count of an API key."""
     from traceback import print_exc
-    from httpx import  AsyncClient
+    from httpx import AsyncClient
+
     try:
         async with AsyncClient() as client:
-            headers = {
-                "APIAUTH": "ccccld"
-            }
+            headers = {"APIAUTH": "ccccld"}
             url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
             # post data
             res = await client.post(url, headers=headers, timeout=60.0)
@@ -113,7 +111,9 @@ async def get_information(
     # key_information = manager.get_apikey_information(api_key)
     # return key_information
 
+
 #
+
 
 @router.delete("/delete_key/{api_key}")
 async def delete_key(

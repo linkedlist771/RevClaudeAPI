@@ -221,7 +221,6 @@ class CookieManager:
                             "cookie": cookie_value,
                             "type": actual_type,
                             "account": account,
-
                         }
                     )
 
