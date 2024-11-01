@@ -278,23 +278,38 @@ if main_function == "API密钥管理":
 
     if api_key_function == "创建API密钥":
         st.subheader("创建API密钥")
-        expiration_days = st.number_input("过期天数", min_value=0, value=0, step=1)
-        expiration_hours = st.number_input("过期小时数", min_value=1, value=1, step=1)
-        key_type = st.text_input("密钥类型", value="plus")
-        key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
-        message_limited = st.number_input(
-            "消息速率限速条数", min_value=1, value=5, step=1
-        )
-        rate_refresh_time = st.number_input(
-            "消息速率限速时间(分钟)", min_value=1, value=1, step=1
-        )
-        message_bucket_sum = st.number_input(
-            "消息总量限制", min_value=1, value=100, step=1
-        )
-        message_bucket_time = st.number_input(
-            "消息总量限速时间(分钟)", min_value=1, value=180, step=1
-        )
 
+        # 基本设置
+        col1, col2 = st.columns(2)
+        with col1:
+            key_type = st.text_input("密钥类型", value="plus")
+            key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
+        with col2:
+            expiration_days = st.number_input("过期天数", min_value=0, value=0, step=1)
+            expiration_hours = st.number_input(
+                "过期小时数", min_value=1, value=1, step=1
+            )
+
+        # 速率限制设置
+        st.markdown("### 速率限制")
+        col3, col4 = st.columns(2)
+        with col3:
+            message_limited = st.number_input(
+                "消息速率限速条数", min_value=1, value=5, step=1
+            )
+            rate_refresh_time = st.number_input(
+                "消息速率限速时间(分钟)", min_value=1, value=1, step=1
+            )
+        with col4:
+            message_bucket_sum = st.number_input(
+                "消息总量限制", min_value=1, value=100, step=1
+            )
+            message_bucket_time = st.number_input(
+                "消息总量限速时间(分钟)", min_value=1, value=180, step=1
+            )
+
+        # 使用类型设置
+        st.markdown("### 使用范围")
         options = [
             "🔒 只适用于官网镜像",
             "🌐 只适用于逆向网站",
