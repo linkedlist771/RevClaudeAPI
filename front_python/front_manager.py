@@ -282,8 +282,25 @@ if main_function == "API密钥管理":
         expiration_hours = st.number_input("过期小时数", min_value=1, value=1, step=1)
         key_type = st.text_input("密钥类型", value="plus")
         key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
+        message_limited = st.number_input(
+            "消息速率限速条数", min_value=1, value=5, step=1
+        )
+        rate_refresh_time = st.number_input(
+            "消息速率限速时间(分钟)", min_value=1, value=1, step=1
+        )
+        message_bucket_sum = st.number_input(
+            "消息总量限制", min_value=1, value=100, step=1
+        )
+        message_bucket_time = st.number_input(
+            "消息总量限速时间(分钟)", min_value=1, value=180, step=1
+        )
 
-        options = ["🔒 只适用于官网镜像", "🌐 只适用于逆向网站", "🔁 全部设为都使用", "🤖 适用于ChatGPT镜像"]
+        options = [
+            "🔒 只适用于官网镜像",
+            "🌐 只适用于逆向网站",
+            "🔁 全部设为都使用",
+            "🤖 适用于ChatGPT镜像",
+        ]
         selected_option = st.selectbox("选择使用类型", options)
 
         total_hours = expiration_days * 24 + expiration_hours
@@ -307,7 +324,16 @@ if main_function == "API密钥管理":
 
             # Create SoruxGPT accounts if needed
             if selected_option in [options[3], options[2]]:
-                sorux_accounts = asyncio.run(create_sorux_accounts(key_number, total_hours))
+                sorux_accounts = asyncio.run(
+                    create_sorux_accounts(
+                        key_number,
+                        total_hours,
+                        message_limited,
+                        rate_refresh_time,
+                        message_bucket_sum,
+                        message_bucket_time,
+                    )
+                )
 
             progress_bar = st.progress(0)
             status = st.empty()
@@ -338,19 +364,23 @@ if main_function == "API密钥管理":
                         new_response = requests.post(
                             "http://54.254.143.80:8300/adminapi/chatgpt/user/add",
                             json=new_payload,
-                            headers=new_headers
+                            headers=new_headers,
                         )
                         logger.debug(new_response.text)
 
             # Display results
             if api_keys:
                 st.success("API密钥创建成功。")
-                formatted_json = json.dumps({"api_key": api_keys}, indent=4, ensure_ascii=False)
+                formatted_json = json.dumps(
+                    {"api_key": api_keys}, indent=4, ensure_ascii=False
+                )
                 st.code(formatted_json, language="json")
 
             if sorux_accounts:
                 st.success("SoruxGPT账号创建成功。")
-                formatted_accounts = "\n".join([account["formatted"] for account in sorux_accounts])
+                formatted_accounts = "\n".join(
+                    [account["formatted"] for account in sorux_accounts]
+                )
                 st.code(formatted_accounts, language="text")
 
             # Delete API keys if only reverse proxy is needed
@@ -358,7 +388,6 @@ if main_function == "API密钥管理":
                 delete_url = f"{API_KEY_ROUTER}/delete_batch_keys"
                 delete_payload = {"api_keys": api_keys}
                 delete_response = requests.delete(delete_url, json=delete_payload)
-
 
     # if api_key_function == "创建API密钥":
     #     st.subheader("创建API密钥")
