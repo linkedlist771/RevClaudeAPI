@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import streamlit as st
 
+
 class SoruxGPTManager:
     def __init__(self, admin_username: str, admin_password: str):
         self.base_url = "https://gpt.soruxgpt.com/api"
@@ -228,7 +229,6 @@ async def create_sorux_accounts(
         message_bucket_time=message_bucket_time,
     )
     return users
-
 
 
 async def main():

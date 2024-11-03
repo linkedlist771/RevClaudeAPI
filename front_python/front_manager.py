@@ -3,13 +3,10 @@ import json
 from datetime import datetime, timedelta, time
 
 import streamlit as st
-import requests
 import pandas as pd
 import altair as alt
 from tqdm import tqdm
 from urllib.request import urlopen
-import os
-from streamlit_cookies_manager import EncryptedCookieManager
 
 from front_utils import create_sorux_accounts
 from front_configs import ADMIN_USERNAME, ADMIN_PASSWORD
@@ -27,50 +24,91 @@ import pytz
 
 st.set_page_config(page_title="API密钥和Cookie管理")
 
-# Initialize the cookie manager
-cookies = EncryptedCookieManager(
-    prefix="my_app",
-    password="SomeSecureRandomString"  # Replace with a secure password
-)
+# 创建一个HTML组件来处理localStorage
+local_storage_html = """
+<script>
+// 检查localStorage中的登录状态
+function checkLoginStatus() {
+    const loginStatus = localStorage.getItem('isLoggedIn');
+    if (loginStatus === 'true') {
+        // 通过Streamlit组件API发送消息
+        window.parent.postMessage({
+            type: 'localStorage',
+            key: 'isLoggedIn',
+            value: 'true'
+        }, '*');
+    }
+}
 
-if not cookies.ready():
-    st.stop()
+// 设置登录状态
+function setLoginStatus(status) {
+    localStorage.setItem('isLoggedIn', status);
+}
+
+// 清除登录状态
+function clearLoginStatus() {
+    localStorage.removeItem('isLoggedIn');
+}
+
+// 页面加载时检查登录状态
+window.addEventListener('load', checkLoginStatus);
+</script>
+
+<div id="localStorage-div"></div>
+"""
+
+# 注入HTML组件
+st.components.v1.html(local_storage_html, height=0)
+
 
 def check_password():
     """Returns `True` if the user has the correct password."""
 
     def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if (st.session_state["username"] == ADMIN_USERNAME and
-                st.session_state["password"] == ADMIN_PASSWORD):
+        """验证用户输入的密码"""
+        if (
+                st.session_state["username"] == ADMIN_USERNAME
+                and st.session_state["password"] == ADMIN_PASSWORD
+        ):
             st.session_state["password_correct"] = True
-            # Store login status in cookies
-            cookies['logged_in'] = 'True'
-            cookies.save()
-            del st.session_state["password"]  # Don't store password
-            del st.session_state["username"]  # Don't store username
+            # 设置localStorage
+            st.components.v1.html(
+                """
+                <script>
+                setLoginStatus('true');
+                </script>
+                """,
+                height=0
+            )
+            del st.session_state["password"]
+            del st.session_state["username"]
         else:
             st.session_state["password_correct"] = False
 
-    # Check if the user is already logged in via cookies
-    if 'logged_in' in cookies and cookies['logged_in'] == 'True':
-        st.session_state["password_correct"] = True
+    # 检查session state中的登录状态
+    if "password_correct" in st.session_state and st.session_state["password_correct"]:
+        return True
 
     if "password_correct" not in st.session_state:
-        # First run, show input for username and password
-        st.text_input("用户名", key="username")
-        st.text_input("密码", type="password", key="password")
-        st.button("登录", on_click=password_entered)
+        # 首次运行，显示登录表单
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.text_input("用户名", key="username")
+            st.text_input("密码", type="password", key="password")
+        with col2:
+            st.button("登录", on_click=password_entered)
         return False
     elif not st.session_state["password_correct"]:
-        # Password not correct, show input + error
-        st.text_input("用户名", key="username")
-        st.text_input("密码", type="password", key="password")
-        st.button("登录", on_click=password_entered)
+        # 密码错误，显示错误信息
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.text_input("用户名", key="username")
+            st.text_input("密码", type="password", key="password")
+        with col2:
+            st.button("登录", on_click=password_entered)
         st.error("😕 用户名或密码错误")
         return False
     else:
-        # Password correct
         return True
 
 def set_cn_time_zone():
@@ -295,6 +333,7 @@ BASE_URL = os.environ.get("BASE_URL", f"http://54.254.143.80:1145")
 
 API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
 
+
 def main():
     # 设置页面标题
 
@@ -329,7 +368,9 @@ def main():
                 key_type = st.text_input("密钥类型", value="plus")
                 key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
             with col2:
-                expiration_days = st.number_input("过期天数", min_value=0, value=0, step=1)
+                expiration_days = st.number_input(
+                    "过期天数", min_value=0, value=0, step=1
+                )
                 expiration_hours = st.number_input(
                     "过期小时数", min_value=1, value=1, step=1
                 )
@@ -407,7 +448,9 @@ def main():
                     for index, api_key in enumerate(api_keys, start=1):
                         progress = int(index / total_keys * 100)
                         progress_bar.progress(progress)
-                        status.text(f"正在处理 API 密钥 {index}/{total_keys}: {api_key}")
+                        status.text(
+                            f"正在处理 API 密钥 {index}/{total_keys}: {api_key}"
+                        )
 
                         if selected_option != options[1]:  # Not "只适用于逆向网站"
                             new_payload = {
@@ -476,7 +519,9 @@ def main():
 
         elif api_key_function == "批量删除API密钥":
             st.subheader("批量删除API密钥")
-            api_keys_to_delete = st.text_area("输入要删除的API密钥（每行一个或用逗号分隔）")
+            api_keys_to_delete = st.text_area(
+                "输入要删除的API密钥（每行一个或用逗号分隔）"
+            )
 
             if st.button("批量删除API密钥"):
                 # 先按换行符分割，然后对每个部分按逗号分割，最后去除空白
@@ -589,7 +634,9 @@ def main():
         elif api_key_function == "延长API密钥过期时间":
             st.subheader("延长API密钥过期时间")
             api_key_to_extend = st.text_input("要延长的API密钥")
-            additional_days = st.number_input("要延长的天数", min_value=1, value=30, step=1)
+            additional_days = st.number_input(
+                "要延长的天数", min_value=1, value=30, step=1
+            )
 
             if st.button("延长过期时间"):
                 url = f"{API_KEY_ROUTER}/extend_expiration/{api_key_to_extend}"
@@ -601,7 +648,6 @@ def main():
                 else:
                     st.error("延长API密钥过期时间失败。")
                     st.write(response.text)
-
 
     elif main_function == "Cookie管理":
         # Cookie管理部分
@@ -620,12 +666,18 @@ def main():
         if cookie_function == "上传Cookie":
             st.subheader("上传Cookie")
             cookie = st.text_input("Cookie")
-            cookie_type = st.selectbox("Cookie类型", ["basic", "plus", "test", "normal"])
+            cookie_type = st.selectbox(
+                "Cookie类型", ["basic", "plus", "test", "normal"]
+            )
             account = st.text_input("账号", value="")
 
             if st.button("上传Cookie"):
                 url = f"{BASE_URL}/api/v1/cookie/upload_cookie"
-                params = {"cookie": cookie, "cookie_type": cookie_type, "account": account}
+                params = {
+                    "cookie": cookie,
+                    "cookie_type": cookie_type,
+                    "account": account,
+                }
                 response = requests.post(url, params=params)
                 if response.status_code == 200:
                     st.success(response.json())
@@ -729,7 +781,9 @@ def main():
                     display_message("获取Cookie状态列表失败。", "error")
 
             for client_type in ["plus_clients", "basic_clients"]:
-                st.subheader(f"{'基础' if client_type == 'basic_clients' else 'Plus'} 客户")
+                st.subheader(
+                    f"{'基础' if client_type == 'basic_clients' else 'Plus'} 客户"
+                )
                 for client in st.session_state.clients[client_type]:
                     display_client_box(client)
 
