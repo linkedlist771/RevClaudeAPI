@@ -25,6 +25,7 @@ from loguru import logger
 from datetime import datetime
 import pytz
 
+st.set_page_config(page_title="API密钥和Cookie管理")
 
 # Initialize the cookie manager
 cookies = EncryptedCookieManager(
@@ -296,7 +297,6 @@ API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
 
 def main():
     # 设置页面标题
-    st.set_page_config(page_title="API密钥和Cookie管理")
 
     # 设置页面标题
     st.title("API密钥和Cookie管理")
