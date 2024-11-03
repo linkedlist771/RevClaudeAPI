@@ -230,74 +230,34 @@ async def create_sorux_accounts(
     )
     return users
 
-
 def check_password():
     """Returns `True` if the user had the correct password."""
-
-    # 创建一个组件来执行JavaScript代码
-    st.components.v1.html("""
-        <script>
-            function checkLoginStatus() {
-                const username = localStorage.getItem('username');
-                const loginStatus = localStorage.getItem('loginStatus');
-                if (username && loginStatus === 'true') {
-                    window.parent.postMessage({type: 'LOGIN_STATUS', username: username}, '*');
-                }
-            }
-
-            function setLoginStatus(username) {
-                localStorage.setItem('username', username);
-                localStorage.setItem('loginStatus', 'true');
-            }
-
-            function clearLoginStatus() {
-                localStorage.removeItem('username');
-                localStorage.removeItem('loginStatus');
-            }
-
-            // 检查登录状态
-            checkLoginStatus();
-        </script>
-    """, height=0)
 
     def password_entered():
         """Checks whether a password entered by the user is correct."""
         if st.session_state["username"] == ADMIN_USERNAME and st.session_state["password"] == ADMIN_PASSWORD:
             st.session_state["password_correct"] = True
-            # 设置登录状态到localStorage
-            st.components.v1.html(f"""
-                <script>
-                    setLoginStatus('{st.session_state["username"]}');
-                </script>
-            """, height=0)
-            del st.session_state["password"]  # 不存储密码
+            del st.session_state["password"]  # Don't store password
+            del st.session_state["username"]  # Don't store username
         else:
             st.session_state["password_correct"] = False
-            # 清除登录状态
-            st.components.v1.html("""
-                <script>
-                    clearLoginStatus();
-                </script>
-            """, height=0)
-            if "username" in st.session_state:
-                del st.session_state["username"]
 
-    # 通过JavaScript检查localStorage中的登录状态
     if "password_correct" not in st.session_state:
-        st.session_state["password_correct"] = False
-
-    if not st.session_state["password_correct"]:
-        # 显示登录界面
+        # First run, show input for username and password
         st.text_input("用户名", key="username")
         st.text_input("密码", type="password", key="password")
         st.button("登录", on_click=password_entered)
-        if "password" in st.session_state and st.session_state["password"]:  # 如果有登录尝试
-            st.error("😕 用户名或密码错误")
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password not correct, show input + error
+        st.text_input("用户名", key="username")
+        st.text_input("密码", type="password", key="password")
+        st.button("登录", on_click=password_entered)
+        st.error("😕 用户名或密码错误")
         return False
     else:
-        # 密码正确
+        # Password correct
         return True
-
 
 async def main():
     # Example usage
