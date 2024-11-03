@@ -9,8 +9,10 @@ import altair as alt
 from tqdm import tqdm
 from urllib.request import urlopen
 import os
+from streamlit_cookies_manager import EncryptedCookieManager
 
-from front_utils import create_sorux_accounts, check_password
+from front_utils import create_sorux_accounts
+from front_configs import ADMIN_USERNAME, ADMIN_PASSWORD
 
 # running: BASE_URL="http://101.132.169.133:1145" streamlit run front_python/front_manager.py --server.port 5000
 TOKEN = "ccccld"
@@ -23,6 +25,52 @@ from loguru import logger
 from datetime import datetime
 import pytz
 
+
+# Initialize the cookie manager
+cookies = EncryptedCookieManager(
+    prefix="my_app",
+    password="SomeSecureRandomString"  # Replace with a secure password
+)
+
+if not cookies.ready():
+    st.stop()
+
+def check_password():
+    """Returns `True` if the user has the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if (st.session_state["username"] == ADMIN_USERNAME and
+                st.session_state["password"] == ADMIN_PASSWORD):
+            st.session_state["password_correct"] = True
+            # Store login status in cookies
+            cookies['logged_in'] = 'True'
+            cookies.save()
+            del st.session_state["password"]  # Don't store password
+            del st.session_state["username"]  # Don't store username
+        else:
+            st.session_state["password_correct"] = False
+
+    # Check if the user is already logged in via cookies
+    if 'logged_in' in cookies and cookies['logged_in'] == 'True':
+        st.session_state["password_correct"] = True
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for username and password
+        st.text_input("用户名", key="username")
+        st.text_input("密码", type="password", key="password")
+        st.button("登录", on_click=password_entered)
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password not correct, show input + error
+        st.text_input("用户名", key="username")
+        st.text_input("密码", type="password", key="password")
+        st.button("登录", on_click=password_entered)
+        st.error("😕 用户名或密码错误")
+        return False
+    else:
+        # Password correct
+        return True
 
 def set_cn_time_zone():
     """设置当前进程的时区为中国时区"""

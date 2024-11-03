@@ -19,3 +19,4 @@ requests
 pandas
 altair
 tqdm
+streamlit-cookies-manager
