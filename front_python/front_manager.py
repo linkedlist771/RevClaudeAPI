@@ -372,7 +372,11 @@ def main():
                     "过期天数", min_value=0, value=0, step=1
                 )
                 expiration_hours = st.number_input(
-                    "过期小时数", min_value=1, value=1, step=1
+                    "过期小时数(只有Claude支持小数)",
+                    min_value=0.1,  # 最小值改为0.1小时(6分钟)
+                    value=1.0,  # 默认值
+                    step=1,  # 步进值改为0.1
+                    format="%.1f"  # 显示1位小数
                 )
 
             # 速率限制设置
@@ -427,7 +431,7 @@ def main():
                     sorux_accounts = asyncio.run(
                         create_sorux_accounts(
                             key_number,
-                            total_hours,
+                            int(total_hours), # gpt 还不支持分钟级别的。
                             message_limited,
                             rate_refresh_time,
                             message_bucket_sum,
