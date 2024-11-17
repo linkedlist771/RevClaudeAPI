@@ -57,24 +57,35 @@ local_storage_html = """
 // 检查localStorage中的登录状态
 function checkLoginStatus() {
     const loginStatus = localStorage.getItem('isLoggedIn');
-    if (loginStatus === 'true') {
-        // 通过Streamlit组件API发送消息
-        window.parent.postMessage({
-            type: 'localStorage',
-            key: 'isLoggedIn',
-            value: 'true'
-        }, '*');
+    const loginTimestamp = localStorage.getItem('loginTimestamp');
+    const currentTime = new Date().getTime();
+
+    // 检查是否登录且在一周之内
+    if (loginStatus === 'true' && loginTimestamp) {
+        const oneWeek = 7 * 24 * 60 * 60 * 1000; // 一周的毫秒数
+        if (currentTime - parseInt(loginTimestamp) < oneWeek) {
+            window.parent.postMessage({
+                type: 'localStorage',
+                key: 'isLoggedIn',
+                value: 'true'
+            }, '*');
+        } else {
+            // 如果超过一周，清除登录状态
+            clearLoginStatus();
+        }
     }
 }
 
 // 设置登录状态
 function setLoginStatus(status) {
     localStorage.setItem('isLoggedIn', status);
+    localStorage.setItem('loginTimestamp', new Date().getTime());
 }
 
 // 清除登录状态
 function clearLoginStatus() {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('loginTimestamp');
 }
 
 // 页面加载时检查登录状态
@@ -98,7 +109,7 @@ def check_password():
                 and st.session_state["password"] == ADMIN_PASSWORD
         ):
             st.session_state["password_correct"] = True
-            # 设置localStorage
+            # 设置localStorage，包含时间戳
             st.components.v1.html(
                 """
                 <script>
@@ -654,7 +665,7 @@ def main():
                     sorted_df = df.sort_values(by=sort_by, ascending=ascending)
                     st.dataframe(sorted_df.head(top_n), use_container_width=True)
 
-       
+
 
         elif api_key_function == "重置API密钥使用量":
             st.subheader("重置API密钥使用量")
