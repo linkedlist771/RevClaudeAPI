@@ -593,111 +593,68 @@ def main():
             if data:
                 df = create_dataframe(data)
 
-                # 创建两列布局
-                col1, col2 = st.columns(2)
+                # 先展示统计指标
+                col_metrics1, col_metrics2 = st.columns(2)
+                with col_metrics1:
+                    active_count = df['current_active'].value_counts().get(True, 0)
+                    st.metric("当前活跃API Key数", active_count)
+                with col_metrics2:
+                    inactive_count = df['current_active'].value_counts().get(False, 0)
+                    st.metric("当前不活跃API Key数", inactive_count)
 
-                with col1:
-                    st.subheader("查询特定 API Key")
-                    search_token = st.text_input("输入 API Key")
-                    if search_token:
-                        filtered_df = df[df['token'].str.contains(search_token, case=False)]
-                        if not filtered_df.empty:
-                            st.dataframe(filtered_df)
-                        else:
-                            st.warning("未找到匹配的 API Key")
-
-                with col2:
-                    st.subheader("数据排序")
-                    sort_by = st.selectbox(
-                        "选择排序字段",
-                        ["total_usage", "last_3_hours", "last_12_hours", "last_24_hours"]
-                    )
-                    sort_order = st.radio("排序方式", ["降序", "升序"])
-
-                    ascending = sort_order == "升序"
-                    sorted_df = df.sort_values(by=sort_by, ascending=ascending)
-
-                    # 显示前N条记录
-                    top_n = st.slider("显示记录数", 5, 50, 10)
-                    st.dataframe(sorted_df.head(top_n))
-
-                # 可视化图表
+                # 可视化部分
                 st.subheader("使用量Top 10可视化")
                 top_10_df = df.nlargest(10, 'total_usage')
 
                 chart = alt.Chart(top_10_df).mark_bar().encode(
                     x=alt.X('token:N', sort='-y', title='API Key', axis=alt.Axis(labelAngle=-45)),
                     y=alt.Y('total_usage:Q', title='总使用量'),
-                    tooltip=['token', 'total_usage', 'current_active']
+                    tooltip=['token', 'total_usage', 'current_active'],
+                    color=alt.condition(
+                        alt.datum.current_active,
+                        alt.value('#1f77b4'),  # 活跃状态颜色
+                        alt.value('#d3d3d3')  # 非活跃状态颜色
+                    )
                 ).properties(
                     height=400
                 )
 
                 st.altair_chart(chart, use_container_width=True)
 
-                # 活跃状态统计
-                st.subheader("API Key活跃状态统计")
-                active_stats = df['current_active'].value_counts()
-                st.write(f"当前活跃: {active_stats.get(True, 0)}个")
-                st.write(f"当前不活跃: {active_stats.get(False, 0)}个")
-            # st.subheader("绘制API密钥使用情况条状图")
-            # key_type = st.selectbox("请输入要查看的API密钥类型", ["plus", "basic"])
-            # top_n = st.number_input(
-            #     "请输入要显示的前几个API密钥", min_value=1, value=5, step=1
-            # )
-            #
-            # if st.button("绘制API密钥使用情况条状图"):
-            #     url = f"{API_KEY_ROUTER}/list_keys"
-            #     headers = {"accept": "application/json"}
-            #     response = requests.get(url, headers=headers)
-            #     if response.status_code == 200:
-            #         api_keys = response.json()
-            #         api_key_usage = []
-            #
-            #         for api_key, info in tqdm(api_keys.items()):
-            #             try:
-            #                 type = info["key_type"]
-            #                 if type == key_type:
-            #                     api_key_usage.append(
-            #                         {"api_key": api_key, "usage": info["usage"]}
-            #                     )
-            #             except Exception as e:
-            #                 pass
-            #
-            #         api_key_usage_df = pd.DataFrame(api_key_usage)
-            #
-            #         api_key_usage_df = api_key_usage_df.sort_values(
-            #             "usage", ascending=False
-            #         ).head(top_n)
-            #         chart = (
-            #             alt.Chart(api_key_usage_df)
-            #             .mark_bar()
-            #             .encode(
-            #                 x=alt.X("api_key:N", title="API密钥"),
-            #                 y=alt.Y("usage:Q", title="使用量"),
-            #                 tooltip=["api_key", "usage"],
-            #             )
-            #             .properties(
-            #                 title=f"Top {top_n} API密钥使用情况",
-            #             )
-            #         )
-            #         st.altair_chart(chart, use_container_width=True)
-            #         st.write(api_key_usage_df)
-            #     else:
-            #         st.error("获取API密钥列表失败。")
-            #
-            #         st.subheader("查看API密钥使用情况")
-            # api_key = st.text_input("请输入要查看的API密钥")
-            #
-            # if st.button("查看API密钥使用情况"):
-            #     url = f"{API_KEY_ROUTER}/get_information/{api_key}"
-            #     headers = {"accept": "application/json"}
-            #     response = requests.get(url, headers=headers)
-            #     if response.status_code == 200:
-            #         api_key_info = response.json()
-            #         st.write(api_key_info)
-            #     else:
-            #         st.error("获取API密钥使用情况失败。")
+                # 查询部分
+                with st.expander("查询特定 API Key", expanded=True):
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        search_token = st.text_input("输入 API Key", key="search_input")
+                    with col2:
+                        search_button = st.button("查询", use_container_width=True)
+
+                    if search_button and search_token:
+                        filtered_df = df[df['token'].str.contains(search_token, case=False)]
+                        if not filtered_df.empty:
+                            st.dataframe(filtered_df, use_container_width=True)
+                        else:
+                            st.warning("未找到匹配的 API Key")
+
+                # 排序和数据显示部分
+                with st.expander("数据排序与展示", expanded=True):
+                    col3, col4, col5 = st.columns([2, 1, 1])
+
+                    with col3:
+                        sort_by = st.selectbox(
+                            "选择排序字段",
+                            ["total_usage", "last_3_hours", "last_12_hours", "last_24_hours"]
+                        )
+                    with col4:
+                        sort_order = st.radio("排序方式", ["降序", "升序"])
+                    with col5:
+                        top_n = st.number_input("显示记录数", min_value=5, max_value=50, value=10)
+
+                    ascending = sort_order == "升序"
+                    sorted_df = df.sort_values(by=sort_by, ascending=ascending)
+                    st.dataframe(sorted_df.head(top_n), use_container_width=True)
+
+       
 
         elif api_key_function == "重置API密钥使用量":
             st.subheader("重置API密钥使用量")
