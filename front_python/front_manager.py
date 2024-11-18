@@ -47,7 +47,6 @@ def create_dataframe(data):
             'last_3_hours': item['usage']['last_3_hours'],
             'last_12_hours': item['usage']['last_12_hours'],
             'last_24_hours': item['usage']['last_24_hours'],
-            "last_week": item['usage']['last_week'],
             'current_active': item['current_active'],
             'last_seen_seconds': item.get('last_seen_seconds', 0)
         }
@@ -648,7 +647,7 @@ def main():
                     with col3:
                         sort_by = st.selectbox(
                             "选择排序字段",
-                            ["total_usage", "last_3_hours", "last_12_hours", "last_24_hours", "last_week"],
+                            ["total_usage", "last_3_hours", "last_12_hours", "last_24_hours"]
                         )
                     with col4:
                         sort_order = st.radio("排序方式", ["降序", "升序"])
