@@ -134,8 +134,10 @@ def check_password():
         if submit:
             if verify_login(username, password):
                 st.success("登录成功！")
-                return True
                 # 重新运行应用以显示登录后的内容
+                # 重新刷新下
+                st.experimental_rerun()  # 重新运行应用以显示登录后的内容
+
             else:
                 st.error("😕 用户名或密码错误")
                 return False
