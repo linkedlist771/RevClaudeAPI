@@ -63,10 +63,42 @@ redis_client = redis.Redis(
 
 
 def get_device_hash():
-    """获取当前会话的哈希值"""
-    # 使用session_id作为唯一标识
-    session_id = str(id(st.session_state))
-    return hashlib.md5(session_id.encode()).hexdigest()
+    """获取当前设备的哈希值"""
+    # 注入JavaScript代码来获取设备信息
+    device_info_js = """
+    <script>
+        function getDeviceInfo() {
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                screenWidth: window.screen.width,
+                screenHeight: window.screen.height,
+                colorDepth: window.screen.colorDepth,
+                pixelRatio: window.devicePixelRatio,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                vendor: navigator.vendor
+            };
+            return deviceInfo;
+        }
+
+        const info = getDeviceInfo();
+        // 将所有设备信息拼接成字符串
+        const deviceString = Object.values(info).join('|');
+        // 生成设备指纹并发送回Streamlit
+        Streamlit.setComponentValue(deviceString);
+    </script>
+    """
+
+    # 使用st.components.v1.html注入JavaScript
+    device_info = st.components.v1.html(device_info_js, height=0)
+
+    # 如果成功获取到设备信息,则生成hash
+    if device_info:
+        return hashlib.md5(str(device_info).encode()).hexdigest()
+
+    # 如果获取失败则返回None
+    return ""
 
 
 def check_password():
