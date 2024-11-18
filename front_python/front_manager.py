@@ -60,45 +60,27 @@ redis_client = redis.Redis(
     port=int(os.getenv('REDIS_PORT', 6379)),
     decode_responses=True
 )
+from streamlit.runtime.scriptrunner import get_script_run_ctx
+from streamlit import runtime
+
+def get_remote_ip():
+    try:
+        ctx = get_script_run_ctx()
+        if ctx is None:
+            return None
+        session_info = runtime.get_instance().get_client(ctx.session_id)
+        if session_info is None:
+            return None
+        return session_info.request.remote_ip
+    except Exception as e:
+        return None
 
 
 def get_device_hash():
-    """获取当前设备的哈希值"""
-    # 注入JavaScript代码来获取设备信息
-    device_info_js = """
-    <script>
-        function getDeviceInfo() {
-            const deviceInfo = {
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                language: navigator.language,
-                screenWidth: window.screen.width,
-                screenHeight: window.screen.height,
-                colorDepth: window.screen.colorDepth,
-                pixelRatio: window.devicePixelRatio,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                vendor: navigator.vendor
-            };
-            return deviceInfo;
-        }
+    """获取当前会话的哈希值"""
+    # 使用session_id作为唯一标识
 
-        const info = getDeviceInfo();
-        // 将所有设备信息拼接成字符串
-        const deviceString = Object.values(info).join('|');
-        // 生成设备指纹并发送回Streamlit
-        Streamlit.setComponentValue(deviceString);
-    </script>
-    """
-
-    # 使用st.components.v1.html注入JavaScript
-    device_info = st.components.v1.html(device_info_js, height=0)
-
-    # 如果成功获取到设备信息,则生成hash
-    if device_info:
-        return hashlib.md5(str(device_info).encode()).hexdigest()
-
-    # 如果获取失败则返回None
-    return ""
+    return hashlib.md5(get_remote_ip().encode()).hexdigest()
 
 
 def check_password():
@@ -136,17 +118,25 @@ def check_password():
             return True
 
     # 显示登录表单
-    col1, col2 = st.columns([3, 1])
-    with col1:
+
+    # 创建一个表单，用于用户登录
+    with st.form("login_form"):
+        # 用户名输入框
         username = st.text_input("用户名")
+
+        # 密码输入框，输入类型为密码
         password = st.text_input("密码", type="password")
-    with col2:
-        if st.button("登录"):
+
+        # 登录按钮
+        submit = st.form_submit_button("登录")
+
+        # 当用户点击登录按钮时执行验证
+        if submit:
             if verify_login(username, password):
-                st.rerun()
+                st.success("登录成功！")
+                # 重新运行应用以显示登录后的内容
             else:
                 st.error("😕 用户名或密码错误")
-
     return False
 def set_cn_time_zone():
     """设置当前进程的时区为中国时区"""
