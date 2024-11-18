@@ -1,7 +1,9 @@
 import asyncio
+import hashlib
 import json
 from datetime import datetime, timedelta, time
 
+import redis
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -51,103 +53,69 @@ def create_dataframe(data):
         records.append(record)
     return pd.DataFrame(records)
 
-# 创建一个HTML组件来处理localStorage
-local_storage_html = """
-<script>
-// 检查localStorage中的登录状态
-function checkLoginStatus() {
-    const loginStatus = localStorage.getItem('isLoggedIn');
-    const loginTimestamp = localStorage.getItem('loginTimestamp');
-    const currentTime = new Date().getTime();
 
-    // 检查是否登录且在一周之内
-    if (loginStatus === 'true' && loginTimestamp) {
-        const oneWeek = 7 * 24 * 60 * 60 * 1000; // 一周的毫秒数
-        if (currentTime - parseInt(loginTimestamp) < oneWeek) {
-            window.parent.postMessage({
-                type: 'localStorage',
-                key: 'isLoggedIn',
-                value: 'true'
-            }, '*');
-        } else {
-            // 如果超过一周，清除登录状态
-            clearLoginStatus();
-        }
-    }
-}
+# Redis 连接设置
+redis_client = redis.Redis(
+    host=os.getenv('REDIS_HOST', 'redis'),
+    port=int(os.getenv('REDIS_PORT', 6379)),
+    decode_responses=True
+)
 
-// 设置登录状态
-function setLoginStatus(status) {
-    localStorage.setItem('isLoggedIn', status);
-    localStorage.setItem('loginTimestamp', new Date().getTime());
-}
 
-// 清除登录状态
-function clearLoginStatus() {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('loginTimestamp');
-}
-
-// 页面加载时检查登录状态
-window.addEventListener('load', checkLoginStatus);
-</script>
-
-<div id="localStorage-div"></div>
-"""
-
-# 注入HTML组件
-st.components.v1.html(local_storage_html, height=0)
+def get_device_hash():
+    """获取当前设备的哈希值"""
+    user_agent = str(st.get_user_agent())
+    device_info = f"{user_agent}"
+    return hashlib.md5(device_info.encode()).hexdigest()
 
 
 def check_password():
     """Returns `True` if the user has the correct password."""
 
-    def password_entered():
+    def verify_login(username, password):
         """验证用户输入的密码"""
-        if (
-                st.session_state["username"] == ADMIN_USERNAME
-                and st.session_state["password"] == ADMIN_PASSWORD
-        ):
-            st.session_state["password_correct"] = True
-            # 设置localStorage，包含时间戳
-            st.components.v1.html(
-                """
-                <script>
-                setLoginStatus('true');
-                </script>
-                """,
-                height=0
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            device_hash = get_device_hash()
+            # 在Redis中设置登录状态
+            login_data = {
+                'is_logged_in': True,
+                'timestamp': datetime.now().timestamp(),
+                'device_hash': device_hash,
+                'username': username
+            }
+            redis_client.setex(
+                f"login:{username}:{device_hash}",
+                7 * 24 * 60 * 60,  # 7天过期
+                json.dumps(login_data)
             )
-            del st.session_state["password"]
-            del st.session_state["username"]
-        else:
-            st.session_state["password_correct"] = False
-
-    # 检查session state中的登录状态
-    if "password_correct" in st.session_state and st.session_state["password_correct"]:
-        return True
-
-    if "password_correct" not in st.session_state:
-        # 首次运行，显示登录表单
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.text_input("用户名", key="username")
-            st.text_input("密码", type="password", key="password")
-        with col2:
-            st.button("登录", on_click=password_entered)
+            return True
         return False
-    elif not st.session_state["password_correct"]:
-        # 密码错误，显示错误信息
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            st.text_input("用户名", key="username")
-            st.text_input("密码", type="password", key="password")
-        with col2:
-            st.button("登录", on_click=password_entered)
-        st.error("😕 用户名或密码错误")
-        return False
-    else:
-        return True
+
+    # 检查Redis中的登录状态
+    device_hash = get_device_hash()
+    login_data = redis_client.get(f"login:{ADMIN_USERNAME}:{device_hash}")
+
+    if login_data:
+        login_data = json.loads(login_data)
+        current_time = datetime.now().timestamp()
+        one_week = 7 * 24 * 60 * 60  # 一周的秒数
+
+        if login_data.get('is_logged_in') and current_time - login_data['timestamp'] < one_week:
+            return True
+
+    # 显示登录表单
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        username = st.text_input("用户名")
+        password = st.text_input("密码", type="password")
+    with col2:
+        if st.button("登录"):
+            if verify_login(username, password):
+                st.experimental_rerun()
+            else:
+                st.error("😕 用户名或密码错误")
+
+    return False
 
 def set_cn_time_zone():
     """设置当前进程的时区为中国时区"""
