@@ -64,8 +64,14 @@ redis_client = redis.Redis(
 
 def get_device_hash():
     """获取当前设备的哈希值"""
-    user_agent = str(st.get_user_agent())
-    device_info = f"{user_agent}"
+    # 从 streamlit 的 request_json 中获取用户代理信息
+    try:
+        user_agent = st.experimental_get_query_params().get('user_agent', [''])[0]
+    except:
+        user_agent = 'unknown'
+
+    # 获取其他可用的设备信息
+    device_info = f"{user_agent}_{st.session_state.get('_device_id', '')}"
     return hashlib.md5(device_info.encode()).hexdigest()
 
 
@@ -116,7 +122,6 @@ def check_password():
                 st.error("😕 用户名或密码错误")
 
     return False
-
 def set_cn_time_zone():
     """设置当前进程的时区为中国时区"""
     os.environ["TZ"] = "Asia/Shanghai"
