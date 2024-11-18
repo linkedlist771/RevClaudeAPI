@@ -63,16 +63,10 @@ redis_client = redis.Redis(
 
 
 def get_device_hash():
-    """获取当前设备的哈希值"""
-    # 从 streamlit 的 request_json 中获取用户代理信息
-    try:
-        user_agent = st.experimental_get_query_params().get('user_agent', [''])[0]
-    except:
-        user_agent = 'unknown'
-
-    # 获取其他可用的设备信息
-    device_info = f"{user_agent}_{st.session_state.get('_device_id', '')}"
-    return hashlib.md5(device_info.encode()).hexdigest()
+    """获取当前会话的哈希值"""
+    # 使用session_id作为唯一标识
+    session_id = str(id(st.session_state))
+    return hashlib.md5(session_id.encode()).hexdigest()
 
 
 def check_password():
@@ -117,7 +111,7 @@ def check_password():
     with col2:
         if st.button("登录"):
             if verify_login(username, password):
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("😕 用户名或密码错误")
 
