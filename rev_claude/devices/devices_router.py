@@ -16,7 +16,7 @@ async def audit_limit(request: Request):
     headers = {
         "Authorization": request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
-        "X-Forwarded-Host": request.headers.get("host")
+        "X-Forwarded-Host": request.headers.get("Host")
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{BASE_URL}/audit_limit", headers=headers)
@@ -28,7 +28,7 @@ async def logout(request: Request):
     headers = {
         "Authorization": request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
-        "X-Forwarded-Host": request.headers.get("host")
+        "X-Forwarded-Host": request.headers.get("Host")
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/logout", params=params, headers=headers)
@@ -39,7 +39,7 @@ async def devices(request: Request):
     headers = {
         "Authorization": request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
-        "X-Forwarded-Host": request.headers.get("host")
+        "X-Forwarded-Host": request.headers.get("Host")
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/devices", headers=headers)
