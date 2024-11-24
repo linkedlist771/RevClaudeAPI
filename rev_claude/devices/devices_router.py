@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Header, Query
-from typing import Optional
+from fastapi import APIRouter, Request
 import httpx
 
 router = APIRouter()
@@ -13,51 +12,37 @@ async def token_stats():
         return response.json()
 
 @router.post("/audit_limit")
-async def audit_limit(
-    authorization: Optional[str] = Header(None),
-    user_agent: Optional[str] = Header(None, alias="User-Agent"),
-    host: Optional[str] = Header(None),
-):
+async def audit_limit(request: Request):
     headers = {
-        "Authorization": authorization,
-        "User-Agent": user_agent,
-        "Host": host
+        "Authorization": request.headers.get("Authorization"),
+        "User-Agent": request.headers.get("User-Agent"),
+        "Host": request.headers.get("Host")
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{BASE_URL}/audit_limit", headers=headers)
         return response.json()
 
 @router.get("/logout")
-async def logout(
-    user_agent_query: Optional[str] = Query(None, alias="User-Agent"),
-    auth: Optional[str] = Query(None),
-    authorization: Optional[str] = Header(None),
-    user_agent_header: Optional[str] = Header(None, alias="User-Agent"),
-    host: Optional[str] = Header(None),
-):
+async def logout(request: Request):
     params = {
-        "User-Agent": user_agent_query,
-        "Auth": auth
+        "User-Agent": request.query_params.get("User-Agent"),
+        "Auth": request.query_params.get("Auth")
     }
     headers = {
-        "Authorization": authorization,
-        "User-Agent": user_agent_header,
-        "Host": host
+        "Authorization": request.headers.get("Authorization"),
+        "User-Agent": request.headers.get("User-Agent"),
+        "Host": request.headers.get("Host")
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/logout", params=params, headers=headers)
         return response.json()
 
 @router.get("/devices")
-async def devices(
-    authorization: Optional[str] = Header(None),
-    user_agent: Optional[str] = Header(None, alias="User-Agent"),
-    host: Optional[str] = Header(None),
-):
+async def devices(request: Request):
     headers = {
-        "Authorization": authorization,
-        "User-Agent": user_agent,
-        "Host": host
+        "Authorization": request.headers.get("Authorization"),
+        "User-Agent": request.headers.get("User-Agent"),
+        "Host": request.headers.get("Host")
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/devices", headers=headers)
