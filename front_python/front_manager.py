@@ -653,7 +653,7 @@ def main():
                     with col4:
                         sort_order = st.radio("排序方式", ["降序", "升序"])
                     with col5:
-                        top_n = st.number_input("显示记录数", min_value=5, max_value=50, value=10)
+                        top_n = st.number_input("显示记录数", min_value=5, max_value=5000, value=10)
 
                     ascending = sort_order == "升序"
                     sorted_df = df.sort_values(by=sort_by, ascending=ascending)
