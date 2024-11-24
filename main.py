@@ -16,7 +16,7 @@ parser.add_argument("--port", default=6238, help="port")
 parser.add_argument("--workers", default=1, type=int, help="workers")
 args = parser.parse_args()
 logger.add(LOGS_PATH / "log_file.log", rotation="1 week")  # 每周轮换一次文件
-app = FastAPI(docs_url=None, redoc_url=None, lifespan=lifespan)
+app = FastAPI(lifespan=lifespan)
 app = register_middleware(app)
 
 
