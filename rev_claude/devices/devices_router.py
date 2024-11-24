@@ -25,8 +25,6 @@ async def audit_limit(request: Request):
 @router.get("/logout")
 async def logout(request: Request):
     params = {
-        "User-Agent": request.query_params.get("User-Agent"),
-        "Auth": request.query_params.get("Auth")
     }
     headers = {
         "Authorization": request.headers.get("Authorization"),
