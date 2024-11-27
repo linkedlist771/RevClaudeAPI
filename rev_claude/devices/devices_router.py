@@ -29,7 +29,7 @@ async def logout(request: Request):
     headers = {
         "Authorization": "Bearer " + request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
-        "X-Forwarded-Host": request.headers.get("Host")
+        # "X-Forwarded-Host": request.headers.get("Host")
     }
     try:
         async with httpx.AsyncClient() as client:
