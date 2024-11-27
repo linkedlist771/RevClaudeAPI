@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request
 import httpx
+from loguru import logger
 
 router = APIRouter()
 
@@ -33,9 +34,12 @@ async def logout(request: Request):
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{BASE_URL}/logout", params=params, headers=headers)
-            return response.json()
+            res =  response.json()
+            logger.debug(res)
+            return res
     except Exception as e:
         from traceback import format_exc
+        logger.error(format_exc())
         return format_exc()
 
 @router.get("/devices")
