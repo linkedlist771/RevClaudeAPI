@@ -30,9 +30,13 @@ async def logout(request: Request):
         "User-Agent": request.headers.get("User-Agent"),
         "X-Forwarded-Host": request.headers.get("Host")
     }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{BASE_URL}/logout", params=params, headers=headers)
-        return response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{BASE_URL}/logout", params=params, headers=headers)
+            return response.json()
+    except Exception as e:
+        from traceback import format_exc
+        return format_exc()
 
 @router.get("/devices")
 async def devices(request: Request):
