@@ -14,7 +14,7 @@ async def token_stats():
 @router.post("/audit_limit")
 async def audit_limit(request: Request):
     headers = {
-        "Authorization": request.headers.get("Authorization"),
+        "Authorization": "Bearer " + request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
         "X-Forwarded-Host": request.headers.get("Host")
     }
@@ -26,7 +26,7 @@ async def audit_limit(request: Request):
 async def logout(request: Request):
     params = {}
     headers = {
-        "Authorization": request.headers.get("Authorization"),
+        "Authorization": "Bearer " + request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
         "X-Forwarded-Host": request.headers.get("Host")
     }
@@ -37,7 +37,7 @@ async def logout(request: Request):
 @router.get("/devices")
 async def devices(request: Request):
     headers = {
-        "Authorization": request.headers.get("Authorization"),
+        "Authorization": "Bearer " + request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
         "X-Forwarded-Host": request.headers.get("Host")
     }
