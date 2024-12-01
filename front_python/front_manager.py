@@ -9,6 +9,7 @@ import pandas as pd
 import altair as alt
 from tqdm import tqdm
 from urllib.request import urlopen
+import plotly.express as px
 
 from front_utils import create_sorux_accounts
 from front_configs import ADMIN_USERNAME, ADMIN_PASSWORD
@@ -25,6 +26,55 @@ from datetime import datetime
 import pytz
 
 st.set_page_config(page_title="API密钥和Cookie管理")
+
+
+def get_all_devices():
+    url = "https://api.claude35.585dg.com/api/v1/devices/all_token_devices"
+    headers = {
+        'User-Agent': 'Apifox/1.0.0 (https://apifox.com)'
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except:
+        return None
+
+
+def logout_device(token, user_agent):
+    url = "https://api.claude35.585dg.com/api/v1/devices/logout"
+    headers = {
+        'Authorization': token,
+        'User-Agent': user_agent
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        return response.json()
+    except:
+        return None
+
+
+def get_device_type(user_agent):
+    ua = user_agent.lower()
+    if 'iphone' in ua:
+        return 'iPhone'
+    elif 'android' in ua:
+        return 'Android'
+    elif 'windows' in ua:
+        return 'Windows'
+    elif 'macintosh' in ua:
+        return 'MacOS'
+    else:
+        return 'Other'
+
+
+def initialize_session_state(data):
+    if 'data' not in st.session_state:
+        st.session_state['data'] = data
+    if 'search_token' not in st.session_state:
+        st.session_state['search_token'] = ""
+    if 'logout_messages' not in st.session_state:
+        st.session_state['logout_messages'] = {}
+
 def get_api_stats():
     url = "http://54.254.143.80:8090/token_stats"
     try:
@@ -382,6 +432,7 @@ def main():
             [
                 "创建API密钥",
                 "查看API密钥使用情况",
+                "查看API设备使用情况"
                 "验证API密钥",
                 "删除API密钥",
                 "批量删除API密钥",  # 新增这一行
@@ -659,6 +710,127 @@ def main():
                     sorted_df = df.sort_values(by=sort_by, ascending=ascending)
                     st.dataframe(sorted_df.head(top_n), use_container_width=True)
 
+        elif api_key_function == "查看API设备使用情况":
+            st.subheader("设备管理系统")
+
+            # 初始化 session_state
+            if 'data' not in st.session_state:
+                data = get_all_devices()
+                if not data:
+                    st.error("获取数据失败")
+                    return
+                initialize_session_state(data)
+            else:
+                data = st.session_state['data']
+
+            st.header("设备分布情况")
+
+            # Create two columns for the pie chart and histogram
+            col1, col2 = st.columns(2)
+
+            # Device Type Distribution Pie Chart
+            device_stats = {}
+            total_devices = 0
+            for item in data['data']:
+                total_devices += len(item['devices'])
+                for device in item['devices']:
+                    device_type = get_device_type(device['user_agent'])
+                    device_stats[device_type] = device_stats.get(device_type, 0) + 1
+
+            with col1:
+                fig_pie = px.pie(
+                    values=list(device_stats.values()),
+                    names=list(device_stats.keys()),
+                    title=f'设备类型分布 (总计: {total_devices}台设备)'
+                )
+                st.plotly_chart(fig_pie, use_container_width=True)
+
+            # Device Usage Histogram
+            with col2:
+                device_counts_per_user = [len(item['devices']) for item in data['data']]
+                fig_hist = px.histogram(
+                    device_counts_per_user,
+                    nbins=20,
+                    title='用户设备使用数量分布',
+                    labels={'value': '设备数量', 'count': '用户数'},
+                    color_discrete_sequence=['#636EFA']
+                )
+                fig_hist.update_layout(xaxis_title='设备数量', yaxis_title='用户数')
+                st.plotly_chart(fig_hist, use_container_width=True)
+
+            # 使用表单来包含输入框和按钮
+            with st.form(key='search_form'):
+                search_token = st.text_input("输入Token进行查询", value=st.session_state['search_token'])
+                submit_button = st.form_submit_button(label='查询')
+
+            if submit_button:
+                st.session_state['search_token'] = search_token.strip()
+
+            if st.session_state['search_token']:
+                found = False
+                for item in st.session_state['data']['data']:
+                    if st.session_state['search_token'] in item['token']:
+                        found = True
+                        st.subheader(f"Token: {item['token']}")
+
+                        # Count devices by type
+                        token_device_counts = {}
+                        for device in item['devices']:
+                            device_type = get_device_type(device['user_agent'])
+                            token_device_counts[device_type] = token_device_counts.get(device_type, 0) + 1
+
+                        # Display device counts
+                        cols = st.columns(len(token_device_counts))
+                        for idx, (device_type, count) in enumerate(token_device_counts.items()):
+                            with cols[idx]:
+                                st.metric(device_type, count)
+
+                        # Display devices with logout buttons
+                        st.subheader("设备列表")
+                        devices_to_remove = []
+                        for idx, device in enumerate(item['devices']):
+                            cols = st.columns([3, 1])
+                            with cols[0]:
+                                st.text(f"{get_device_type(device['user_agent'])} - {device['host']}")
+                            with cols[1]:
+                                button_key = f"logout_{item['token']}_{idx}"
+                                if st.button("注销", key=button_key):
+                                    result = logout_device(item['token'], device['user_agent'])
+                                    if result:
+                                        st.success("注销成功")
+                                        # 记录需要移除的设备
+                                        devices_to_remove.append(idx)
+                                    else:
+                                        # error_message = result.get('error', '未知错误') if result else '请求失败'
+                                        st.error(f"注销失败: {result}")
+
+                        # 移除已注销的设备
+                        if devices_to_remove:
+                            # 移除设备时从后往前移除以避免索引问题
+                            for idx in sorted(devices_to_remove, reverse=True):
+                                del item['devices'][idx]
+                            # 更新 session_state 数据
+                            st.session_state['data'] = st.session_state['data']
+
+                if not found:
+                    st.warning("未找到匹配的Token")
+
+            st.header("所有Token设备统计")
+            token_stats = []
+            for item in st.session_state['data']['data']:
+                token_device_counts = {}
+                for device in item['devices']:
+                    device_type = get_device_type(device['user_agent'])
+                    token_device_counts[device_type] = token_device_counts.get(device_type, 0) + 1
+
+                token_stats.append({
+                    'Token': item['token'],
+                    '总设备数': len(item['devices']),
+                    **token_device_counts
+                })
+
+            df_all = pd.DataFrame(token_stats)
+            st.dataframe(df_all, use_container_width=True)
 
 
         elif api_key_function == "重置API密钥使用量":
