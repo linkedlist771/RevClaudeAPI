@@ -20,4 +20,3 @@ pandas
 altair
 tqdm
 streamlit-cookies-manager
-streamlit-aggrid
