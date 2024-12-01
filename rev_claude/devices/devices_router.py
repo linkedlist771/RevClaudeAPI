@@ -49,9 +49,9 @@ async def logout(request: Request):
 @router.get("/devices")
 async def devices(request: Request):
     headers = {
-        "Authorization": "Bearer " + request.headers.get("Authorization"),
-        "User-Agent": request.headers.get("User-Agent"),
-        "X-Forwarded-Host": request.headers.get("Host")
+        # "Authorization": "Bearer " + request.headers.get("Authorization"),
+        # "User-Agent": request.headers.get("User-Agent"),
+        # "X-Forwarded-Host": request.headers.get("Host")
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/devices", headers=headers)
