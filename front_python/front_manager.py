@@ -710,6 +710,7 @@ def main():
                     sorted_df = df.sort_values(by=sort_by, ascending=ascending)
                     st.dataframe(sorted_df.head(top_n), use_container_width=True)
 
+
         elif api_key_function == "查看API设备使用情况":
             st.subheader("设备管理系统")
 
