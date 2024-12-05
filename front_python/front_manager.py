@@ -207,7 +207,7 @@ set_cn_time_zone()
 
 
 def get_user_tokens() -> List[dict]:
-    url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/list/"
+    url = "http://clauai.qqyunsd.com/adminapi/chatgpt/user/list/"
 
     payload = json.dumps({})
     headers = {
@@ -226,7 +226,7 @@ def get_user_tokens() -> List[dict]:
 
 
 def delete_sessions(ids: List[int]):
-    url = "https://claude35.liuli.585dg.com/adminapi/chatgpt/user/delete"
+    url = "http://clauai.qqyunsd.com/adminapi/chatgpt/user/delete"
 
     payload = json.dumps({"ids": ids})
     headers = {
