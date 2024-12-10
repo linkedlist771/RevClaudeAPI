@@ -95,11 +95,12 @@ async def get_information(api_key: str):
     try:
         async with AsyncClient() as client:
             headers = {"APIAUTH": "ccccld"}
-            url = "https://clauai.qqyunsd.com/adminapi/chatgpt/user/list/"
+            url = "https://clauai.qqyunsd.com/adminapi/chatgpt/user/page/"
             # post data
             res = await client.post(url, headers=headers, timeout=60.0)
             res_json = res.json()
             data = res_json.get("data")
+            data = data['list']
             result = next((i for i in data if i.get("userToken") == api_key), None)
             return result
     except Exception as e:
