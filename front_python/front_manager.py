@@ -75,6 +75,7 @@ def initialize_session_state(data):
     if 'logout_messages' not in st.session_state:
         st.session_state['logout_messages'] = {}
 
+
 def get_api_stats():
     url = "http://54.254.143.80:8090/token_stats"
     try:
@@ -87,6 +88,7 @@ def get_api_stats():
     except Exception as e:
         st.error(f"请求错误: {str(e)}")
         return None
+
 
 def create_dataframe(data):
     records = []
@@ -113,6 +115,7 @@ redis_client = redis.Redis(
 )
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit import runtime
+
 
 def get_remote_ip():
     try:
@@ -193,6 +196,8 @@ def check_password():
                 st.error("😕 用户名或密码错误")
                 return False
     return False
+
+
 def set_cn_time_zone():
     """设置当前进程的时区为中国时区"""
     os.environ["TZ"] = "Asia/Shanghai"
@@ -256,7 +261,7 @@ def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
 
     # Delete in batches
     for i in range(0, len(ids_to_delete), batch_size):
-        batch = ids_to_delete[i : i + batch_size]
+        batch = ids_to_delete[i: i + batch_size]
         delete_sessions(batch)
         print(f"Deleted batch of {len(batch)} sessions")
 
@@ -314,25 +319,25 @@ def display_client_box(client):
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button(
-                "🌐 只用于网页登录",
-                key=f"normal_{client['cookie_key']}",
-                help="点击设置为只用于网页登录",
+                    "🌐 只用于网页登录",
+                    key=f"normal_{client['cookie_key']}",
+                    help="点击设置为只用于网页登录",
             ):
                 if update_usage_type(client, 0):
                     update_client_display()
         with col2:
             if st.button(
-                "🔒 只用于官网1:1登录",
-                key=f"official_{client['cookie_key']}",
-                help="点击设置为只用于官网1:1登录",
+                    "🔒 只用于官网1:1登录",
+                    key=f"official_{client['cookie_key']}",
+                    help="点击设置为只用于官网1:1登录",
             ):
                 if update_usage_type(client, 1):
                     update_client_display()
         with col3:
             if st.button(
-                "🔁 都使用",
-                key=f"both_{client['cookie_key']}",
-                help="点击设置为两种登录都使用",
+                    "🔁 都使用",
+                    key=f"both_{client['cookie_key']}",
+                    help="点击设置为两种登录都使用",
             ):
                 if update_usage_type(client, 2):
                     update_client_display()
@@ -404,11 +409,9 @@ def display_message(message, type="info"):
 
 import time
 
-
 # Initialize session state for messages
 if "messages" not in st.session_state:
     st.session_state.messages = {}
-
 
 # claude3.ucas.life
 BASE_URL = os.environ.get("BASE_URL", f"http://54.254.143.80:1145")
@@ -514,7 +517,7 @@ def main():
                     sorux_accounts = asyncio.run(
                         create_sorux_accounts(
                             key_number,
-                            int(total_hours), # gpt 还不支持分钟级别的。
+                            int(total_hours),  # gpt 还不支持分钟级别的。
                             message_limited,
                             rate_refresh_time,
                             message_bucket_sum,
@@ -561,7 +564,10 @@ def main():
                 if api_keys:
                     st.success("API密钥创建成功。")
                     formatted_json = json.dumps(
-                        {"api_key": api_keys}, indent=4, ensure_ascii=False
+
+                        {
+                            "api_key_str": "\n".join(api_keys),
+                            "api_key": api_keys}, indent=4, ensure_ascii=False
                     )
                     st.code(formatted_json, language="json")
 
