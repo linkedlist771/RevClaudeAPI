@@ -2,6 +2,8 @@ from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from loguru import logger
+
+from rev_claude.configs import CLAUDE_BACKEND_API_USER_URL, CLAUDE_BACKEND_API_APIAUTH
 from rev_claude.schemas import (
     CreateAPIKeyRequest,
     BatchAPIKeysDeleteRequest,
@@ -94,15 +96,14 @@ async def get_information(api_key: str):
 
     try:
         async with AsyncClient() as client:
-            headers = {"APIAUTH": "ccccld"}
-            url = "https://clauai.qqyunsd.com/adminapi/chatgpt/user/page/"
+            headers = {"APIAUTH": CLAUDE_BACKEND_API_APIAUTH}
+            url = f"{CLAUDE_BACKEND_API_USER_URL}/page/"
             # post data
-            payload = {"page":1,"size":20,"keyWord":api_key}
+            payload = {"page": 1, "size": 20, "keyWord": api_key}
             res = await client.post(url, headers=headers, json=payload, timeout=60)
             res_json = res.json()
             data = res_json.get("data")
-            data = data['list']
-
+            data = data["list"]
             result = next((i for i in data if i.get("userToken") == api_key), None)
             return result
     except Exception as e:

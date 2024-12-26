@@ -30,9 +30,7 @@ st.set_page_config(page_title="API密钥和Cookie管理")
 
 def get_all_devices():
     url = "https://api.claude35.585dg.com/api/v1/devices/all_token_devices"
-    headers = {
-        'User-Agent': 'Apifox/1.0.0 (https://apifox.com)'
-    }
+    headers = {"User-Agent": "Apifox/1.0.0 (https://apifox.com)"}
     try:
         response = requests.get(url, headers=headers)
         return response.json()
@@ -42,10 +40,7 @@ def get_all_devices():
 
 def logout_device(token, user_agent):
     url = "https://api.claude35.585dg.com/api/v1/devices/logout"
-    headers = {
-        'Authorization': token,
-        'User-Agent': user_agent
-    }
+    headers = {"Authorization": token, "User-Agent": user_agent}
     try:
         response = requests.get(url, headers=headers)
         return response.json()
@@ -55,32 +50,33 @@ def logout_device(token, user_agent):
 
 def get_device_type(user_agent):
     ua = user_agent.lower()
-    if 'iphone' in ua:
-        return 'iPhone'
-    elif 'android' in ua:
-        return 'Android'
-    elif 'windows' in ua:
-        return 'Windows'
-    elif 'macintosh' in ua:
-        return 'MacOS'
+    if "iphone" in ua:
+        return "iPhone"
+    elif "android" in ua:
+        return "Android"
+    elif "windows" in ua:
+        return "Windows"
+    elif "macintosh" in ua:
+        return "MacOS"
     else:
-        return 'Other'
+        return "Other"
 
 
 def initialize_session_state(data):
-    if 'data' not in st.session_state:
-        st.session_state['data'] = data
-    if 'search_token' not in st.session_state:
-        st.session_state['search_token'] = ""
-    if 'logout_messages' not in st.session_state:
-        st.session_state['logout_messages'] = {}
+    if "data" not in st.session_state:
+        st.session_state["data"] = data
+    if "search_token" not in st.session_state:
+        st.session_state["search_token"] = ""
+    if "logout_messages" not in st.session_state:
+        st.session_state["logout_messages"] = {}
+
 
 def get_api_stats():
     url = "http://54.254.143.80:8090/token_stats"
     try:
         response = requests.get(url)
         if response.status_code == 200:
-            return response.json()['data']
+            return response.json()["data"]
         else:
             st.error("获取数据失败")
             return None
@@ -88,18 +84,19 @@ def get_api_stats():
         st.error(f"请求错误: {str(e)}")
         return None
 
+
 def create_dataframe(data):
     records = []
     for item in data:
         record = {
-            'token': item['token'],
-            'total_usage': item['usage']['total'],
-            'last_3_hours': item['usage']['last_3_hours'],
-            'last_12_hours': item['usage']['last_12_hours'],
-            'last_24_hours': item['usage']['last_24_hours'],
-            "last_week": item['usage']['last_week'],
-            'current_active': item['current_active'],
-            'last_seen_seconds': item.get('last_seen_seconds', 0)
+            "token": item["token"],
+            "total_usage": item["usage"]["total"],
+            "last_3_hours": item["usage"]["last_3_hours"],
+            "last_12_hours": item["usage"]["last_12_hours"],
+            "last_24_hours": item["usage"]["last_24_hours"],
+            "last_week": item["usage"]["last_week"],
+            "current_active": item["current_active"],
+            "last_seen_seconds": item.get("last_seen_seconds", 0),
         }
         records.append(record)
     return pd.DataFrame(records)
@@ -107,12 +104,13 @@ def create_dataframe(data):
 
 # Redis 连接设置
 redis_client = redis.Redis(
-    host=os.getenv('REDIS_HOST', 'redis'),
-    port=int(os.getenv('REDIS_PORT', 6379)),
-    decode_responses=True
+    host=os.getenv("REDIS_HOST", "redis"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    decode_responses=True,
 )
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit import runtime
+
 
 def get_remote_ip():
     try:
@@ -143,15 +141,15 @@ def check_password():
             device_hash = get_device_hash()
             # 在Redis中设置登录状态
             login_data = {
-                'is_logged_in': True,
-                'timestamp': datetime.now().timestamp(),
-                'device_hash': device_hash,
-                'username': username
+                "is_logged_in": True,
+                "timestamp": datetime.now().timestamp(),
+                "device_hash": device_hash,
+                "username": username,
             }
             redis_client.setex(
                 f"login:{username}:{device_hash}",
                 7 * 24 * 60 * 60,  # 7天过期
-                json.dumps(login_data)
+                json.dumps(login_data),
             )
             return True
         return False
@@ -165,7 +163,10 @@ def check_password():
         current_time = datetime.now().timestamp()
         one_week = 7 * 24 * 60 * 60  # 一周的秒数
 
-        if login_data.get('is_logged_in') and current_time - login_data['timestamp'] < one_week:
+        if (
+            login_data.get("is_logged_in")
+            and current_time - login_data["timestamp"] < one_week
+        ):
             return True
 
     # 显示登录表单
@@ -193,6 +194,8 @@ def check_password():
                 st.error("😕 用户名或密码错误")
                 return False
     return False
+
+
 def set_cn_time_zone():
     """设置当前进程的时区为中国时区"""
     os.environ["TZ"] = "Asia/Shanghai"
@@ -459,7 +462,7 @@ def main():
                     min_value=0.1,  # 最小值改为0.1小时(6分钟)
                     value=1.0,  # 默认值
                     step=1.0,  # 步进值改为0.1
-                    format="%.1f"  # 显示1位小数
+                    format="%.1f",  # 显示1位小数
                 )
 
             # 速率限制设置
@@ -514,7 +517,7 @@ def main():
                     sorux_accounts = asyncio.run(
                         create_sorux_accounts(
                             key_number,
-                            int(total_hours), # gpt 还不支持分钟级别的。
+                            int(total_hours),  # gpt 还不支持分钟级别的。
                             message_limited,
                             rate_refresh_time,
                             message_bucket_sum,
@@ -655,27 +658,35 @@ def main():
                 # 先展示统计指标
                 col_metrics1, col_metrics2 = st.columns(2)
                 with col_metrics1:
-                    active_count = df['current_active'].value_counts().get(True, 0)
+                    active_count = df["current_active"].value_counts().get(True, 0)
                     st.metric("当前活跃API Key数", active_count)
                 with col_metrics2:
-                    inactive_count = df['current_active'].value_counts().get(False, 0)
+                    inactive_count = df["current_active"].value_counts().get(False, 0)
                     st.metric("当前不活跃API Key数", inactive_count)
 
                 # 可视化部分
                 st.subheader("使用量Top 10可视化")
-                top_10_df = df.nlargest(10, 'total_usage')
+                top_10_df = df.nlargest(10, "total_usage")
 
-                chart = alt.Chart(top_10_df).mark_bar().encode(
-                    x=alt.X('token:N', sort='-y', title='API Key', axis=alt.Axis(labelAngle=-45)),
-                    y=alt.Y('total_usage:Q', title='总使用量'),
-                    tooltip=['token', 'total_usage', 'current_active'],
-                    color=alt.condition(
-                        alt.datum.current_active,
-                        alt.value('#1f77b4'),  # 活跃状态颜色
-                        alt.value('#d3d3d3')  # 非活跃状态颜色
+                chart = (
+                    alt.Chart(top_10_df)
+                    .mark_bar()
+                    .encode(
+                        x=alt.X(
+                            "token:N",
+                            sort="-y",
+                            title="API Key",
+                            axis=alt.Axis(labelAngle=-45),
+                        ),
+                        y=alt.Y("total_usage:Q", title="总使用量"),
+                        tooltip=["token", "total_usage", "current_active"],
+                        color=alt.condition(
+                            alt.datum.current_active,
+                            alt.value("#1f77b4"),  # 活跃状态颜色
+                            alt.value("#d3d3d3"),  # 非活跃状态颜色
+                        ),
                     )
-                ).properties(
-                    height=400
+                    .properties(height=400)
                 )
 
                 st.altair_chart(chart, use_container_width=True)
@@ -689,7 +700,9 @@ def main():
                         search_button = st.button("查询", use_container_width=True)
 
                     if search_button and search_token:
-                        filtered_df = df[df['token'].str.contains(search_token, case=False)]
+                        filtered_df = df[
+                            df["token"].str.contains(search_token, case=False)
+                        ]
                         if not filtered_df.empty:
                             st.dataframe(filtered_df, use_container_width=True)
                         else:
@@ -702,30 +715,37 @@ def main():
                     with col3:
                         sort_by = st.selectbox(
                             "选择排序字段",
-                            ["total_usage", "last_3_hours", "last_12_hours", "last_24_hours", "last_week"],
+                            [
+                                "total_usage",
+                                "last_3_hours",
+                                "last_12_hours",
+                                "last_24_hours",
+                                "last_week",
+                            ],
                         )
                     with col4:
                         sort_order = st.radio("排序方式", ["降序", "升序"])
                     with col5:
-                        top_n = st.number_input("显示记录数", min_value=5, max_value=5000, value=10)
+                        top_n = st.number_input(
+                            "显示记录数", min_value=5, max_value=5000, value=10
+                        )
 
                     ascending = sort_order == "升序"
                     sorted_df = df.sort_values(by=sort_by, ascending=ascending)
                     st.dataframe(sorted_df.head(top_n), use_container_width=True)
 
-
         elif api_key_function == "查看API设备使用情况":
             st.subheader("设备管理系统")
 
             # 初始化 session_state
-            if 'data' not in st.session_state:
+            if "data" not in st.session_state:
                 data = get_all_devices()
                 if not data:
                     st.error("获取数据失败")
                     return
                 initialize_session_state(data)
             else:
-                data = st.session_state['data']
+                data = st.session_state["data"]
 
             st.header("设备分布情况")
 
@@ -735,71 +755,81 @@ def main():
             # Device Type Distribution Pie Chart
             device_stats = {}
             total_devices = 0
-            for item in data['data']:
-                total_devices += len(item['devices'])
-                for device in item['devices']:
-                    device_type = get_device_type(device['user_agent'])
+            for item in data["data"]:
+                total_devices += len(item["devices"])
+                for device in item["devices"]:
+                    device_type = get_device_type(device["user_agent"])
                     device_stats[device_type] = device_stats.get(device_type, 0) + 1
 
             with col1:
                 fig_pie = px.pie(
                     values=list(device_stats.values()),
                     names=list(device_stats.keys()),
-                    title=f'设备类型分布 (总计: {total_devices}台设备)'
+                    title=f"设备类型分布 (总计: {total_devices}台设备)",
                 )
                 st.plotly_chart(fig_pie, use_container_width=True)
 
             # Device Usage Histogram
             with col2:
-                device_counts_per_user = [len(item['devices']) for item in data['data']]
+                device_counts_per_user = [len(item["devices"]) for item in data["data"]]
                 fig_hist = px.histogram(
                     device_counts_per_user,
                     nbins=20,
-                    title='用户设备使用数量分布',
-                    labels={'value': '设备数量', 'count': '用户数'},
-                    color_discrete_sequence=['#636EFA']
+                    title="用户设备使用数量分布",
+                    labels={"value": "设备数量", "count": "用户数"},
+                    color_discrete_sequence=["#636EFA"],
                 )
-                fig_hist.update_layout(xaxis_title='设备数量', yaxis_title='用户数')
+                fig_hist.update_layout(xaxis_title="设备数量", yaxis_title="用户数")
                 st.plotly_chart(fig_hist, use_container_width=True)
 
             # 使用表单来包含输入框和按钮
-            with st.form(key='search_form'):
-                search_token = st.text_input("输入Token进行查询", value=st.session_state['search_token'])
-                submit_button = st.form_submit_button(label='查询')
+            with st.form(key="search_form"):
+                search_token = st.text_input(
+                    "输入Token进行查询", value=st.session_state["search_token"]
+                )
+                submit_button = st.form_submit_button(label="查询")
 
             if submit_button:
-                st.session_state['search_token'] = search_token.strip()
+                st.session_state["search_token"] = search_token.strip()
 
-            if st.session_state['search_token']:
+            if st.session_state["search_token"]:
                 found = False
-                for item in st.session_state['data']['data']:
-                    if st.session_state['search_token'] in item['token']:
+                for item in st.session_state["data"]["data"]:
+                    if st.session_state["search_token"] in item["token"]:
                         found = True
                         st.subheader(f"Token: {item['token']}")
 
                         # Count devices by type
                         token_device_counts = {}
-                        for device in item['devices']:
-                            device_type = get_device_type(device['user_agent'])
-                            token_device_counts[device_type] = token_device_counts.get(device_type, 0) + 1
+                        for device in item["devices"]:
+                            device_type = get_device_type(device["user_agent"])
+                            token_device_counts[device_type] = (
+                                token_device_counts.get(device_type, 0) + 1
+                            )
 
                         # Display device counts
                         cols = st.columns(len(token_device_counts))
-                        for idx, (device_type, count) in enumerate(token_device_counts.items()):
+                        for idx, (device_type, count) in enumerate(
+                            token_device_counts.items()
+                        ):
                             with cols[idx]:
                                 st.metric(device_type, count)
 
                         # Display devices with logout buttons
                         st.subheader("设备列表")
                         devices_to_remove = []
-                        for idx, device in enumerate(item['devices']):
+                        for idx, device in enumerate(item["devices"]):
                             cols = st.columns([3, 1])
                             with cols[0]:
-                                st.text(f"{get_device_type(device['user_agent'])} - {device['host']}")
+                                st.text(
+                                    f"{get_device_type(device['user_agent'])} - {device['host']}"
+                                )
                             with cols[1]:
                                 button_key = f"logout_{item['token']}_{idx}"
                                 if st.button("注销", key=button_key):
-                                    result = logout_device(item['token'], device['user_agent'])
+                                    result = logout_device(
+                                        item["token"], device["user_agent"]
+                                    )
                                     if result:
                                         st.success("注销成功")
                                         # 记录需要移除的设备
@@ -812,30 +842,33 @@ def main():
                         if devices_to_remove:
                             # 移除设备时从后往前移除以避免索引问题
                             for idx in sorted(devices_to_remove, reverse=True):
-                                del item['devices'][idx]
+                                del item["devices"][idx]
                             # 更新 session_state 数据
-                            st.session_state['data'] = st.session_state['data']
+                            st.session_state["data"] = st.session_state["data"]
 
                 if not found:
                     st.warning("未找到匹配的Token")
 
             st.header("所有Token设备统计")
             token_stats = []
-            for item in st.session_state['data']['data']:
+            for item in st.session_state["data"]["data"]:
                 token_device_counts = {}
-                for device in item['devices']:
-                    device_type = get_device_type(device['user_agent'])
-                    token_device_counts[device_type] = token_device_counts.get(device_type, 0) + 1
+                for device in item["devices"]:
+                    device_type = get_device_type(device["user_agent"])
+                    token_device_counts[device_type] = (
+                        token_device_counts.get(device_type, 0) + 1
+                    )
 
-                token_stats.append({
-                    'Token': item['token'],
-                    '总设备数': len(item['devices']),
-                    **token_device_counts
-                })
+                token_stats.append(
+                    {
+                        "Token": item["token"],
+                        "总设备数": len(item["devices"]),
+                        **token_device_counts,
+                    }
+                )
 
             df_all = pd.DataFrame(token_stats)
             st.dataframe(df_all, use_container_width=True)
-
 
         elif api_key_function == "重置API密钥使用量":
             st.subheader("重置API密钥使用量")

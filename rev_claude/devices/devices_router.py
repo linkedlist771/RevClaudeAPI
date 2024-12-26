@@ -19,7 +19,7 @@ async def audit_limit(request: Request):
     headers = {
         "Authorization": "Bearer " + request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
-        "X-Forwarded-Host": request.headers.get("Host")
+        "X-Forwarded-Host": request.headers.get("Host"),
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{BASE_URL}/audit_limit", headers=headers)
@@ -36,12 +36,15 @@ async def logout(request: Request):
     }
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{BASE_URL}/logout", params=params, headers=headers)
+            response = await client.get(
+                f"{BASE_URL}/logout", params=params, headers=headers
+            )
             res = response.json()
             logger.debug(res)
             return res
     except Exception as e:
         from traceback import format_exc
+
         logger.error(format_exc())
         return format_exc()
 
@@ -51,7 +54,7 @@ async def devices(request: Request):
     headers = {
         "Authorization": "Bearer " + request.headers.get("Authorization"),
         "User-Agent": request.headers.get("User-Agent"),
-        "X-Forwarded-Host": request.headers.get("Host")
+        "X-Forwarded-Host": request.headers.get("Host"),
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/devices", headers=headers)

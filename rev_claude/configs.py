@@ -35,7 +35,7 @@ PROXIES = {"http://": "socks5://127.0.0.1:7891", "https://": "socks5://127.0.0.1
 
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
-
+REDIS_DB = int(os.environ.get("REDIS_DB", 0))
 
 DOCS_USERNAME = "claude-backend"
 DOCS_PASSWORD = "20Wd!!!!"
@@ -58,6 +58,10 @@ CLAUDE_OFFICIAL_USAGE_INCREASE = 5
 # limits check的函数
 CLAUDE_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES = 60
 CLAUDE_CLIENT_LIMIT_CHECKS_PROMPT = "Say: OK."
+
+CLAUDE_BACKEND_API_BASE_URL = "https://clauai.qqyunsd.com/adminapi"
+CLAUDE_BACKEND_API_USER_URL = f"{CLAUDE_BACKEND_API_BASE_URL}/chatgpt/user/"
+CLAUDE_BACKEND_API_APIAUTH = "ccccld"
 
 
 # IP访问的限制
