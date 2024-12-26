@@ -490,6 +490,7 @@ def main():
                 "🌐 只适用于逆向网站",
                 "🔁 全部设为都使用",
                 "🤖 适用于ChatGPT镜像",
+                "🔄 只用于claude账号池续费"
             ]
             selected_option = st.selectbox("选择使用类型", options)
 
@@ -500,30 +501,47 @@ def main():
                 api_keys = []
                 sorux_accounts = []
 
-                # Create official API keys if needed
-                if selected_option in [options[0], options[2]]:
-                    url = f"{API_KEY_ROUTER}/create_key"
+                if selected_option == "🔄 只用于claude账号池续费":
+                    url = f"{BASE_URL}/api/v1/renewal/create"
                     payload = {
-                        "expiration_days": expiration_days_float,
-                        "key_type": key_type,
-                        "key_number": key_number,
+                        "days": expiration_days,
+                        "hours": expiration_hours,
+                        "minutes": 0,
+                        "count": key_number
                     }
                     response = requests.post(url, json=payload)
                     if response.status_code == 200:
-                        api_keys = response.json().get("api_key", [])
+                        renewal_codes = response.json()
+                        st.success("续费码创建成功")
+                        # 显示续费码
+                        renewal_codes_str = "\n".join(renewal_codes)
+                        st.text_area("续费码", renewal_codes_str)
+                        st.code(json.dumps({"renewal_codes": renewal_codes}, indent=4, ensure_ascii=False), language="json")
+                        
+                else:
+                    if selected_option in [options[0], options[2]]:
+                        url = f"{API_KEY_ROUTER}/create_key"
+                        payload = {
+                            "expiration_days": expiration_days_float,
+                            "key_type": key_type,
+                            "key_number": key_number,
+                        }
+                        response = requests.post(url, json=payload)
+                        if response.status_code == 200:
+                            api_keys = response.json().get("api_key", [])
 
-                # Create SoruxGPT accounts if needed
-                if selected_option in [options[3], options[2]]:
-                    sorux_accounts = asyncio.run(
-                        create_sorux_accounts(
-                            key_number,
-                            int(total_hours),  # gpt 还不支持分钟级别的。
-                            message_limited,
-                            rate_refresh_time,
-                            message_bucket_sum,
-                            message_bucket_time,
+                    # Create SoruxGPT accounts if needed
+                    if selected_option in [options[3], options[2]]:
+                        sorux_accounts = asyncio.run(
+                            create_sorux_accounts(
+                                key_number,
+                                int(total_hours),
+                                message_limited,
+                                rate_refresh_time,
+                                message_bucket_sum,
+                                message_bucket_time,
+                            )
                         )
-                    )
 
                 progress_bar = st.progress(0)
                 status = st.empty()
