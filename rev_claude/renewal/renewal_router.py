@@ -58,12 +58,10 @@ async def get_renewal_code_info(
 async def use_renewal_code(
     request: UseRenewalCodeRequest,
     renewal_manager: RenewalManager = Depends(get_renewal_manager),
-    api_key_manager=Depends(get_api_key_manager),
 ):
     """Use a renewal code to extend an API key's expiration."""
     result = await renewal_manager.use_renewal_code(
         request.renewal_code,
-        api_key_manager,
         request.api_key
     )
     

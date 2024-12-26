@@ -137,13 +137,12 @@ class RenewalManager(BaseRedisManager):
                 renewal_code.to_json()
             )
 
-    async def use_renewal_code(self, renewal_code: str, api_key_manager, api_key: str) -> str:
+    async def use_renewal_code(self, renewal_code: str, api_key: str) -> str:
         """
         Use a renewal code to extend an API key's expiration.
         
         Args:
             renewal_code: The renewal code to use
-            api_key_manager: Instance of APIKeyManager
             api_key: The API key to extend
             
         Returns:
@@ -164,6 +163,7 @@ class RenewalManager(BaseRedisManager):
 
         # 4. Process the renewal
         total_minutes = code_info.total_minutes()
+
         if total_minutes <= 0:
             return "续费码无效：续期时间必须大于0"
 
@@ -171,7 +171,7 @@ class RenewalManager(BaseRedisManager):
         days = total_minutes / (24 * 60)
         result = await renew_api_key(api_key, days)
         
-        return f"成功续期 {days} 天"
+        return f"成功续期 {code_info.days} 天 {code_info.hours} 小时 "
 
     async def get_renewal_code_info(self, code: str) -> dict:
         """Get detailed information about a renewal code"""
