@@ -81,3 +81,15 @@ async def validate_renewal_code(
     """Check if a renewal code is valid and unused."""
     is_valid = await renewal_manager.is_valid_renewal_code(code)
     return {"is_valid": is_valid}
+
+
+@router.get("/all")
+async def get_all_renewal_codes(
+    renewal_manager: RenewalManager = Depends(get_renewal_manager),
+):
+    """Get information about all renewal codes."""
+    codes = await renewal_manager.get_all_renewal_codes()
+    return {
+        "total": len(codes),
+        "codes": codes
+    }

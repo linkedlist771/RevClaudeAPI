@@ -181,3 +181,29 @@ class RenewalManager(BaseRedisManager):
             "used_at": renewal_code.used_at.isoformat() if renewal_code.used_at else None,
             "used_by": renewal_code.used_by
         }
+
+    async def get_all_renewal_codes(self) -> List[dict]:
+        """Get information about all renewal codes"""
+        # Get all keys matching the renewal pattern
+        keys = await self.redis.keys("renewal:*")
+        codes = []
+        
+        for key in keys:
+            data = await self.decoded_get(key)
+            if data:
+                renewal_code = RenewalCode.from_json(data)
+                codes.append({
+                    "code": renewal_code.code,
+                    "status": renewal_code.status.value,
+                    "days": renewal_code.days,
+                    "hours": renewal_code.hours,
+                    "minutes": renewal_code.minutes,
+                    "total_minutes": renewal_code.total_minutes(),
+                    "created_at": renewal_code.created_at.isoformat(),
+                    "used_at": renewal_code.used_at.isoformat() if renewal_code.used_at else None,
+                    "used_by": renewal_code.used_by
+                })
+        
+        # Sort by created_at, most recent first
+        codes.sort(key=lambda x: x["created_at"], reverse=True)
+        return codes
