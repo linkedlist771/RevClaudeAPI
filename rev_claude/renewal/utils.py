@@ -62,13 +62,13 @@ async def create_api_key(api_key: str, expire_time: str):
         return res.json()
 
 
-async def renew_api_key(api_key: str, days: int = 30):
+async def renew_api_key(api_key: str, days: float = 30):
     """
     Renew an API key for the specified number of days.
 
     Args:
         api_key (str): The API key to renew
-        days (int): Number of days to extend the API key validity
+        days (float): Number of days to extend the API key validity
 
     Returns:
         dict: Updated API key information

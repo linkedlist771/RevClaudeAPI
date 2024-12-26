@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import json
 from typing import List
 
+from rev_claude.renewal.utils import renew_api_key
+
 
 class RenewalKeyStatus(Enum):
     UNUSED = "unused"
@@ -154,7 +156,8 @@ class RenewalManager(BaseRedisManager):
 
         # Convert minutes to days for the API key manager
         days = total_minutes / (24 * 60)
-        result = api_key_manager.extend_api_key_expiration(api_key, days)
+        # result = api_key_manager.extend_api_key_expiration(api_key, days)
+        result = await renew_api_key(api_key, days)
         
         if "已延长" in result:
             await self.mark_as_used(renewal_code, api_key)
