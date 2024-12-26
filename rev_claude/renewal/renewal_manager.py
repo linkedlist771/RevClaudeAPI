@@ -171,7 +171,7 @@ class RenewalManager(BaseRedisManager):
         days = total_minutes / (24 * 60)
         result = await renew_api_key(api_key, days)
         
-        return result
+        return f"成功续期 {days} 天"
 
     async def get_renewal_code_info(self, code: str) -> dict:
         """Get detailed information about a renewal code"""
