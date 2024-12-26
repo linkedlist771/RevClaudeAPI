@@ -11,6 +11,7 @@ from rev_claude.artifacts_sharing.artifacts_sharing_router import (
     router as artifacts_sharing_router,
 )
 from rev_claude.devices.devices_router import router as devices_router
+from rev_claude.renewal.renewal_router import router as renewal_router
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(claude_router, prefix="/claude", tags=["claude"])
@@ -28,3 +29,4 @@ router.include_router(
     artifacts_sharing_router, prefix="/artifacts_sharing", tags=["artifacts_sharing"]
 )
 router.include_router(devices_router, prefix="/devices", tags=["devices"])
+router.include_router(renewal_router, prefix="/renewal", tags=["renewal"])
