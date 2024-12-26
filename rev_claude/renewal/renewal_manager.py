@@ -150,8 +150,11 @@ class RenewalManager(BaseRedisManager):
             str: Success/error message
         """
         code_info = await self.get_renewal_code(renewal_code)
-        if not code_info or code_info.status != RenewalKeyStatus.UNUSED:
-            return "无效的续费码或该续费码已被使用"
+        if not code_info:
+            return "无效的续费码"
+        
+        if code_info.status == RenewalKeyStatus.USED:
+            return "该续费码已被使用"
 
         total_minutes = code_info.total_minutes()
         if total_minutes <= 0:
@@ -159,7 +162,6 @@ class RenewalManager(BaseRedisManager):
 
         # Convert minutes to days for the API key manager
         days = total_minutes / (24 * 60)
-        # result = api_key_manager.extend_api_key_expiration(api_key, days)
         result = await renew_api_key(api_key, days)
         
         if "已延长" in result:
