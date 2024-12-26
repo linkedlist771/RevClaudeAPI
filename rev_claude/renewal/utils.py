@@ -79,17 +79,25 @@ async def renew_api_key(api_key: str, days: float = 30):
     current_time = get_shanghai_time()
     shanghai_tz = pytz.timezone("Asia/Shanghai")
     extension_period = timedelta(days=days)
+    #  "isUsed": 1,
 
     if api_key_info:
         # API key exists - handle renewal
         expire_time = shanghai_tz.localize(datetime.strptime(api_key_info["expireTime"], "%Y-%m-%d %H:%M:%S"))
 
-        # If expired, start from current time
-        if expire_time < current_time:
-            new_expire_time = current_time + extension_period
-        else:
-            # If not expired, add extension to current expiry
+        # 首先判断有没有被使用？ 如果没有被使用的话， 那么就在原始的基础上加上 然后返回
+        # extension_period
+        is_used = api_key_info.get("isUsed", 0)
+        if not is_used:
             new_expire_time = expire_time + extension_period
+        # 被使用并且过期了
+        else:
+            # If expired, start from current time
+            if expire_time < current_time:
+                new_expire_time = current_time + extension_period
+            else:
+                # If not expired, add extension to current expiry
+                new_expire_time = expire_time + extension_period
 
         # Update API key information
         api_key_info["expireTime"] = new_expire_time.strftime("%Y-%m-%d %H:%M:%S")
