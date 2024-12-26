@@ -149,13 +149,20 @@ class RenewalManager(BaseRedisManager):
         Returns:
             str: Success/error message
         """
+        # 1. First get the renewal code info
         code_info = await self.get_renewal_code(renewal_code)
         if not code_info:
             return "无效的续费码"
         
+        # 2. Check if it's already used
         if code_info.status == RenewalKeyStatus.USED:
             return "该续费码已被使用"
 
+        # 3. Mark it as used BEFORE processing the renewal
+        # This helps prevent race conditions
+        await self.mark_as_used(renewal_code, api_key)
+
+        # 4. Process the renewal
         total_minutes = code_info.total_minutes()
         if total_minutes <= 0:
             return "续费码无效：续期时间必须大于0"
@@ -164,9 +171,6 @@ class RenewalManager(BaseRedisManager):
         days = total_minutes / (24 * 60)
         result = await renew_api_key(api_key, days)
         
-        if "已延长" in result:
-            await self.mark_as_used(renewal_code, api_key)
-            
         return result
 
     async def get_renewal_code_info(self, code: str) -> dict:
