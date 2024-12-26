@@ -185,7 +185,8 @@ class RenewalManager(BaseRedisManager):
     async def get_all_renewal_codes(self) -> List[dict]:
         """Get information about all renewal codes"""
         # Get all keys matching the renewal pattern
-        keys = await self.redis.keys("renewal:*")
+        redis = await self.get_aioredis()
+        keys = await redis.keys("renewal:*")
         codes = []
         
         for key in keys:
