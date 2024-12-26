@@ -29,11 +29,13 @@ class RenewalCode(BaseModel):
         return self.days * 24 * 60 + self.hours * 60 + self.minutes
 
     def to_json(self) -> str:
-        """Convert to JSON string with proper datetime handling"""
+        """Convert to JSON string with proper datetime and enum handling"""
         data = self.model_dump()
         # Convert datetime objects to ISO format strings
         data['created_at'] = self.created_at.isoformat()
         data['used_at'] = self.used_at.isoformat() if self.used_at else None
+        # Convert enum to string
+        data['status'] = self.status.value  # Convert enum to string
         return json.dumps(data)
 
     @classmethod
@@ -44,6 +46,7 @@ class RenewalCode(BaseModel):
         data['created_at'] = datetime.fromisoformat(data['created_at'])
         if data['used_at']:
             data['used_at'] = datetime.fromisoformat(data['used_at'])
+        # Convert string back to enum
         data['status'] = RenewalKeyStatus(data['status'])
         return cls(**data)
 
