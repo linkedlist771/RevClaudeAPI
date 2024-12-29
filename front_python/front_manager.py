@@ -676,7 +676,7 @@ def main():
                         st.warning("请输入至少一个API密钥进行删除。")
                 elif delete_type == "续费码":
                     url = f"{API_CLAUDE35_URL}/renewal/delete"
-                    payload = {"codes": api_keys_list}
+                    payload = {"renewal_codes": api_keys_list}
                     response = requests.delete(url, json=payload)
                     st.write(response.json())
                 else:
