@@ -3,6 +3,7 @@ import hashlib
 import json
 from datetime import datetime, timedelta, time
 
+from httpx import AsyncClient
 import redis
 import streamlit as st
 import pandas as pd
@@ -26,6 +27,10 @@ from datetime import datetime
 import pytz
 
 st.set_page_config(page_title="API密钥和Cookie管理")
+
+CLAUDE_BACKEND_API_BASE_URL = "https://clauai.qqyunsd.com/adminapi"
+CLAUDE_BACKEND_API_USER_URL = f"{CLAUDE_BACKEND_API_BASE_URL}/chatgpt/user/"
+CLAUDE_BACKEND_API_APIAUTH = "ccccld"
 
 
 def get_all_devices():
@@ -206,6 +211,16 @@ def set_cn_time_zone():
         logger.error(f"Failed to set time zone: {e}")
 
 
+def build_client_headers() -> dict:
+    headers = {
+        "APIAUTH": CLAUDE_BACKEND_API_APIAUTH,
+        "Content-Type": "application/json"
+    }
+    return headers
+
+
+
+
 set_cn_time_zone()
 
 
@@ -245,24 +260,36 @@ def delete_sessions(ids: List[int]):
         )
 
 
+async def get_api_key_information(api_key: str):
+    async with AsyncClient() as client:
+        headers = build_client_headers()
+        url = f"{CLAUDE_BACKEND_API_USER_URL}/page/"
+        payload = {"page": 1, "size": 20, "keyWord": api_key}
+        res = await client.post(url, headers=headers, json=payload, timeout=60)
+        res_json = res.json()
+        data = res_json.get("data")
+        data = data["list"]
+        result = next((i for i in data if i.get("userToken") == api_key), None)
+        return result
+
+async def get_all_api_key_information(user_tokens: List[str]):
+    tasks = [get_api_key_information(token) for token in user_tokens]
+    return await asyncio.gather(*tasks)
+
 def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
-    # Get all user data
-    all_users = get_user_tokens()
-
-    # Create a mapping of user tokens to their IDs
-    token_to_id = {user["userToken"]: user["id"] for user in all_users}
-
-    # Find IDs for the given user tokens
+    # Get all user data asynchronously
+    user_infos = asyncio.run(get_all_api_key_information(user_tokens))
+    # Extract IDs from user info
     ids_to_delete = [
-        token_to_id[token] for token in user_tokens if token in token_to_id
+        user_info.get("id") 
+        for user_info in user_infos 
+        if user_info and user_info.get("id")
     ]
 
     # Delete in batches
     for i in range(0, len(ids_to_delete), batch_size):
         batch = ids_to_delete[i : i + batch_size]
         delete_sessions(batch)
-        print(f"Deleted batch of {len(batch)} sessions")
-
     message = f"Deleted a total of {len(ids_to_delete)} sessions"
     return message
 
@@ -437,7 +464,7 @@ def main():
                 "查看API密钥使用情况",
                 "查看API设备使用情况",
                 "验证API密钥",
-                "删除API密钥",
+                # "删除API密钥",
                 "批量删除API密钥",  # 新增这一行
                 "获取所有API密钥",
                 "重置API密钥使用量",  # Add this line
@@ -1060,3 +1087,6 @@ def main():
 
 if check_password():
     main()
+# delete_batch_user_tokens(
+#     ["sj-521cd7ae1c72412da2b2346038910c8e"]
+# )
