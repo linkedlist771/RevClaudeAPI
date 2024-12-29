@@ -33,6 +33,8 @@ CLAUDE_BACKEND_API_USER_URL = f"{CLAUDE_BACKEND_API_BASE_URL}/chatgpt/user/"
 CLAUDE_BACKEND_API_APIAUTH = "ccccld"
 
 
+API_CLAUDE35_URL = "https://api.claude35.585dg.com/api/v1"
+
 def get_all_devices():
     url = "https://api.claude35.585dg.com/api/v1/devices/all_token_devices"
     headers = {"User-Agent": "Apifox/1.0.0 (https://apifox.com)"}
@@ -463,7 +465,7 @@ def main():
                 "创建API密钥",
                 "查看API密钥使用情况",
                 "查看API设备使用情况",
-                "验证API密钥",
+                # "验证API密钥",
                 # "删除API密钥",
                 "批量删除API密钥",  # 新增这一行
                 "获取所有API密钥",
@@ -513,7 +515,7 @@ def main():
             # 使用类型设置
             st.markdown("### 使用范围")
             options = [
-                "🔒 只适用于官网镜像",
+                "🔒 只适用于claude账号池镜像",
                 "🌐 只适用于逆向网站",
                 "🔁 全部设为都使用",
                 "🤖 适用于ChatGPT镜像",
@@ -528,7 +530,8 @@ def main():
                 api_keys = []
                 sorux_accounts = []
 
-                if selected_option == "🔄 只用于claude账号池续费":
+                # if selected_option == "🔄 只用于claude账号池续费":
+                if selected_option in [options[-1]]:
                     url = f"{BASE_URL}/api/v1/renewal/create"
                     payload = {
                         "days": expiration_days,
@@ -642,45 +645,42 @@ def main():
                 else:
                     st.error("API密钥无效。")
 
-        elif api_key_function == "删除API密钥":
-            st.subheader("删除API密钥")
-            api_key_to_delete = st.text_input("要删除的API密钥")
-
-            if st.button("删除API密钥"):
-                # url = f"{BASE_URL}/api/v1/api_key/delete_key/{api_key_to_delete}"
-                url = f"{API_KEY_ROUTER}/delete_key/{api_key_to_delete}"
-                response = requests.delete(url)
-                if response.status_code == 200:
-                    st.success("API密钥删除成功!")
-                else:
-                    st.error("API密钥删除失败。")
-
         elif api_key_function == "批量删除API密钥":
             st.subheader("批量删除API密钥")
             api_keys_to_delete = st.text_area(
                 "输入要删除的API密钥（每行一个或用逗号分隔）"
             )
+            # default as the api key
+            delete_type = st.selectbox("选择删除类型", ["API密钥", "续费码"], index=0)
+            # 先按换行符分割，然后对每个部分按逗号分割，最后去除空白
+            api_keys_to_delete = api_keys_to_delete.replace('"', "")
+            api_keys_to_delete = api_keys_to_delete.replace("'", "")
+            api_keys_list = [
+                key.strip()
+                for line in api_keys_to_delete.split("\n")
+                for key in line.split(",")
+                if key.strip()
+            ]
 
             if st.button("批量删除API密钥"):
-                # 先按换行符分割，然后对每个部分按逗号分割，最后去除空白
-                api_keys_to_delete = api_keys_to_delete.replace('"', "")
-                api_keys_to_delete = api_keys_to_delete.replace("'", "")
-                api_keys_list = [
-                    key.strip()
-                    for line in api_keys_to_delete.split("\n")
-                    for key in line.split(",")
-                    if key.strip()
-                ]
+                if delete_type == "API密钥":
 
-                if api_keys_list:
-                    try:
-                        message = delete_batch_user_tokens(api_keys_list)
-                        st.success(message)
-                    except Exception as e:
-                        st.error(f"批量删除API密钥失败: {str(e)}")
+                    if api_keys_list:
+                        try:
+                            message = delete_batch_user_tokens(api_keys_list)
+                            st.success(message)
+                        except Exception as e:
+                            st.error(f"批量删除API密钥失败: {str(e)}")
 
+                    else:
+                        st.warning("请输入至少一个API密钥进行删除。")
+                elif delete_type == "续费码":
+                    url = f"{API_CLAUDE35_URL}/renewal/delete"
+                    payload = {"codes": api_keys_list}
+                    response = requests.delete(url, json=payload)
+                    st.write(response.json())
                 else:
-                    st.warning("请输入至少一个API密钥进行删除。")
+                    st.warning("请选择正确的删除类型。")
 
         elif api_key_function == "获取所有API密钥":
             st.subheader("获取所有API密钥")

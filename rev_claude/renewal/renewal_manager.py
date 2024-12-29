@@ -217,3 +217,33 @@ class RenewalManager(BaseRedisManager):
         # Sort by created_at, most recent first
         codes.sort(key=lambda x: x["created_at"], reverse=True)
         return codes
+
+    async def delete_renewal_codes(self, codes: List[str] | str) -> dict:
+        """
+        Delete one or multiple renewal codes
+        
+        Args:
+            codes: Single renewal code string or list of renewal codes
+            
+        Returns:
+            dict: Results of deletion operation
+        """
+        if isinstance(codes, str):
+            codes = [codes]
+            
+        results = {
+            "success": [],
+            "not_found": []
+        }
+        
+        redis = await self.get_aioredis()
+        for code in codes:
+            key = self._get_renewal_key(code)
+            exists = await redis.exists(key)
+            if exists:
+                await redis.delete(key)
+                results["success"].append(code)
+            else:
+                results["not_found"].append(code)
+                
+        return results

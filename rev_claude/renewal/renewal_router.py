@@ -17,6 +17,10 @@ class UseRenewalCodeRequest(BaseModel):
     api_key: str
 
 
+class DeleteRenewalCodeRequest(BaseModel):
+    renewal_codes: List[str] | str
+
+
 router = APIRouter()
 
 
@@ -90,4 +94,17 @@ async def get_all_renewal_codes(
     return {
         "total": len(codes),
         "codes": codes
+    }
+
+
+@router.delete("/delete")
+async def delete_renewal_codes(
+    request: DeleteRenewalCodeRequest,
+    renewal_manager: RenewalManager = Depends(get_renewal_manager),
+):
+    """Delete one or multiple renewal codes."""
+    results = await renewal_manager.delete_renewal_codes(request.renewal_codes)
+    return {
+        "message": f"Successfully deleted {len(results['success'])} codes",
+        "results": results
     }
