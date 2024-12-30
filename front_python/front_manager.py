@@ -79,7 +79,14 @@ def initialize_session_state(data):
 
 
 def get_api_stats():
-    url = "http://54.254.143.80:8090/token_stats"
+    # 添加一个切换按钮来选择 usage_type
+    usage_type = st.radio(
+        "选择统计类型",
+        ["token_usage", "record_usage"],
+        format_func=lambda x: "Token使用统计" if x == "token_usage" else "记录使用统计"
+    )
+    
+    url = f"http://54.254.143.80:8090/token_stats?usage_type={usage_type}"
     try:
         response = requests.get(url)
         if response.status_code == 200:
