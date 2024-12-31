@@ -5,7 +5,9 @@ from tqdm.asyncio import tqdm
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import streamlit as st
-
+from loguru import logger
+admin_username = "liuliu"
+admin_password = "123.liu"
 
 class SoruxGPTManager:
     def __init__(self, admin_username: str, admin_password: str):
@@ -89,6 +91,117 @@ class SoruxGPTManager:
             except Exception as e:
                 print(f"Add node failed for user {user_id}: {str(e)}")
                 return False
+            
+    async def get_user_info(self, user_name: str, current: int = 1, page_size: int = 8) -> Optional[Dict]:
+        """Get user information by username.
+        
+        Args:
+            user_name: The username to search for
+            current: Current page number (default: 1)
+            page_size: Number of items per page (default: 8)
+            
+        Returns:
+            Optional[Dict]: User information if successful, None if failed
+        """
+        if not self.token:
+            return None
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/agent/getPartUsers",
+                    headers=self.headers,
+                    params={"token": self.token},
+                    data={
+                        "current": current,
+                        "pageSize": page_size,
+                        "UserName": user_name
+                    }
+                )
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                print(f"Get user info failed for username {user_name}: {str(e)}")
+                return e
+
+    async def delete_user(self, user_name: str) -> Dict:
+        """Delete a user account.
+        
+        Args:
+            user_name: The username to delete
+            
+        Returns:
+            Dict: Contains status and details of the deletion operation
+        """
+        if not self.token:
+            return {
+                "username": user_name,
+                "success": False,
+                "error": "No valid token"
+            }
+        
+        try:
+            user_info = await self.get_user_info(user_name)
+            if not user_info or not user_info.get("data") or len(user_info["data"]) == 0:
+                return {
+                    "username": user_name,
+                    "success": False,
+                    "error": "User not found"
+                }
+            
+            user_id = user_info["data"][0]["ID"]
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/agent/delete",
+                    headers=self.headers,
+                    params={"token": self.token},
+                    data={"user_id": user_id}
+                )
+                response.raise_for_status()
+                return {
+                    "username": user_name,
+                    "success": True,
+                    "user_id": user_id
+                }
+                
+        except Exception as e:
+            return {
+                "username": user_name,
+                "success": False,
+                "error": str(e)
+            }
+
+    async def batch_delete_users(self, user_names: List[str]) -> List[Dict]:
+        """Batch delete multiple users.
+        
+        Args:
+            user_names: List of usernames to delete
+            
+        Returns:
+            List[Dict]: List of deletion results for each user
+        """
+        if not await self.login():
+            return [{
+                "username": username,
+                "success": False,
+                "error": "Failed to login"
+            } for username in user_names]
+        
+        if not self.token:
+            return [{
+                "username": username,
+                "success": False,
+                "error": "No valid token"
+            } for username in user_names]
+            
+        tasks = [self.delete_user(user_name) for user_name in user_names]
+        results = await tqdm.gather(
+            *tasks,
+            desc="Deleting users",
+            total=len(user_names)
+        )
+        return results
 
     async def set_user_limits(
         self,
@@ -109,10 +222,6 @@ class SoruxGPTManager:
                     params={"token": self.token},
                     data={
                         "user_id": user_id,
-                        # "message_limited": "5",
-                        # "rate_refresh_time": "1",
-                        # "message_bucket_sum": "40",
-                        # "message_bucket_time": "180",
                         "message_limited": str(message_limited),
                         "rate_refresh_time": str(rate_refresh_time),
                         "message_bucket_sum": str(message_bucket_sum),
@@ -203,10 +312,6 @@ class SoruxGPTManager:
 
         return created_users
 
-    # sorux_accounts = asyncio.run(create_sorux_accounts(key_number, total_hours,
-    #                                                                 message_limited, rate_refresh_time, message_bucket_sum,
-    #                                                                 message_bucket_time))
-
 
 async def create_sorux_accounts(
     key_number: int,
@@ -216,7 +321,7 @@ async def create_sorux_accounts(
     message_bucket_sum: int,
     message_bucket_time: int,
 ) -> List[Dict]:
-    manager = SoruxGPTManager("liuliu", "123.liu")
+    manager = SoruxGPTManager(admin_username, admin_password)
     days = total_hours // 24
     hours = total_hours % 24
     users = await manager.batch_create_users(
@@ -230,10 +335,35 @@ async def create_sorux_accounts(
     )
     return users
 
+async def delete_sorux_accounts(user_names: List[str]) -> bool:
+    manager = SoruxGPTManager(admin_username, admin_password)
+    return await manager.batch_delete_users(user_names)
+
+async def parse_chatgpt_credentials(credentials: str) -> List[str]:
+    """Parse ChatGPT credentials from formatted string.
+    
+    Format example:
+    30_1_3a038b3a288c----30e92eb536cb
+    30_1_039f8a3d1c7d----31d5d2fc26e7
+    
+    Returns:
+        List[str]: List of usernames (e.g. ['30_1_3a038b3a288c', '30_1_039f8a3d1c7d'])
+    """
+    # Split by newlines and filter empty lines
+    lines = [line.strip() for line in credentials.split('\n') if line.strip()]
+    
+    # Extract usernames (part before '----')
+    usernames = []
+    for line in lines:
+        if '----' in line:
+            username = line.split('----')[0].strip()
+            usernames.append(username)
+    
+    return usernames
 
 async def main():
     # Example usage
-    manager = SoruxGPTManager("liuliu", "123.liu")
+    manager = SoruxGPTManager(admin_username, admin_password)
     # Create accounts valid for 30 days
     print("Creating 30-day accounts:")
     users_30d = await manager.batch_create_users(count=2, days=30)
@@ -247,5 +377,11 @@ async def main():
         print(user["formatted"])
 
 
+async def delete_sorux_accounts_main():
+    user_names = ["0_1_d42ae9aa9ecb", "30_1_039f8a3d1c7d"]
+    res = await delete_sorux_accounts(user_names)
+    logger.debug(res)
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(delete_sorux_accounts_main())
+
