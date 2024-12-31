@@ -39,7 +39,7 @@ async def create_renewal_code(
             days=request.days,
             hours=request.hours,
             minutes=request.minutes,
-            count=request.count
+            count=request.count,
         )
         return codes
     except ValueError as e:
@@ -65,13 +65,12 @@ async def use_renewal_code(
 ):
     """Use a renewal code to extend an API key's expiration."""
     result = await renewal_manager.use_renewal_code(
-        request.renewal_code,
-        request.api_key
+        request.renewal_code, request.api_key
     )
-    
+
     if "无效" in result or "错误" in result:
         raise HTTPException(status_code=400, detail=result)
-    
+
     return {"message": result}
 
 
@@ -91,10 +90,7 @@ async def get_all_renewal_codes(
 ):
     """Get information about all renewal codes."""
     codes = await renewal_manager.get_all_renewal_codes()
-    return {
-        "total": len(codes),
-        "codes": codes
-    }
+    return {"total": len(codes), "codes": codes}
 
 
 @router.delete("/delete")
@@ -106,5 +102,5 @@ async def delete_renewal_codes(
     results = await renewal_manager.delete_renewal_codes(request.renewal_codes)
     return {
         "message": f"Successfully deleted {len(results['success'])} codes",
-        "results": results
+        "results": results,
     }

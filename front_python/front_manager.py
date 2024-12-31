@@ -2,7 +2,14 @@ import asyncio
 import hashlib
 import json
 from datetime import datetime, timedelta, time
-
+import requests
+import json
+from typing import List
+import os
+import time
+from loguru import logger
+from datetime import datetime
+import pytz
 from httpx import AsyncClient
 import redis
 import streamlit as st
@@ -13,30 +20,22 @@ from urllib.request import urlopen
 import plotly.express as px
 
 from front_utils import create_sorux_accounts
-from front_configs import ADMIN_USERNAME, ADMIN_PASSWORD
+from front_configs import (
+    ADMIN_USERNAME,
+    ADMIN_PASSWORD,
+    CLAUDE_BACKEND_API_BASE_URL,
+    CLAUDE_BACKEND_API_USER_URL,
+    CLAUDE_BACKEND_API_APIAUTH,
+)
 
-# running: BASE_URL="http://101.132.169.133:1145" streamlit run front_python/front_manager.py --server.port 5000
-TOKEN = "ccccld"
-import requests
-import json
-from typing import List
-import os
-import time
-from loguru import logger
-from datetime import datetime
-import pytz
+# running:  streamlit run front_python/front_manager.py --server.port 5000
+
 
 st.set_page_config(page_title="API密钥和Cookie管理")
 
-CLAUDE_BACKEND_API_BASE_URL = "https://clauai.qqyunsd.com/adminapi"
-CLAUDE_BACKEND_API_USER_URL = f"{CLAUDE_BACKEND_API_BASE_URL}/chatgpt/user/"
-CLAUDE_BACKEND_API_APIAUTH = "ccccld"
-
-
-API_CLAUDE35_URL = "https://api.claude35.585dg.com/api/v1"
 
 def get_all_devices():
-    url = "https://api.claude35.585dg.com/api/v1/devices/all_token_devices"
+    url = f"{CLAUDE_BACKEND_API_BASE_URL}/devices/all_token_devices"
     headers = {"User-Agent": "Apifox/1.0.0 (https://apifox.com)"}
     try:
         response = requests.get(url, headers=headers)
@@ -46,7 +45,7 @@ def get_all_devices():
 
 
 def logout_device(token, user_agent):
-    url = "https://api.claude35.585dg.com/api/v1/devices/logout"
+    url = f"{CLAUDE_BACKEND_API_BASE_URL}/devices/logout"
     headers = {"Authorization": token, "User-Agent": user_agent}
     try:
         response = requests.get(url, headers=headers)
@@ -83,9 +82,9 @@ def get_api_stats():
     usage_type = st.radio(
         "选择统计类型",
         ["token_usage", "record_usage"],
-        format_func=lambda x: "Token使用统计" if x == "token_usage" else "记录使用统计"
+        format_func=lambda x: "Token使用统计" if x == "token_usage" else "记录使用统计",
     )
-    
+
     url = f"http://54.254.143.80:8090/token_stats?usage_type={usage_type}"
     try:
         response = requests.get(url)
@@ -223,45 +222,18 @@ def set_cn_time_zone():
 def build_client_headers() -> dict:
     headers = {
         "APIAUTH": CLAUDE_BACKEND_API_APIAUTH,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
     return headers
-
-
 
 
 set_cn_time_zone()
 
 
-def get_user_tokens() -> List[dict]:
-    url = "http://clauai.qqyunsd.com/adminapi/chatgpt/user/list/"
-
-    payload = json.dumps({})
-    headers = {
-        "APIAUTH": TOKEN,
-        "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
-        "Content-Type": "application/json",
-    }
-
-    response = requests.post(url, headers=headers, data=payload)
-    if response.status_code == 200:
-        return response.json()["data"]
-    else:
-        raise Exception(
-            f"Failed to fetch user tokens. Status code: {response.status_code}"
-        )
-
-
 def delete_sessions(ids: List[int]):
-    url = "http://clauai.qqyunsd.com/adminapi/chatgpt/user/delete"
-
+    url = f"{CLAUDE_BACKEND_API_USER_URL}/delete"
     payload = json.dumps({"ids": ids})
-    headers = {
-        "APIAUTH": TOKEN,
-        "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
-        "Content-Type": "application/json",
-    }
-
+    headers = build_client_headers()
     response = requests.post(url, headers=headers, data=payload)
     if response.status_code != 200:
         raise Exception(
@@ -281,17 +253,19 @@ async def get_api_key_information(api_key: str):
         result = next((i for i in data if i.get("userToken") == api_key), None)
         return result
 
+
 async def get_all_api_key_information(user_tokens: List[str]):
     tasks = [get_api_key_information(token) for token in user_tokens]
     return await asyncio.gather(*tasks)
+
 
 def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
     # Get all user data asynchronously
     user_infos = asyncio.run(get_all_api_key_information(user_tokens))
     # Extract IDs from user info
     ids_to_delete = [
-        user_info.get("id") 
-        for user_info in user_infos 
+        user_info.get("id")
+        for user_info in user_infos
         if user_info and user_info.get("id")
     ]
 
@@ -303,156 +277,12 @@ def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
     return message
 
 
-def get_public_ip():
-    try:
-        response = urlopen("https://api.ipify.org")
-        return response.read().decode("utf-8")
-    except:
-        return None
-
-
-usage_type_map = {0: "只用于网页登录", 1: "只用于官网1:1登录", 2: "都用"}
-
-
-def get_type_color(client_type):
-    return "#FF69B4" if client_type == "plus" else "#90EE90"
-
-
-def get_usage_icon(usage_type):
-    if usage_type == 0:
-        return "🌐"  # Globe for web login
-    elif usage_type == 1:
-        return "🔒"  # Lock for official 1:1 login
-    else:
-        return "🔁"  # Recycle for both
-
-
-def display_client_box(client):
-    type_color = get_type_color(client["type"])
-    # usage_icon = get_usage_icon(client['usage_type'])
-
-    with st.container():
-        client_container = st.empty()
-
-        def update_client_display():
-            client_container.markdown(
-                f"""
-            <div style="border:1px solid #ddd; padding:10px; margin:10px 0; border-radius:5px; background-color: #f0f8ff;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0;">{client['account']}</h3>
-                    <span style="background-color: {type_color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">{client['type']}</span>
-                </div>
-                <p style="margin: 5px 0;">使用类型: {get_usage_icon(client['usage_type'])} {usage_type_map[client['usage_type']]}</p>
-            </div>
-            """,
-                unsafe_allow_html=True,
-            )
-
-        update_client_display()
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button(
-                "🌐 只用于网页登录",
-                key=f"normal_{client['cookie_key']}",
-                help="点击设置为只用于网页登录",
-            ):
-                if update_usage_type(client, 0):
-                    update_client_display()
-        with col2:
-            if st.button(
-                "🔒 只用于官网1:1登录",
-                key=f"official_{client['cookie_key']}",
-                help="点击设置为只用于官网1:1登录",
-            ):
-                if update_usage_type(client, 1):
-                    update_client_display()
-        with col3:
-            if st.button(
-                "🔁 都使用",
-                key=f"both_{client['cookie_key']}",
-                help="点击设置为两种登录都使用",
-            ):
-                if update_usage_type(client, 2):
-                    update_client_display()
-
-        # Display message for this client
-        if client["cookie_key"] in st.session_state.messages:
-            message, message_type = st.session_state.messages[client["cookie_key"]]
-            display_message(message, message_type)
-
-
-def update_all_usage_types(usage_type):
-    success_count = 0
-    total_count = sum(
-        len(st.session_state.clients[client_type])
-        for client_type in ["plus_clients", "basic_clients"]
-    )
-
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-
-    for client_type in ["plus_clients", "basic_clients"]:
-        for i, client in enumerate(st.session_state.clients[client_type]):
-            if update_usage_type(client, usage_type):
-                success_count += 1
-
-            # 更新进度条和状态文本
-            progress = (i + 1) / total_count
-            progress_bar.progress(progress)
-            status_text.text(f"正在更新... {i + 1}/{total_count}")
-
-    status_text.text(f"更新完成: 成功 {success_count}/{total_count}")
-    return success_count == total_count
-
-
-def update_usage_type(client, usage_type):
-    url = f"{BASE_URL}/api/v1/cookie/set_cookie_usage_type/{client['cookie_key']}"
-    try:
-        response = requests.put(url, params={"usage_type": usage_type})
-        if response.status_code == 200:
-            result = response.json()
-            st.session_state.messages[client["cookie_key"]] = (
-                f"成功更新：{result['message']}",
-                "success",
-            )
-            # 更新本地客户数据
-            client["usage_type"] = usage_type
-            return True
-        else:
-            st.session_state.messages[client["cookie_key"]] = (
-                f"更新失败：HTTP {response.status_code}",
-                "error",
-            )
-    except requests.RequestException as e:
-        st.session_state.messages[client["cookie_key"]] = (
-            f"请求错误：{str(e)}",
-            "error",
-        )
-    return False
-
-
-def display_message(message, type="info"):
-    if type == "success":
-        st.success(message)
-    elif type == "error":
-        st.error(message)
-    else:
-        st.info(message)
-
-
 import time
 
 
 # Initialize session state for messages
 if "messages" not in st.session_state:
     st.session_state.messages = {}
-
-
-# claude3.ucas.life
-BASE_URL = os.environ.get("BASE_URL", f"http://54.254.143.80:1145")
-
-API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
 
 
 def main():
@@ -472,8 +302,6 @@ def main():
                 "创建API密钥",
                 "查看API密钥使用情况",
                 "查看API设备使用情况",
-                # "验证API密钥",
-                # "删除API密钥",
                 "批量删除API密钥",  # 新增这一行
                 "获取所有API密钥",
                 "重置API密钥使用量",  # Add this line
@@ -526,7 +354,7 @@ def main():
                 "🌐 只适用于逆向网站",
                 "🔁 全部设为都使用",
                 "🤖 适用于ChatGPT镜像",
-                "🔄 只用于claude账号池续费"
+                "🔄 只用于claude账号池续费",
             ]
             selected_option = st.selectbox("选择使用类型", options)
 
@@ -544,7 +372,7 @@ def main():
                         "days": expiration_days,
                         "hours": expiration_hours,
                         "minutes": 0,
-                        "count": key_number
+                        "count": key_number,
                     }
                     response = requests.post(url, json=payload)
                     if response.status_code == 200:
@@ -553,8 +381,15 @@ def main():
                         # 显示续费码
                         renewal_codes_str = "\n".join(renewal_codes)
                         st.text_area("续费码", renewal_codes_str)
-                        st.code(json.dumps({"renewal_codes": renewal_codes}, indent=4, ensure_ascii=False), language="json")
-                        
+                        st.code(
+                            json.dumps(
+                                {"renewal_codes": renewal_codes},
+                                indent=4,
+                                ensure_ascii=False,
+                            ),
+                            language="json",
+                        )
+
                 else:
                     if selected_option in [options[0], options[2]]:
                         url = f"{API_KEY_ROUTER}/create_key"
@@ -603,13 +438,10 @@ def main():
                                 "expireTime": expire_time,
                                 "isPlus": is_plus,
                             }
-                            new_headers = {
-                                "APIAUTH": TOKEN,
-                                "User-Agent": "Apifox/1.0.0 (https://apifox.com)",
-                                "Content-Type": "application/json",
-                            }
+
+                            new_headers = build_client_headers()
                             new_response = requests.post(
-                                "http://54.254.143.80:8300/adminapi/chatgpt/user/add",
+                                f"{CLAUDE_BACKEND_API_USER_URL}/add",
                                 json=new_payload,
                                 headers=new_headers,
                             )
@@ -638,19 +470,6 @@ def main():
                     delete_url = f"{API_KEY_ROUTER}/delete_batch_keys"
                     delete_payload = {"api_keys": api_keys}
                     delete_response = requests.delete(delete_url, json=delete_payload)
-
-        elif api_key_function == "验证API密钥":
-            st.subheader("验证API密钥")
-            api_key = st.text_input("API密钥")
-
-            if st.button("验证API密钥"):
-                # url = f"{BASE_URL}/api/v1/api_key/validate_key/{api_key}"
-                url = f"{API_KEY_ROUTER}/validate_key/{api_key}"
-                response = requests.get(url)
-                if response.status_code == 200:
-                    st.success("API密钥有效。")
-                else:
-                    st.error("API密钥无效。")
 
         elif api_key_function == "批量删除API密钥":
             st.subheader("批量删除API密钥")
@@ -800,11 +619,7 @@ def main():
                 data = st.session_state["data"]
 
             st.header("设备分布情况")
-
-            # Create two columns for the pie chart and histogram
             col1, col2 = st.columns(2)
-
-            # Device Type Distribution Pie Chart
             device_stats = {}
             total_devices = 0
             for item in data["data"]:
@@ -922,178 +737,6 @@ def main():
             df_all = pd.DataFrame(token_stats)
             st.dataframe(df_all, use_container_width=True)
 
-        elif api_key_function == "重置API密钥使用量":
-            st.subheader("重置API密钥使用量")
-            api_key_to_reset = st.text_input("要重置的API密钥")
-
-            if st.button("重置使用量"):
-                url = f"{API_KEY_ROUTER}/reset_current_usage/{api_key_to_reset}"
-                response = requests.post(url)
-                if response.status_code == 200:
-                    result = response.json()
-                    st.success(f"API密钥 已重置： {result}")
-                else:
-                    st.error("重置API密钥使用量失败。")
-
-        elif api_key_function == "延长API密钥过期时间":
-            st.subheader("延长API密钥过期时间")
-            api_key_to_extend = st.text_input("要延长的API密钥")
-            additional_days = st.number_input(
-                "要延长的天数", min_value=1, value=30, step=1
-            )
-
-            if st.button("延长过期时间"):
-                url = f"{API_KEY_ROUTER}/extend_expiration/{api_key_to_extend}"
-                payload = {"additional_days": additional_days}
-                response = requests.post(url, json=payload)
-                if response.status_code == 200:
-                    result = response.json()
-                    st.success(f"API密钥过期时间已延长：{result['message']}")
-                else:
-                    st.error("延长API密钥过期时间失败。")
-                    st.write(response.text)
-
-    elif main_function == "Cookie管理":
-        # Cookie管理部分
-        cookie_function = st.sidebar.radio(
-            "Cookie管理",
-            [
-                "上传Cookie",
-                "删除Cookie",
-                "刷新Cookie",
-                "列出所有Cookie",
-                "更新Cookie",
-                "调整Cookie是否为官网1:1",
-            ],
-        )
-
-        if cookie_function == "上传Cookie":
-            st.subheader("上传Cookie")
-            cookie = st.text_input("Cookie")
-            cookie_type = st.selectbox(
-                "Cookie类型", ["basic", "plus", "test", "normal"]
-            )
-            account = st.text_input("账号", value="")
-
-            if st.button("上传Cookie"):
-                url = f"{BASE_URL}/api/v1/cookie/upload_cookie"
-                params = {
-                    "cookie": cookie,
-                    "cookie_type": cookie_type,
-                    "account": account,
-                }
-                response = requests.post(url, params=params)
-                if response.status_code == 200:
-                    st.success(response.json())
-                else:
-                    st.error("Cookie上传失败。")
-
-        elif cookie_function == "删除Cookie":
-            st.subheader("删除Cookie")
-            cookie_key_to_delete = st.text_input("要删除的Cookie Key")
-
-            if st.button("删除Cookie"):
-                url = f"{BASE_URL}/api/v1/cookie/delete_cookie/{cookie_key_to_delete}"
-                response = requests.delete(url)
-                if response.status_code == 200:
-                    st.success("Cookie删除成功!")
-                else:
-                    st.error("Cookie删除失败。")
-
-        elif cookie_function == "刷新Cookie":
-            st.subheader("刷新Cookie")
-
-            if st.button("刷新Cookie"):
-                url = f"{BASE_URL}/api/v1/cookie/refresh_cookies"
-                headers = {"accept": "application/json"}
-                response = requests.get(url, headers=headers)
-                if response.status_code == 200:
-                    st.success("Cookie刷新成功!")
-                else:
-                    st.error("Cookie刷新失败。")
-
-        elif cookie_function == "列出所有Cookie":
-            st.subheader("列出所有Cookie")
-
-            if st.button("列出所有Cookie"):
-                url = f"{BASE_URL}/api/v1/cookie/list_all_cookies"
-                response = requests.get(url)
-                if response.status_code == 200:
-                    cookies = response.json()
-                    st.write(cookies)
-                else:
-                    st.error("获取Cookie列表失败。")
-
-        elif cookie_function == "更新Cookie":
-            st.subheader("更新Cookie")
-            cookie_key_to_update = st.text_input("要更新的Cookie Key")
-            updated_cookie = st.text_input("更新后的Cookie")
-            updated_account = st.text_input("更新后的账号", value="")
-
-            if st.button("更新Cookie"):
-                url = f"{BASE_URL}/api/v1/cookie/update_cookie/{cookie_key_to_update}"
-                params = {"cookie": updated_cookie, "account": updated_account}
-                response = requests.put(url, params=params)
-                if response.status_code == 200:
-                    st.success("Cookie更新成功!")
-                else:
-                    st.error("Cookie更新失败。")
-
-        elif cookie_function == "调整Cookie是否为官网1:1":
-            st.subheader("调整Cookie是否为官网1:1")
-            # 方法2：使用 st.info
-            st.markdown(
-                """
-             **使用说明：** 在下方列表中，您可以查看所有Cookie的当前状态，并通过点击按钮来更改它们的使用类型。
-             更改将立即生效， 在状态栏中能看到对应的修改:
-             - 网页登录: 仅用于网页登录, 也就是该账号只用于网页登录。
-             - 官网1:1登录: 仅用于官网1:1登录, 也就是该账号只用于官网1:1登录。
-             - 都使用: 两种登录都使用, 也就是该账号既可以用于网页登录，也可以用于官网1:1登录。（状态页面会有两个同样的账号）
-             """
-            )
-
-            if st.button("刷新客户列表"):
-                if st.session_state.clients:
-                    del st.session_state.clients
-                st.experimental_rerun()
-
-            # 添加一键设置所有Cookie使用类型的按钮
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                if st.button("🌐 全部设为只用于网页登录"):
-                    if update_all_usage_types(0):
-                        st.success("所有Cookie已成功设置为只用于网页登录")
-                    st.experimental_rerun()
-            with col2:
-                if st.button("🔒 全部设为只用于官网1:1登录"):
-                    if update_all_usage_types(1):
-                        st.success("所有Cookie已成功设置为只用于官网1:1登录")
-                    st.experimental_rerun()
-            with col3:
-                if st.button("🔁 全部设为都使用"):
-                    if update_all_usage_types(2):
-                        st.success("所有Cookie已成功设置为都使用")
-                    st.experimental_rerun()
-
-            url = f"{BASE_URL}/api/v1/cookie/clients_information"
-
-            if "clients" not in st.session_state:
-                response = requests.get(url)
-                if response.status_code == 200:
-                    st.session_state.clients = response.json()["data"]
-                else:
-                    display_message("获取Cookie状态列表失败。", "error")
-
-            for client_type in ["plus_clients", "basic_clients"]:
-                st.subheader(
-                    f"{'基础' if client_type == 'basic_clients' else 'Plus'} 客户"
-                )
-                for client in st.session_state.clients[client_type]:
-                    display_client_box(client)
-
 
 if check_password():
     main()
-# delete_batch_user_tokens(
-#     ["sj-521cd7ae1c72412da2b2346038910c8e"]
-# )

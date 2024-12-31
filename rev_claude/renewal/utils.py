@@ -23,7 +23,7 @@ class APIKeyInfo(BaseModel):
 def build_client_headers() -> dict:
     headers = {
         "APIAUTH": CLAUDE_BACKEND_API_APIAUTH,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
     return headers
 
@@ -56,9 +56,11 @@ async def create_api_key(api_key: str, expire_time: str):
         api_key_info = APIKeyInfo(
             userToken=api_key,
             expireTime=expire_time,
-            createTime=get_shanghai_time().strftime("%Y-%m-%d %H:%M:%S")
+            createTime=get_shanghai_time().strftime("%Y-%m-%d %H:%M:%S"),
         )
-        res = await client.post(url, headers=headers, json=api_key_info.dict(), timeout=60)
+        res = await client.post(
+            url, headers=headers, json=api_key_info.dict(), timeout=60
+        )
         return res.json()
 
 
@@ -83,7 +85,9 @@ async def renew_api_key(api_key: str, days: float = 30):
 
     if api_key_info:
         # API key exists - handle renewal
-        expire_time = shanghai_tz.localize(datetime.strptime(api_key_info["expireTime"], "%Y-%m-%d %H:%M:%S"))
+        expire_time = shanghai_tz.localize(
+            datetime.strptime(api_key_info["expireTime"], "%Y-%m-%d %H:%M:%S")
+        )
 
         # 首先判断有没有被使用？ 如果没有被使用的话， 那么就在原始的基础上加上 然后返回
         # extension_period
@@ -110,8 +114,7 @@ async def renew_api_key(api_key: str, days: float = 30):
         # API key doesn't exist - create new one
         new_expire_time = current_time + extension_period
         result = await create_api_key(
-            api_key,
-            new_expire_time.strftime("%Y-%m-%d %H:%M:%S")
+            api_key, new_expire_time.strftime("%Y-%m-%d %H:%M:%S")
         )
 
     return result
