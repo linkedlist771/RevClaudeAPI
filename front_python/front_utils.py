@@ -6,8 +6,10 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import streamlit as st
 from loguru import logger
+
 admin_username = "liuliu"
 admin_password = "123.liu"
+
 
 class SoruxGPTManager:
     def __init__(self, admin_username: str, admin_password: str):
@@ -91,15 +93,17 @@ class SoruxGPTManager:
             except Exception as e:
                 print(f"Add node failed for user {user_id}: {str(e)}")
                 return False
-            
-    async def get_user_info(self, user_name: str, current: int = 1, page_size: int = 8) -> Optional[Dict]:
+
+    async def get_user_info(
+        self, user_name: str, current: int = 1, page_size: int = 8
+    ) -> Optional[Dict]:
         """Get user information by username.
-        
+
         Args:
             user_name: The username to search for
             current: Current page number (default: 1)
             page_size: Number of items per page (default: 8)
-            
+
         Returns:
             Optional[Dict]: User information if successful, None if failed
         """
@@ -115,8 +119,8 @@ class SoruxGPTManager:
                     data={
                         "current": current,
                         "pageSize": page_size,
-                        "UserName": user_name
-                    }
+                        "UserName": user_name,
+                    },
                 )
                 response.raise_for_status()
                 return response.json()
@@ -126,80 +130,68 @@ class SoruxGPTManager:
 
     async def delete_user(self, user_name: str) -> Dict:
         """Delete a user account.
-        
+
         Args:
             user_name: The username to delete
-            
+
         Returns:
             Dict: Contains status and details of the deletion operation
         """
         if not self.token:
-            return {
-                "username": user_name,
-                "success": False,
-                "error": "No valid token"
-            }
-        
+            return {"username": user_name, "success": False, "error": "No valid token"}
+
         try:
             user_info = await self.get_user_info(user_name)
-            if not user_info or not user_info.get("data") or len(user_info["data"]) == 0:
+            if (
+                not user_info
+                or not user_info.get("data")
+                or len(user_info["data"]) == 0
+            ):
                 return {
                     "username": user_name,
                     "success": False,
-                    "error": "User not found"
+                    "error": "User not found",
                 }
-            
+
             user_id = user_info["data"][0]["ID"]
-            
+
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{self.base_url}/agent/delete",
                     headers=self.headers,
                     params={"token": self.token},
-                    data={"user_id": user_id}
+                    data={"user_id": user_id},
                 )
                 response.raise_for_status()
-                return {
-                    "username": user_name,
-                    "success": True,
-                    "user_id": user_id
-                }
-                
+                return {"username": user_name, "success": True, "user_id": user_id}
+
         except Exception as e:
-            return {
-                "username": user_name,
-                "success": False,
-                "error": str(e)
-            }
+            return {"username": user_name, "success": False, "error": str(e)}
 
     async def batch_delete_users(self, user_names: List[str]) -> List[Dict]:
         """Batch delete multiple users.
-        
+
         Args:
             user_names: List of usernames to delete
-            
+
         Returns:
             List[Dict]: List of deletion results for each user
         """
         if not await self.login():
-            return [{
-                "username": username,
-                "success": False,
-                "error": "Failed to login"
-            } for username in user_names]
-        
+            return [
+                {"username": username, "success": False, "error": "Failed to login"}
+                for username in user_names
+            ]
+
         if not self.token:
-            return [{
-                "username": username,
-                "success": False,
-                "error": "No valid token"
-            } for username in user_names]
-            
+            return [
+                {"username": username, "success": False, "error": "No valid token"}
+                for username in user_names
+            ]
+
         tasks = [self.delete_user(user_name) for user_name in user_names]
         results = await tqdm.gather(
-            *tasks,
-            desc="Deleting users",
-            total=len(user_names)
+            *tasks, desc="Deleting users", total=len(user_names)
         )
         return results
 
@@ -312,6 +304,87 @@ class SoruxGPTManager:
 
         return created_users
 
+    async def create_redemption_code(self, points: int) -> Optional[Dict]:
+        """Create a redemption code for ChatGPT points.
+
+        Args:
+            points: The number of points for the redemption code
+
+        Returns:
+            Optional[Dict]: Response data if successful, None if failed
+        """
+        if not self.token:
+            await self.login()
+            if not self.token:
+                return None
+
+        # Generate random code with points as prefix
+        code = f"{points}-{str(uuid.uuid4()).replace('-', '')[:20]}"
+
+        # Set expiration date to 10 years from now
+        expire_time = (datetime.now() + timedelta(days=3650)).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    # "https://gpthoutai.585dg.com/api/agent/codeAdd",
+                    f"{self.base_url}/agent/codeAdd",
+                    headers=self.headers,
+                    params={"token": self.token},
+                    data={
+                        "code": code,
+                        "bill": str(points),
+                        "name": "chatgpt续费兑换码",
+                        "description": "兑换额度后请点击渠道商店购买相应的套餐才能续费",
+                        "time": expire_time,
+                    },
+                )
+                response.raise_for_status()
+                return {
+                    "code": code,
+                    "points": points,
+                    "expire_time": expire_time,
+                    "response": response.json(),
+                }
+            except Exception as e:
+                logger.error(f"Failed to create redemption code: {str(e)}")
+                return None
+
+    async def batch_create_redemption_codes(
+        self, points: int, count: int, batch_size: int = 5
+    ) -> List[Dict]:
+        """Batch create multiple redemption codes.
+
+        Args:
+            points: The number of points for each redemption code
+            count: Number of codes to create
+            batch_size: Number of codes to create in each batch
+
+        Returns:
+            List[Dict]: List of created redemption codes and their details
+        """
+        if not await self.login():
+            return []
+
+        created_codes = []
+        for i in range(0, count, batch_size):
+            batch_count = min(batch_size, count - i)
+            tasks = [self.create_redemption_code(points) for _ in range(batch_count)]
+            results = await tqdm.gather(
+                *tasks,
+                desc=f"Creating redemption codes (batch {i // batch_size + 1})",
+                total=batch_count,
+            )
+
+            created_codes.extend([r for r in results if r])
+
+            if i + batch_size < count:
+                await asyncio.sleep(1)  # Add delay between batches
+
+        return created_codes
+
 
 async def create_sorux_accounts(
     key_number: int,
@@ -335,31 +408,34 @@ async def create_sorux_accounts(
     )
     return users
 
+
 async def delete_sorux_accounts(user_names: List[str]) -> bool:
     manager = SoruxGPTManager(admin_username, admin_password)
     return await manager.batch_delete_users(user_names)
 
+
 async def parse_chatgpt_credentials(credentials: str) -> List[str]:
     """Parse ChatGPT credentials from formatted string.
-    
+
     Format example:
     30_1_3a038b3a288c----30e92eb536cb
     30_1_039f8a3d1c7d----31d5d2fc26e7
-    
+
     Returns:
         List[str]: List of usernames (e.g. ['30_1_3a038b3a288c', '30_1_039f8a3d1c7d'])
     """
     # Split by newlines and filter empty lines
-    lines = [line.strip() for line in credentials.split('\n') if line.strip()]
-    
+    lines = [line.strip() for line in credentials.split("\n") if line.strip()]
+
     # Extract usernames (part before '----')
     usernames = []
     for line in lines:
-        if '----' in line:
-            username = line.split('----')[0].strip()
+        if "----" in line:
+            username = line.split("----")[0].strip()
             usernames.append(username)
-    
+
     return usernames
+
 
 async def main():
     # Example usage
@@ -382,6 +458,23 @@ async def delete_sorux_accounts_main():
     res = await delete_sorux_accounts(user_names)
     logger.debug(res)
 
+
+async def create_sorux_redemption_codes(points: int, code_number: int) -> List[Dict]:
+    """Helper function to create redemption codes.
+
+    Args:
+        points: Points for each redemption code
+        code_number: Number of codes to create
+
+    Returns:
+        List[Dict]: List of created redemption codes and their details
+    """
+    manager = SoruxGPTManager(admin_username, admin_password)
+    codes = await manager.batch_create_redemption_codes(
+        points=points, count=code_number
+    )
+    return codes
+
+
 if __name__ == "__main__":
     asyncio.run(delete_sorux_accounts_main())
-

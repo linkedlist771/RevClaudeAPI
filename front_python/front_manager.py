@@ -18,7 +18,12 @@ import altair as alt
 from tqdm import tqdm
 from urllib.request import urlopen
 import plotly.express as px
-from front_utils import create_sorux_accounts, parse_chatgpt_credentials, delete_sorux_accounts
+from front_utils import (
+    create_sorux_accounts,
+    parse_chatgpt_credentials,
+    delete_sorux_accounts,
+    create_sorux_redemption_codes,
+)
 from front_configs import *
 
 
@@ -78,9 +83,9 @@ def get_api_stats():
     usage_type = st.radio(
         "选择统计类型",
         ["token_usage", "record_usage"],
-        format_func=lambda x: "Token使用统计" if x == "token_usage" else "记录使用统计"
+        format_func=lambda x: "Token使用统计" if x == "token_usage" else "记录使用统计",
     )
-    
+
     url = f"http://54.254.143.80:8090/token_stats?usage_type={usage_type}"
     try:
         response = requests.get(url)
@@ -218,15 +223,12 @@ def set_cn_time_zone():
 def build_client_headers() -> dict:
     headers = {
         "APIAUTH": CLAUDE_BACKEND_API_APIAUTH,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
     return headers
 
 
-
-
 set_cn_time_zone()
-
 
 
 def delete_sessions(ids: List[int]):
@@ -252,17 +254,19 @@ async def get_api_key_information(api_key: str):
         result = next((i for i in data if i.get("userToken") == api_key), None)
         return result
 
+
 async def get_all_api_key_information(user_tokens: List[str]):
     tasks = [get_api_key_information(token) for token in user_tokens]
     return await asyncio.gather(*tasks)
+
 
 def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
     # Get all user data asynchronously
     user_infos = asyncio.run(get_all_api_key_information(user_tokens))
     # Extract IDs from user info
     ids_to_delete = [
-        user_info.get("id") 
-        for user_info in user_infos 
+        user_info.get("id")
+        for user_info in user_infos
         if user_info and user_info.get("id")
     ]
 
@@ -300,7 +304,6 @@ def main():
                 "查看API密钥使用情况",
                 "查看API设备使用情况",
                 "批量删除API密钥",  # 新增这一行
-
             ],
         )
 
@@ -349,7 +352,8 @@ def main():
                 "🌐 只适用于逆向网站",
                 "🔁 全部设为都使用",
                 "🤖 适用于ChatGPT镜像",
-                "🔄 只用于claude账号池续费"
+                "🔄 只用于claude账号池续费",
+                "💰 创建ChatGPT兑换码",  # 新增选项
             ]
             selected_option = st.selectbox("选择使用类型", options)
 
@@ -360,14 +364,34 @@ def main():
                 api_keys = []
                 sorux_accounts = []
 
-                # if selected_option == "🔄 只用于claude账号池续费":
-                if selected_option in [options[-1]]:
+                # 处理ChatGPT兑换码创建
+                if selected_option == "💰 创建ChatGPT兑换码":
+                    points = expiration_days  # 使用过期天数作为积分数
+                    redemption_codes = asyncio.run(
+                        create_sorux_redemption_codes(
+                            points=points, code_number=key_number
+                        )
+                    )
+                    if redemption_codes:
+                        st.success("ChatGPT兑换码创建成功")
+                        # 显示兑换码
+                        codes_str = "\n".join(
+                            [code["code"] for code in redemption_codes if code]
+                        )
+                        st.text_area("兑换码", codes_str)
+                        st.code(
+                            json.dumps(redemption_codes, indent=4, ensure_ascii=False),
+                            language="json",
+                        )
+
+                # 处理续费码创建
+                elif selected_option in [options[-2]]:  # 注意索引变化
                     url = f"{BASE_URL}/api/v1/renewal/create"
                     payload = {
                         "days": expiration_days,
                         "hours": expiration_hours,
                         "minutes": 0,
-                        "count": key_number
+                        "count": key_number,
                     }
                     response = requests.post(url, json=payload)
                     if response.status_code == 200:
@@ -376,8 +400,15 @@ def main():
                         # 显示续费码
                         renewal_codes_str = "\n".join(renewal_codes)
                         st.text_area("续费码", renewal_codes_str)
-                        st.code(json.dumps({"renewal_codes": renewal_codes}, indent=4, ensure_ascii=False), language="json")
-                        
+                        st.code(
+                            json.dumps(
+                                {"renewal_codes": renewal_codes},
+                                indent=4,
+                                ensure_ascii=False,
+                            ),
+                            language="json",
+                        )
+
                 else:
                     if selected_option in [options[0], options[2]]:
                         url = f"{API_KEY_ROUTER}/create_key"
@@ -464,11 +495,13 @@ def main():
                 "输入要删除的API密钥（每行一个或用逗号分隔）"
             )
             # default as the api key
-            delete_type = st.selectbox("选择删除类型", ["API密钥", "续费码", "ChatGPT账号"], index=0)
+            delete_type = st.selectbox(
+                "选择删除类型", ["API密钥", "续费码", "ChatGPT账号"], index=0
+            )
             # 先按换行符分割，然后对每个部分按逗号分割，最后去除空白
             api_keys_to_delete = api_keys_to_delete.replace('"', "")
             api_keys_to_delete = api_keys_to_delete.replace("'", "")
-            
+
             if delete_type == "API密钥":
                 api_keys_list = [
                     key.strip()
@@ -484,7 +517,9 @@ def main():
                     if key.strip()
                 ]
             else:  # ChatGPT账号
-                api_keys_list = asyncio.run(parse_chatgpt_credentials(api_keys_to_delete))
+                api_keys_list = asyncio.run(
+                    parse_chatgpt_credentials(api_keys_to_delete)
+                )
 
             if st.button("批量删除"):
                 if delete_type == "API密钥":
@@ -504,7 +539,7 @@ def main():
                 else:  # ChatGPT账号
                     if api_keys_list:
                         try:
-                            res  = asyncio.run(delete_sorux_accounts(api_keys_list))
+                            res = asyncio.run(delete_sorux_accounts(api_keys_list))
                             st.info(res)
                             # if success:
                             #     st.success("成功删除ChatGPT账号")
@@ -744,7 +779,6 @@ def main():
 
             df_all = pd.DataFrame(token_stats)
             st.dataframe(df_all, use_container_width=True)
-
 
 
 if check_password():
