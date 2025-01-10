@@ -397,7 +397,7 @@ class SoruxGPTManagerV2(SoruxGPTManager):
             return str(uuid.uuid4()).replace("-", "")[:12]
         days = max(days, 1) # 至少为1
         # Format: liuli_days_randomstring
-        username = f"liuli_{days}_{generate_uuid_string()}"
+        username = f"chatgpt_{days}_{generate_uuid_string()}"
         password = generate_uuid_string()
         return username, password
     
