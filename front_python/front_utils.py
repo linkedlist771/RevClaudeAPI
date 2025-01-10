@@ -384,7 +384,55 @@ class SoruxGPTManager:
                 await asyncio.sleep(1)  # Add delay between batches
 
         return created_codes
+    
 
+class SoruxGPTManagerV2(SoruxGPTManager):
+    
+    """
+    Only to rewrite the username generation and the add node logic.
+    """
+    def generate_credentials(self, days: int, hours: int = 0) -> tuple:
+        def generate_uuid_string() -> str:
+            # Generate UUID and remove hyphens, take first 12 characters
+            return str(uuid.uuid4()).replace("-", "")[:12]
+        
+        # Format: liuli_days_randomstring
+        username = f"liuli_{days}_{generate_uuid_string()}"
+        password = generate_uuid_string()
+        return username, password
+    
+    async def add_node(self, user_id: str, expire_time: datetime) -> bool:
+        """Override the add_node method to use the new API endpoint.
+        
+        Args:
+            user_id: The username (in format liuli_days_randomstring)
+            expire_time: Not used in this implementation
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        async with httpx.AsyncClient() as client:
+            try:
+                headers = {
+                    "Content-Type": "application/json"
+                }
+                
+                data = {
+                    "username": user_id,  # The user_id parameter contains the username
+                    "authkey": "92msdamidhx"  # Fixed verification key
+                }
+                
+                response = await client.post(
+                    "https://soruxgpt-liuli-usersystem.soruxgpt.com/api/add",
+                    headers=headers,
+                    json=data
+                )
+                response.raise_for_status()
+                return True
+                
+            except Exception as e:
+                logger.error(f"Add node failed for user {user_id}: {str(e)}")
+                return False
 
 async def create_sorux_accounts(
     key_number: int,
