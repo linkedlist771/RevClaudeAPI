@@ -20,6 +20,7 @@ from urllib.request import urlopen
 import plotly.express as px
 from front_utils import (
     create_sorux_accounts,
+    create_sorux_accounts_v2,
     parse_chatgpt_credentials,
     delete_sorux_accounts,
     create_sorux_redemption_codes,
@@ -352,6 +353,8 @@ def main():
                 "🌐 只适用于逆向网站",
                 "🔁 全部设为都使用",
                 "🤖 适用于ChatGPT镜像",
+                "🤖 适用于ChatGPT镜像-懒激活",
+
                 "🔄 只用于claude账号池续费",
                 "💰 创建ChatGPT兑换码",  # 新增选项
             ]
@@ -385,7 +388,7 @@ def main():
                         )
 
                 # 处理续费码创建
-                elif selected_option in [options[-2]]:  # 注意索引变化
+                elif selected_option == "🔄 只用于claude账号池续费":
                     url = f"{BASE_URL}/api/v1/renewal/create"
                     payload = {
                         "days": expiration_days,
@@ -410,7 +413,7 @@ def main():
                         )
 
                 else:
-                    if selected_option in [options[0], options[2]]:
+                    if selected_option in ["🔒 只适用于claude账号池镜像", "🔁 全部设为都使用"]:
                         url = f"{API_KEY_ROUTER}/create_key"
                         payload = {
                             "expiration_days": expiration_days_float,
@@ -422,9 +425,20 @@ def main():
                             api_keys = response.json().get("api_key", [])
 
                     # Create SoruxGPT accounts if needed
-                    if selected_option in [options[3], options[2]]:
+                    if selected_option in ["🤖 适用于ChatGPT镜像", "🔁 全部设为都使用"]:
                         sorux_accounts = asyncio.run(
                             create_sorux_accounts(
+                                key_number,
+                                int(total_hours),
+                                message_limited,
+                                rate_refresh_time,
+                                message_bucket_sum,
+                                message_bucket_time,
+                            )
+                        )
+                    elif selected_option == "🤖 适用于ChatGPT镜像-懒激活":
+                        sorux_accounts = asyncio.run(
+                            create_sorux_accounts_v2(
                                 key_number,
                                 int(total_hours),
                                 message_limited,
@@ -451,7 +465,7 @@ def main():
                             f"正在处理 API 密钥 {index}/{total_keys}: {api_key}"
                         )
 
-                        if selected_option != options[1]:  # Not "只适用于逆向网站"
+                        if selected_option != "🌐 只适用于逆向网站":
                             new_payload = {
                                 "userToken": api_key,
                                 "expireTime": expire_time,
@@ -484,7 +498,7 @@ def main():
                     st.code(formatted_accounts, language="text")
 
                 # Delete API keys if only reverse proxy is needed
-                if selected_option == options[1] and api_keys:
+                if selected_option == "🌐 只适用于逆向网站" and api_keys:
                     delete_url = f"{API_KEY_ROUTER}/delete_batch_keys"
                     delete_payload = {"api_keys": api_keys}
                     delete_response = requests.delete(delete_url, json=delete_payload)
