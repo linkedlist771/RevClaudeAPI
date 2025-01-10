@@ -401,6 +401,42 @@ class SoruxGPTManagerV2(SoruxGPTManager):
         password = generate_uuid_string()
         return username, password
     
+    async def create_single_user(
+        self,
+        days: int,
+        hours: int,
+        i: int,
+        message_limited: int = 5,
+        rate_refresh_time: int = 1,
+        message_bucket_sum: int = 100,
+        message_bucket_time: int = 180,
+    ) -> Dict:
+        username, password = self.generate_credentials(days, hours)
+        expire_time = datetime.now() + timedelta(days=days, hours=hours)
+
+        user_id = await self.register_user(username, password)
+        if not user_id:
+            return {}
+
+        node_added = await self.add_node(username, expire_time)
+        limits_set = await self.set_user_limits(
+            user_id,
+            message_limited,
+            rate_refresh_time,
+            message_bucket_sum,
+            message_bucket_time,
+        )
+
+        if node_added and limits_set:
+            return {
+                "formatted": f"{username}----{password}",
+                "username": username,
+                "password": password,
+                "user_id": user_id,
+                "expire_time": expire_time.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        return {}
+    
     async def add_node(self, user_id: str, expire_time: datetime) -> bool:
         """Override the add_node method to use the new API endpoint.
         
