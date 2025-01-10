@@ -395,7 +395,7 @@ class SoruxGPTManagerV2(SoruxGPTManager):
         def generate_uuid_string() -> str:
             # Generate UUID and remove hyphens, take first 12 characters
             return str(uuid.uuid4()).replace("-", "")[:12]
-        
+        days = max(days, 1) # 至少为1
         # Format: liuli_days_randomstring
         username = f"liuli_{days}_{generate_uuid_string()}"
         password = generate_uuid_string()
@@ -443,6 +443,28 @@ async def create_sorux_accounts(
     message_bucket_time: int,
 ) -> List[Dict]:
     manager = SoruxGPTManager(admin_username, admin_password)
+    days = total_hours // 24
+    hours = total_hours % 24
+    users = await manager.batch_create_users(
+        count=key_number,
+        days=days,
+        hours=hours,
+        message_limited=message_limited,
+        rate_refresh_time=rate_refresh_time,
+        message_bucket_sum=message_bucket_sum,
+        message_bucket_time=message_bucket_time,
+    )
+    return users
+
+async def create_sorux_accounts_v2(
+    key_number: int,
+    total_hours: int,
+    message_limited: int,
+    rate_refresh_time: int,
+    message_bucket_sum: int,
+    message_bucket_time: int,
+) -> List[Dict]:
+    manager = SoruxGPTManagerV2(admin_username, admin_password)
     days = total_hours // 24
     hours = total_hours % 24
     users = await manager.batch_create_users(
