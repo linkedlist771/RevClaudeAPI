@@ -1,12 +1,13 @@
+import asyncio
+from io import BytesIO, StringIO
+
 from docx import Document
 from fastapi import UploadFile
+from loguru import logger
+from pdfminer.high_level import extract_text_to_fp
+from pdfminer.layout import LAParams
 from pydantic import BaseModel
 from starlette.datastructures import UploadFile as StarletteUploadFile
-from pdfminer.high_level import extract_text_to_fp
-from io import BytesIO, StringIO
-from pdfminer.layout import LAParams
-import asyncio
-from loguru import logger
 
 from rev_claude.utils.async_task_utils import submit_task2event_loop
 
@@ -19,7 +20,6 @@ class DocumentConvertedResponse(BaseModel):
 
 
 class DocumentConverter:
-
     def __init__(self, upload_file: UploadFile):
         self.upload_file = upload_file
 

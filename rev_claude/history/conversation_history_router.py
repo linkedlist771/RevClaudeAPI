@@ -1,12 +1,10 @@
-from fastapi import APIRouter
 from typing import List
+
+from fastapi import APIRouter
+
 from rev_claude.history.conversation_history_manager import (
-    ConversationHistoryManager,
-    ConversationHistoryRequestInput,
-    ConversationHistory,
-    Message,
-    conversation_history_manager,
-)
+    ConversationHistory, ConversationHistoryManager,
+    ConversationHistoryRequestInput, Message, conversation_history_manager)
 
 router = APIRouter()
 
@@ -43,11 +41,11 @@ async def delete_all_conversations(
     return {"message": "All conversations deleted successfully"}
 
 
-@router.get('/export_all_conversations')
+@router.get("/export_all_conversations")
 async def export_all_conversations():
     raise NotImplementedError
 
 
-@router.get('/export_all_conversations_test')
+@router.get("/export_all_conversations_test")
 async def export_all_conversations_test():
     raise NotImplementedError

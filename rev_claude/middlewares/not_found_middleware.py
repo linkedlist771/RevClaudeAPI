@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
-from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 
 # 自定义中间件

@@ -1,6 +1,7 @@
-from httpx import Timeout
-from pathlib import Path
 import os
+from pathlib import Path
+
+from httpx import Timeout
 
 API_KEY_REFRESH_INTERVAL_HOURS = 3
 

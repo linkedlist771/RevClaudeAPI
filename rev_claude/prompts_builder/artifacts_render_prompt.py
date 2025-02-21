@@ -1,8 +1,7 @@
-from typing import Tuple, List
-
-from pydantic import BaseModel
+from typing import List, Tuple
 
 from loguru import logger
+from pydantic import BaseModel
 
 
 class ArtifactsRendererPrompt(BaseModel):

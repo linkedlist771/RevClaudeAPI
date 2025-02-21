@@ -1,35 +1,29 @@
 import asyncio
 import json
 from functools import partial
-from fastapi import APIRouter, Depends, Request
+
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, Request,
+                     UploadFile)
 from fastapi.responses import JSONResponse, StreamingResponse
-from fastapi import HTTPException, File, UploadFile, Form
 from loguru import logger
 
-from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
+from rev_claude.api_key.api_key_manage import (APIKeyManager,
+                                               get_api_key_manager)
 from rev_claude.client.claude import upload_attachment_for_fastapi
 from rev_claude.client.client_manager import ClientManager
-from rev_claude.configs import (
-    NEW_CONVERSATION_RETRY,
-    USE_MERMAID_AND_SVG,
-    CLAUDE_OFFICIAL_USAGE_INCREASE,
-)
+from rev_claude.configs import (CLAUDE_OFFICIAL_USAGE_INCREASE,
+                                NEW_CONVERSATION_RETRY, USE_MERMAID_AND_SVG)
 from rev_claude.history.conversation_history_manager import (
-    conversation_history_manager,
-    ConversationHistoryRequestInput,
-    Message,
-    RoleType,
-)
-from rev_claude.prompts_builder.artifacts_render_prompt import ArtifactsRendererPrompt
-from rev_claude.schemas import (
-    ClaudeChatRequest,
-    ObtainReverseOfficialLoginRouterRequest,
-)
+    ConversationHistoryRequestInput, Message, RoleType,
+    conversation_history_manager)
 from rev_claude.models import ClaudeModels
+from rev_claude.prompts_builder.artifacts_render_prompt import \
+    ArtifactsRendererPrompt
+from rev_claude.schemas import (ClaudeChatRequest,
+                                ObtainReverseOfficialLoginRouterRequest)
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from rev_claude.status_code.status_code_enum import HTTP_480_API_KEY_INVALID
 from rev_claude.utils.sse_utils import build_sse_data
-
 
 # This in only for claude router, I do not use the
 
@@ -37,7 +31,6 @@ from rev_claude.utils.sse_utils import build_sse_data
 async def validate_api_key(
     request: Request, manager: APIKeyManager = Depends(get_api_key_manager)
 ):
-
     api_key = request.headers.get("Authorization")
     # logger.info(f"checking api key: {api_key}")
     if api_key is None or not manager.is_api_key_valid(api_key):
@@ -58,7 +51,6 @@ router = APIRouter(dependencies=[Depends(validate_api_key)])
 
 
 def obtain_claude_client():
-
     basic_clients, plus_clients = ClientManager().get_clients()
 
     return {
@@ -143,7 +135,6 @@ async def obtain_reverse_official_login_router(
         # 首先check一下用户是不是被删除了
         is_deleted = not manager.is_api_key_valid(api_key)
         if is_deleted:
-
             return JSONResponse(
                 content={
                     "message": "由于滥用API key，已经被删除，如有疑问，请联系管理员。",
@@ -193,9 +184,7 @@ async def chat(
         if is_deleted:
             logger.critical(f"API key {api_key} has been deleted due to abuse.")
             return StreamingResponse(
-                build_sse_data(
-                    message="由于滥用API key，已经被删除，如有疑问，请联系管理员。"
-                ),
+                build_sse_data(message="由于滥用API key，已经被删除，如有疑问，请联系管理员。"),
                 media_type="text/event-stream",
             )
         message = manager.generate_exceed_message(api_key)
@@ -237,17 +226,13 @@ async def chat(
     )
     if (not manager.is_plus_user(api_key)) and (client_type == "plus"):
         return StreamingResponse(
-            build_sse_data(
-                message="您的登录秘钥不是Plus 用户，请升级您的套餐以访问此账户。"
-            ),
+            build_sse_data(message="您的登录秘钥不是Plus 用户，请升级您的套餐以访问此账户。"),
             media_type="text/event-stream",
         )
 
     if (client_type == "basic") and ClaudeModels.model_is_plus(model):
         return StreamingResponse(
-            build_sse_data(
-                message="客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"
-            ),
+            build_sse_data(message="客户端是基础用户，但模型是 Plus 模型，请切换到 Plus 客户端。"),
             media_type="text/event-stream",
         )
 
@@ -292,9 +277,7 @@ async def chat(
                         #     build_sse_data(message="创建对话失败，请重新尝试。"),
                         #     media_type="text/event-stream",
                         # )
-                        generate_data = build_sse_data(
-                            message="创建对话失败，请重新尝试。"
-                        )
+                        generate_data = build_sse_data(message="创建对话失败，请重新尝试。")
                         done_data = build_sse_data(message="closed", id=conversation_id)
 
                         return StreamingResponse(
@@ -344,9 +327,8 @@ async def chat(
     logger.debug(f"Need web search: {claude_chat_request.need_web_search}")
     hrefs = []
     if claude_chat_request.need_web_search:
-        from rev_claude.prompts_builder.duckduck_search_prompt import (
-            DuckDuckSearchPrompt,
-        )
+        from rev_claude.prompts_builder.duckduck_search_prompt import \
+            DuckDuckSearchPrompt
 
         # here we choose a number from 3 to 5
         message, hrefs = await DuckDuckSearchPrompt(
@@ -373,6 +355,5 @@ async def chat(
             media_type="text/event-stream",
         )
     else:
-
         res = claude_client.send_message(message, conversation_id, model)
         return res

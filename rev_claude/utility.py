@@ -1,6 +1,8 @@
-from typing import List
-from rev_claude.status.clients_status_manager import ClientsStatus, ClientsStatusManager
 from time import time
+from typing import List
+
+from rev_claude.status.clients_status_manager import (ClientsStatus,
+                                                      ClientsStatusManager)
 
 
 def get_current_time() -> int:

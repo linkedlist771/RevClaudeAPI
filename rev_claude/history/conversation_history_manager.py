@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
-import redis
-from redis.asyncio import Redis
 from enum import Enum
 from typing import List, Optional
+
+import redis
 from pydantic import BaseModel, Field
+from redis.asyncio import Redis
 
 from rev_claude.configs import REDIS_HOST, REDIS_PORT
 from rev_claude.cookie.claude_cookie_manage import CookieKeyType
@@ -39,7 +40,6 @@ class ConversationHistoryRequestInput(BaseModel):
 
 
 class ConversationHistoryManager:
-
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=0):
         """Initialize the connection to Redis."""
         # self.redis = redis.StrictRedis(host=host, port=port, db=db)
@@ -78,7 +78,6 @@ class ConversationHistoryManager:
         await (await self.get_aioredis()).hset(key, field, value)
 
     def get_conversation_history_key(self, request: ConversationHistoryRequestInput):
-
         if request.conversation_type.value == "normal":
             return f"conversation_history-{request.api_key}-{request.client_idx}-basic"
         return f"conversation_history-{request.api_key}-{request.client_idx}-{request.conversation_type.value}"

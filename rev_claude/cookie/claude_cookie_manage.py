@@ -1,11 +1,13 @@
 import asyncio
-import redis
-from redis.asyncio import Redis
+import random
 import uuid
 from enum import Enum
-from typing import Tuple, List
+from typing import List, Tuple
+
+import redis
 from loguru import logger
-import random
+from redis.asyncio import Redis
+
 from rev_claude.client.claude import Client
 from rev_claude.configs import REDIS_HOST, REDIS_PORT
 from rev_claude.utils.async_utils import register_clients
@@ -38,7 +40,6 @@ class CookieUsageType(Enum):
 
 
 class CookieManager:
-
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=1):
         """Initialize the connection to Redis."""
         self.host = host

@@ -1,40 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import json
-import re
-import httpx
 import asyncio
+import itertools
+import json
+import os
+import random
+import re
+import uuid
+
+import httpx
+from fake_useragent import UserAgent
+from fastapi import HTTPException, UploadFile, status
+from fastapi.responses import JSONResponse
 from httpx_sse._decoders import SSEDecoder
 from loguru import logger
-from fake_useragent import UserAgent
-from fastapi import UploadFile, status, HTTPException
-from fastapi.responses import JSONResponse
-import itertools
-import uuid
-import random
-import os
 
-
-from rev_claude.utils.file_utils import DocumentConverter
-from rev_claude.REMINDING_MESSAGE import (
-    NO_EMPTY_PROMPT_MESSAGE,
-    PROMPT_TOO_LONG_MESSAGE,
-    EXCEED_LIMIT_MESSAGE,
-    PLUS_EXPIRE,
-)
-from rev_claude.configs import (
-    STREAM_CONNECTION_TIME_OUT,
-    STREAM_TIMEOUT,
-    PROXIES,
-    USE_PROXY,
-    CLAUDE_OFFICIAL_EXPIRE_TIME,
-    CLAUDE_OFFICIAL_REVERSE_BASE_URL,
-)
+from rev_claude.configs import (CLAUDE_OFFICIAL_EXPIRE_TIME,
+                                CLAUDE_OFFICIAL_REVERSE_BASE_URL, PROXIES,
+                                STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT,
+                                USE_PROXY)
+from rev_claude.REMINDING_MESSAGE import (EXCEED_LIMIT_MESSAGE,
+                                          NO_EMPTY_PROMPT_MESSAGE, PLUS_EXPIRE,
+                                          PROMPT_TOO_LONG_MESSAGE)
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from rev_claude.status_code.status_code_enum import (
-    HTTP_481_IMAGE_UPLOAD_FAILED,
-    HTTP_482_DOCUMENT_UPLOAD_FAILED,
-)
+    HTTP_481_IMAGE_UPLOAD_FAILED, HTTP_482_DOCUMENT_UPLOAD_FAILED)
+from rev_claude.utils.file_utils import DocumentConverter
 
 
 def generate_trace_id():
@@ -215,7 +206,6 @@ class Client:
         call_back=None,
         timeout=120,
     ):
-
         url = f"https://claude.ai/api/organizations/{self.organization_id}/chat_conversations/{conversation_id}/completion"
         __payload = {
             "attachments": attachments,  # attachments is a list
@@ -573,7 +563,6 @@ class Client:
             return False
 
     async def upload_images(self, image_file: UploadFile):
-
         url = f"https://claude.ai/api/{self.organization_id}/upload"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/124.0",

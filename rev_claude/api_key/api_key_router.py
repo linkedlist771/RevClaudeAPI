@@ -1,14 +1,13 @@
-from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from rev_claude.configs import CLAUDE_BACKEND_API_USER_URL, CLAUDE_BACKEND_API_APIAUTH
-from rev_claude.schemas import (
-    CreateAPIKeyRequest,
-    BatchAPIKeysDeleteRequest,
-    ExtendExpirationRequest,
-)
+from rev_claude.api_key.api_key_manage import (APIKeyManager,
+                                               get_api_key_manager)
+from rev_claude.configs import (CLAUDE_BACKEND_API_APIAUTH,
+                                CLAUDE_BACKEND_API_USER_URL)
+from rev_claude.schemas import (BatchAPIKeysDeleteRequest, CreateAPIKeyRequest,
+                                ExtendExpirationRequest)
 
 router = APIRouter()
 
@@ -92,6 +91,7 @@ async def get_information(
 async def get_information(api_key: str):
     """Get the usage count of an API key."""
     from traceback import print_exc
+
     from httpx import AsyncClient
 
     try:

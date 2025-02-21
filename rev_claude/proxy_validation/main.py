@@ -1,7 +1,8 @@
-from loguru import logger
-import httpx
 import asyncio
 from itertools import cycle
+
+import httpx
+from loguru import logger
 
 from rev_claude.client.client_manager import ClientManager
 from rev_claude.proxy_validation.proxies import PROXIES
@@ -12,7 +13,6 @@ async def get_clients():
 
 
 class ProxyValidator:
-
     def __init__(self):
         self.basic_clients, self.plus_clients = ClientManager().get_clients()
         # this is a dict\
@@ -48,7 +48,6 @@ class ProxyValidator:
                 # logger.debug(f"res: {res}")]
                 valid_proxies.append(proxy)
             except Exception as e:
-
                 logger.error(f"Error: {e}")
                 continue
         logger.debug(f"Valid proxies: {valid_proxies}")

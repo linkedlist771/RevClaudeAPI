@@ -1,10 +1,10 @@
+import hashlib
 from typing import Dict, List
 
+from loguru import logger
 from tqdm.asyncio import tqdm, tqdm_asyncio
 
 from rev_claude.cookie.claude_cookie_manage import get_cookie_manager
-from loguru import logger
-import hashlib
 
 HASH_MODULE = 1e6
 
@@ -21,9 +21,10 @@ class ClientManager:
 
     async def load_clients(self, reload: bool = False):
         cookie_manager = get_cookie_manager()
-        basic_clients, plus_clients = (
-            await cookie_manager.get_all_basic_and_plus_client(reload)
-        )
+        (
+            basic_clients,
+            plus_clients,
+        ) = await cookie_manager.get_all_basic_and_plus_client(reload)
         ClientManager.basic_clients = {
             int(improved_hash(client.cookie_key)): client for client in basic_clients
         }

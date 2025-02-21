@@ -1,6 +1,6 @@
+import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-import asyncio
 
 
 async def run_background_task(task):

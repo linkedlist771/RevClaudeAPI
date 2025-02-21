@@ -1,6 +1,8 @@
-from rev_claude.client.claude import Client
-from loguru import logger
 import asyncio
+
+from loguru import logger
+
+from rev_claude.client.claude import Client
 
 
 async def main():
@@ -20,7 +22,6 @@ async def main():
         #     pass
         # logger.debug(f"res: {res}")]
     except Exception as e:
-
         logger.error(f"Error: {e}")
 
 

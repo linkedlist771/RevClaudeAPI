@@ -1,6 +1,7 @@
 import hashlib
-from redis.asyncio import Redis
 from typing import List
+
+from redis.asyncio import Redis
 
 from rev_claude.configs import REDIS_HOST, REDIS_PORT
 

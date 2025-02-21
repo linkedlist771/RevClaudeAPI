@@ -1,32 +1,26 @@
 import asyncio
 import hashlib
 import json
-from datetime import datetime, timedelta, time
-import requests
-import json
-from typing import List
 import os
 import time
-from loguru import logger
-from datetime import datetime
-import pytz
-from httpx import AsyncClient
-import redis
-import streamlit as st
-import pandas as pd
-import altair as alt
-from tqdm import tqdm
+from datetime import datetime, time, timedelta
+from typing import List
 from urllib.request import urlopen
-import plotly.express as px
-from front_utils import (
-    create_sorux_accounts,
-    create_sorux_accounts_v2,
-    parse_chatgpt_credentials,
-    delete_sorux_accounts,
-    create_sorux_redemption_codes,
-)
-from front_configs import *
 
+import altair as alt
+import pandas as pd
+import plotly.express as px
+import pytz
+import redis
+import requests
+import streamlit as st
+from front_configs import *
+from front_utils import (create_sorux_accounts, create_sorux_accounts_v2,
+                         create_sorux_redemption_codes, delete_sorux_accounts,
+                         parse_chatgpt_credentials)
+from httpx import AsyncClient
+from loguru import logger
+from tqdm import tqdm
 
 # running:  streamlit run front_python/front_manager.py --server.port 5000
 
@@ -123,8 +117,8 @@ redis_client = redis.Redis(
     port=int(os.getenv("REDIS_PORT", 6379)),
     decode_responses=True,
 )
-from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit import runtime
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 
 def get_remote_ip():
@@ -281,7 +275,6 @@ def delete_batch_user_tokens(user_tokens: List[str], batch_size: int = 50):
 
 import time
 
-
 # Initialize session state for messages
 if "messages" not in st.session_state:
     st.session_state.messages = {}
@@ -317,9 +310,7 @@ def main():
                 key_type = st.text_input("密钥类型", value="plus")
                 key_number = st.number_input("密钥数量", min_value=1, value=1, step=1)
             with col2:
-                expiration_days = st.number_input(
-                    "过期天数", min_value=0, value=0, step=1
-                )
+                expiration_days = st.number_input("过期天数", min_value=0, value=0, step=1)
                 expiration_hours = st.number_input(
                     "过期小时数(只有Claude支持小数)",
                     min_value=0.1,  # 最小值改为0.1小时(6分钟)
@@ -354,7 +345,6 @@ def main():
                 "🔁 全部设为都使用",
                 "🤖 适用于ChatGPT镜像",
                 "🤖 适用于ChatGPT镜像-懒激活",
-
                 "🔄 只用于claude账号池续费",
                 "💰 创建ChatGPT兑换码",  # 新增选项
             ]
@@ -461,9 +451,7 @@ def main():
                     for index, api_key in enumerate(api_keys, start=1):
                         progress = int(index / total_keys * 100)
                         progress_bar.progress(progress)
-                        status.text(
-                            f"正在处理 API 密钥 {index}/{total_keys}: {api_key}"
-                        )
+                        status.text(f"正在处理 API 密钥 {index}/{total_keys}: {api_key}")
 
                         if selected_option != "🌐 只适用于逆向网站":
                             new_payload = {
@@ -505,13 +493,9 @@ def main():
 
         elif api_key_function == "批量删除API密钥":
             st.subheader("批量删除API密钥")
-            api_keys_to_delete = st.text_area(
-                "输入要删除的API密钥（每行一个或用逗号分隔）"
-            )
+            api_keys_to_delete = st.text_area("输入要删除的API密钥（每行一个或用逗号分隔）")
             # default as the api key
-            delete_type = st.selectbox(
-                "选择删除类型", ["API密钥", "续费码", "ChatGPT账号"], index=0
-            )
+            delete_type = st.selectbox("选择删除类型", ["API密钥", "续费码", "ChatGPT账号"], index=0)
             # 先按换行符分割，然后对每个部分按逗号分割，最后去除空白
             api_keys_to_delete = api_keys_to_delete.replace('"', "")
             api_keys_to_delete = api_keys_to_delete.replace("'", "")

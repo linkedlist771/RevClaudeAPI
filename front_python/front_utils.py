@@ -1,11 +1,12 @@
-import uuid
-import httpx
 import asyncio
-from tqdm.asyncio import tqdm
+import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
+import httpx
 import streamlit as st
 from loguru import logger
+from tqdm.asyncio import tqdm
 
 admin_username = "liuliu"
 admin_password = "123.liu"
@@ -384,23 +385,25 @@ class SoruxGPTManager:
                 await asyncio.sleep(1)  # Add delay between batches
 
         return created_codes
-    
+
 
 class SoruxGPTManagerV2(SoruxGPTManager):
-    
+
     """
     Only to rewrite the username generation and the add node logic.
     """
+
     def generate_credentials(self, days: int, hours: int = 0) -> tuple:
         def generate_uuid_string() -> str:
             # Generate UUID and remove hyphens, take first 12 characters
             return str(uuid.uuid4()).replace("-", "")[:12]
-        days = max(days, 1) # 至少为1
+
+        days = max(days, 1)  # 至少为1
         # Format: liuli_days_randomstring
         username = f"chatgpt_{days}_{generate_uuid_string()}"
         password = generate_uuid_string()
         return username, password
-    
+
     async def create_single_user(
         self,
         days: int,
@@ -436,39 +439,38 @@ class SoruxGPTManagerV2(SoruxGPTManager):
                 "expire_time": expire_time.strftime("%Y-%m-%d %H:%M:%S"),
             }
         return {}
-    
+
     async def add_node(self, user_id: str, expire_time: datetime) -> bool:
         """Override the add_node method to use the new API endpoint.
-        
+
         Args:
             user_id: The username (in format liuli_days_randomstring)
             expire_time: Not used in this implementation
-            
+
         Returns:
             bool: True if successful, False otherwise
         """
         async with httpx.AsyncClient() as client:
             try:
-                headers = {
-                    "Content-Type": "application/json"
-                }
-                
+                headers = {"Content-Type": "application/json"}
+
                 data = {
                     "username": user_id,  # The user_id parameter contains the username
-                    "authkey": "92msdamidhx"  # Fixed verification key
+                    "authkey": "92msdamidhx",  # Fixed verification key
                 }
-                
+
                 response = await client.post(
                     "https://soruxgpt-liuli-usersystem.soruxgpt.com/api/add",
                     headers=headers,
-                    json=data
+                    json=data,
                 )
                 response.raise_for_status()
                 return True
-                
+
             except Exception as e:
                 logger.error(f"Add node failed for user {user_id}: {str(e)}")
                 return False
+
 
 async def create_sorux_accounts(
     key_number: int,
@@ -491,6 +493,7 @@ async def create_sorux_accounts(
         message_bucket_time=message_bucket_time,
     )
     return users
+
 
 async def create_sorux_accounts_v2(
     key_number: int,

@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 
 from rev_claude.configs import IP_REQUEST_LIMIT_PER_MINUTE
 from rev_claude.middlewares.docs_middleware import ApidocBasicAuthMiddleware
-from rev_claude.middlewares.not_found_middleware import NotFoundResponseMiddleware
+from rev_claude.middlewares.not_found_middleware import \
+    NotFoundResponseMiddleware
 from rev_claude.middlewares.rate_limiter_middleware import RateLimitMiddleware
 
 
@@ -21,7 +22,6 @@ def register_cross_origin(app: FastAPI):
 
 
 def register_docs_auth(app: FastAPI):
-
     # app_env = 'production'
     # if app_env == 'production':
     @app.get("/docs", include_in_schema=False)

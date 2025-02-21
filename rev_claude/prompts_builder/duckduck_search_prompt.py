@@ -1,9 +1,9 @@
-from typing import Tuple, List
+from typing import List, Tuple
 
+from loguru import logger
 from pydantic import BaseModel
 
 from rev_claude.duckduck_search.utils import search_with_duckduckgo
-from loguru import logger
 
 
 class DuckDuckSearchPrompt(BaseModel):

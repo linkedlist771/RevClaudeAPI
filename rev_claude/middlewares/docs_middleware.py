@@ -1,10 +1,12 @@
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.requests import Request
-from starlette.responses import Response
 import base64
 import secrets
 
-from rev_claude.configs import DOCS_USERNAME, DOCS_PASSWORD
+from starlette.middleware.base import (BaseHTTPMiddleware,
+                                       RequestResponseEndpoint)
+from starlette.requests import Request
+from starlette.responses import Response
+
+from rev_claude.configs import DOCS_PASSWORD, DOCS_USERNAME
 
 
 class ApidocBasicAuthMiddleware(BaseHTTPMiddleware):

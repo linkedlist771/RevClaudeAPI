@@ -1,8 +1,9 @@
+import time
+from typing import Awaitable, Callable, Dict
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Callable, Awaitable, Dict
-import time
 
 
 class InMemoryRateLimiter:

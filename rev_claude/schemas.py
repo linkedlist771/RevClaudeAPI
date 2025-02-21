@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import Union, List, Dict
 from enum import Enum
+from typing import Dict, List, Union
+
+from pydantic import BaseModel, Field
 
 
 class APIKeyType(Enum):

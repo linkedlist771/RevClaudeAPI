@@ -1,20 +1,16 @@
 import time
+import uuid
 from datetime import datetime, timedelta
+from enum import Enum
 
 import redis
-import uuid
-from enum import Enum
 from loguru import logger
+
+from rev_claude.configs import (ACCOUNT_DELETE_LIMIT, API_KEY_REFRESH_INTERVAL,
+                                API_KEY_REFRESH_INTERVAL_HOURS,
+                                BASIC_KEY_MAX_USAGE, PLUS_KEY_MAX_USAGE,
+                                REDIS_HOST, REDIS_PORT)
 from rev_claude.utility import get_current_time
-from rev_claude.configs import (
-    BASIC_KEY_MAX_USAGE,
-    PLUS_KEY_MAX_USAGE,
-    API_KEY_REFRESH_INTERVAL,
-    API_KEY_REFRESH_INTERVAL_HOURS,
-    REDIS_HOST,
-    REDIS_PORT,
-    ACCOUNT_DELETE_LIMIT,
-)
 
 # from redis.asyncio import StrictRedis
 
@@ -50,9 +46,7 @@ class APIKeyManager:
         ttl = self.redis.ttl(api_key)
         if ttl == -1:
             # 还未激活
-            expiration_seconds = int(
-                self.redis.get(f"{api_key}:expiration")
-            )  # 确保转换为整数
+            expiration_seconds = int(self.redis.get(f"{api_key}:expiration"))  # 确保转换为整数
             api_key_type = self.redis.get(f"{api_key}:type")
             if isinstance(api_key_type, bytes):
                 api_key_type = api_key_type.decode("utf-8")

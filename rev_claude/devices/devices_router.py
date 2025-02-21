@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Request
 import httpx
+from fastapi import APIRouter, Request
 from loguru import logger
 
 router = APIRouter()

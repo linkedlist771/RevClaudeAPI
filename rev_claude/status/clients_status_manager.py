@@ -1,15 +1,15 @@
 import json
-from uuid import uuid4
-import redis
-from enum import Enum
 import time
+from enum import Enum
+from uuid import uuid4
 
-from pydantic import BaseModel
+import redis
 from loguru import logger
+from pydantic import BaseModel
 from redis.asyncio import Redis
+
 from rev_claude.configs import REDIS_HOST
 from rev_claude.models import ClaudeModels
-
 
 # from claude_cookie_manage import get_cookie_manager
 
@@ -35,7 +35,6 @@ class ClientsStatus(BaseModel):
 
 
 class ClientsStatusManager:
-
     def __init__(self, host=REDIS_HOST, port=6379, db=2):
         """Initialize the connection to Redis."""
         self.host = host
@@ -114,7 +113,6 @@ class ClientsStatusManager:
         current_time = time.time()
 
         for mode, start_time in start_times.items():
-
             # print(f"current_time: {current_time}, start_time: {start_time}")
             time_passed = current_time - float(start_time)
             remaining_time = 8 * 3600 - time_passed
@@ -157,7 +155,6 @@ class ClientsStatusManager:
             return {}
 
     async def set_client_limited(self, client_type, client_idx, start_time, model):
-
         # 都得传入模型进行设置，我看这样设计就比较好了
         client_status_key = self.get_client_status_key(client_type, client_idx)
         # 设置键值对
@@ -248,10 +245,8 @@ class ClientsStatusManager:
             await self.set_async(usage_key, 0)
 
     async def get_all_clients_status(self, basic_clients, plus_clients):
-        from rev_claude.cookie.claude_cookie_manage import (
-            CookieUsageType,
-            get_cookie_manager,
-        )
+        from rev_claude.cookie.claude_cookie_manage import (CookieUsageType,
+                                                            get_cookie_manager)
 
         async def retrieve_client_status(idx, client, client_type, models):
             # self.create_if_not_exist(client_type, idx, models)

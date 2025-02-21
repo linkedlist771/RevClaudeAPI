@@ -1,8 +1,9 @@
 # base_redis_manager.py
 import json
+
 from redis.asyncio import Redis
 
-from rev_claude.configs import REDIS_HOST, REDIS_PORT, REDIS_DB
+from rev_claude.configs import REDIS_DB, REDIS_HOST, REDIS_PORT
 
 
 class BaseRedisManager:
