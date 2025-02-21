@@ -13,3 +13,5 @@ BASE_URL = os.environ.get("BASE_URL", f"http://54.254.143.80:1145")
 
 API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
 API_CLAUDE35_URL = "https://api.claude35.585dg.com/api/v1"
+
+CLAUDE_AUDIT_BASE_URL = "http://54.254.143.80:8090"
