@@ -41,3 +41,13 @@ async def delete_all_conversations(
     """Delete all conversations for the current client."""
     conversation_history_manager.delete_all_conversations(request)
     return {"message": "All conversations deleted successfully"}
+
+
+@router.get('/export_all_conversations')
+async def export_all_conversations():
+    raise NotImplementedError
+
+
+@router.get('/export_all_conversations_test')
+async def export_all_conversations_test():
+    raise NotImplementedError
