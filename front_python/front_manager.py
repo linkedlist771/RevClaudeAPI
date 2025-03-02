@@ -21,7 +21,7 @@ from front_utils import (create_sorux_accounts, create_sorux_accounts_v2,
 from httpx import AsyncClient
 from loguru import logger
 from tqdm import tqdm
-from conversation_utils import get_all_conversations
+from conversation_utils import get_all_conversations, get_single_conversation
 # running:  streamlit run front_python/front_manager.py --server.port 5000
 
 
@@ -802,8 +802,8 @@ def main():
                         result = asyncio.run(get_single_conversation(api_key, conversation_id if conversation_id else None))
                         if result:
                             # Display the result
-                            st.json(result)
-                            
+                            # st.json(result)
+                            st.success(f"查询成功")
                             # Download buttons
                             col1, col2 = st.columns(2)
                             with col1:
@@ -817,7 +817,7 @@ def main():
                                 )
                             with col2:
                                 # Text download
-                                text_str = str(result)
+                                text_str = "暂未适配文本格式"
                                 st.download_button(
                                     label="下载文本格式",
                                     data=text_str,
@@ -847,8 +847,8 @@ def main():
                     result = asyncio.run(get_all_conversations(time_filter))
                     if result:
                         # Display the result
-                        st.json(result)
-                        
+                        # st.json(result)
+                        st.success(f"查询成功")
                         # Download buttons
                         col1, col2 = st.columns(2)
                         with col1:
@@ -862,7 +862,8 @@ def main():
                             )
                         with col2:
                             # Text download
-                            text_str = str(result)
+                            data = result.get("data")
+                            text_str = "暂未适配文本格式"
                             st.download_button(
                                 label="下载文本格式",
                                 data=text_str,
