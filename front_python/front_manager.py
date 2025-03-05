@@ -446,7 +446,8 @@ def main():
                 # Process official API keys
                 if api_keys:
                     # add more 8 hours into the expiration_days
-                    expire_date = datetime.now() + timedelta(hours=total_hours + 8)
+                    total_hours += 8
+                    expire_date = datetime.now() + timedelta(hours=total_hours)
                     expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
                     is_plus = 1 if key_type == "plus" else 0
 
