@@ -406,7 +406,7 @@ def main():
                     if selected_option in ["🔒 只适用于claude账号池镜像", "🔁 全部设为都使用"]:
                         url = f"{API_KEY_ROUTER}/create_key"
                         # add 8 hours into the expiration_days
-                        expiration_days_float += 8 / 24
+                        # expiration_days_float += 8 / 24
                         payload = {
                             "expiration_days": expiration_days_float,
                             "key_type": key_type,
@@ -445,7 +445,8 @@ def main():
 
                 # Process official API keys
                 if api_keys:
-                    expire_date = datetime.now() + timedelta(hours=total_hours)
+                    # add more 8 hours into the expiration_days
+                    expire_date = datetime.now() + timedelta(hours=total_hours) + 8
                     expire_time = expire_date.strftime("%Y-%m-%d %H:%M:%S")
                     is_plus = 1 if key_type == "plus" else 0
 
