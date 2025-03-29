@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Page with AJAX Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #eaeaea;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            display: flex;
+            background-color: white;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+        }
+        .sidebar {
+            width: 30%;
+            padding-right: 20px;
+        }
+        .main-content {
+            width: 70%;
+        }
+        .login-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #response-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .dashboard {
+            display: none;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>My Application</h1>
+        </div>
+        <div class="content">
+            <div class="sidebar">
+                <h2>Navigation</h2>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Profile</a></li>
+                    <li><a href="#">Settings</a></li>
+                </ul>
+            </div>
+            <div class="main-content">
+                <h2>Login to Continue</h2>
+                
+                <div class="login-container" id="login-form">
+                    <form id="ajax-login-form">
+                        <div class="form-group">
+                            <label for="account">Account</label>
+                            <input type="text" id="account" name="account" value="3_1_cfe6f58aee37" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" value="d8b7bf838934" required>
+                        </div>
+                        <input type="hidden" name="action" value="default">
+                        <button type="submit">Login</button>
+                    </form>
+                    <div id="response-message"></div>
+                </div>
+                
+                <div class="dashboard" id="dashboard">
+                    <h3>Welcome to your Dashboard</h3>
+                    <p>You have successfully logged in without leaving the parent page.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('ajax-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const responseMessage = document.getElementById('response-message');
+            
+            // Show loading state
+            responseMessage.style.display = 'block';
+            responseMessage.className = '';
+            responseMessage.textContent = 'Logging in...';
+            
+            fetch('https://chat.qqyunsd.com/login', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include' // Include cookies for session
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Login successful
+                    responseMessage.textContent = 'Login successful!';
+                    responseMessage.className = 'success';
+                    
+                    // Hide login form and show dashboard
+                    setTimeout(() => {
+                        document.getElementById('login-form').style.display = 'none';
+                        document.getElementById('dashboard').style.display = 'block';
+                    }, 1000);
+                    
+                    return response.text();
+                } else {
+                    // Login failed
+                    throw new Error('Login failed. Please check your credentials.');
+                }
+            })
+            .catch(error => {
+                responseMessage.textContent = error.message;
+                responseMessage.className = 'error';
+            });
+        });
+    </script>
+</body>
+</html> 

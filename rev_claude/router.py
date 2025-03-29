@@ -12,6 +12,7 @@ from rev_claude.history.conversation_history_router import \
 from rev_claude.renewal.renewal_router import router as renewal_router
 from rev_claude.status.clients_status_router import \
     router as clients_status_router
+from rev_claude.gpt_cookie_login.router import router as gpt_login_router
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(claude_router, prefix="/claude", tags=["claude"])
@@ -30,3 +31,4 @@ router.include_router(
 )
 router.include_router(devices_router, prefix="/devices", tags=["devices"])
 router.include_router(renewal_router, prefix="/renewal", tags=["renewal"])
+router.include_router(gpt_login_router, prefix="/gpt_login", tags=["gpt_login"])

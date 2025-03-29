@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <h2>Login</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="account">Account</label>
+            <input type="text" id="account" name="account" value="3_1_cfe6f58aee37" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" value="d8b7bf838934" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    <div id="status"></div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // 阻止默认表单提交
+            
+            const account = document.getElementById('account').value;
+            const password = document.getElementById('password').value;
+            const statusDiv = document.getElementById('status');
+            
+            statusDiv.textContent = "Attempting to login...";
+            statusDiv.className = "";
+            statusDiv.style.display = "block";
+            
+            const loginData = {
+                account: account,
+                password: password,
+                action: 'default'
+            };
+            
+            // 1. 发送POST请求获取cookie
+            fetch('https://chat.qqyunsd.com/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams(loginData).toString(),
+                credentials: 'include' // 确保保存和发送cookies
+            })
+            .then(response => {
+                if (response.ok) {
+                    statusDiv.textContent = "Login successful! Getting cookies...";
+                    statusDiv.className = "success";
+                    
+                    // 检查是否有Set-Cookie头
+                    console.log("Response headers:", response.headers);
+                    
+                    // 2. 使用cookie跳转到目标网站
+                    // 由于cookies已经被浏览器自动保存，我们可以直接跳转
+                    statusDiv.textContent = "Login successful! Redirecting...";
+                    
+                    // 给用户一点时间看到成功消息，然后重定向
+                    setTimeout(() => {
+                        window.location.href = 'https://chat.qqyunsd.com';
+                    }, 1500);
+                    
+                } else {
+                    statusDiv.textContent = "Login failed. Please check your credentials.";
+                    statusDiv.className = "error";
+                    console.error('Login failed with status:', response.status);
+                }
+            })
+            .catch(error => {
+                statusDiv.textContent = "Error during login: " + error.message;
+                statusDiv.className = "error";
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

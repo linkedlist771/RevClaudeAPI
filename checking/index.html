@@ -2,55 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件自动保存与上传</title>
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .login-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <input type="file" id="fileInput">
-    <button id="uploadButton" disabled>上传文件</button>
-
-    <script>
-        let savedFile = null;
-
-        document.getElementById('fileInput').addEventListener('change', function() {
-            const file = this.files[0]; // 获取选中的文件
-            if (file) {
-                savedFile = file;
-                document.getElementById('uploadButton').disabled = false; // 激活上传按钮
-                console.log('文件已保存');
-            } else {
-                document.getElementById('uploadButton').disabled = true; // 如果没有文件选中，禁用上传按钮
-                console.log('请选择文件');
-            }
-        });
-
-        document.getElementById('uploadButton').addEventListener('click', function() {
-            if (savedFile) {
-                const formData = new FormData();
-                formData.append('file', savedFile);
-
-                fetch('http://0.0.0.0:8848/upload', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then(response => response.json())
-                .then(data => console.log('文件上传成功:', data))
-                .catch(error => console.error('上传出错:', error));
-            } else {
-                console.log('没有文件可上传');
-            }
-        });
-    </script>
-</body>
-</html>
-</title>
-</head>
-<body>
-
-
+    <div class="login-container">
+        <h2>Login</h2>
+        <form action="https://chat.qqyunsd.com/login" method="POST">
+            <div class="form-group">
+                <label for="account">Account</label>
+                <input type="text" id="account" name="account" value="3_1_cfe6f58aee37" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" value="d8b7bf838934" required>
+            </div>
+            <input type="hidden" name="action" value="default">
+            <button type="submit">Login</button>
+        </form>
+    </div>
 </body>
 </html>
