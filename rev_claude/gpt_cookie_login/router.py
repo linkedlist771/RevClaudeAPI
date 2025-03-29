@@ -16,4 +16,4 @@ router = APIRouter()
 async def login(login_request: LogInRequest):
     async with httpx.AsyncClient() as client:
         res = await client.post('https://chat.qqyunsd.com/login', data=login_request.model_dump())
-        return res.json()
+        return res.cookies.get_dict()
