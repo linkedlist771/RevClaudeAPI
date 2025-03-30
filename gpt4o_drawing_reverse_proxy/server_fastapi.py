@@ -130,34 +130,39 @@ async def proxy(request: Request, path: str = ""):
 
         try:
             if "backend-api/conversation" in str(path) and request.method == "POST":
-                status_code = None
-                headers = None
                 async def stream_response():
-                    try:
-                        async with client.stream(
-                                method=request.method,
-                                url=target_url,
-                                headers=request.headers,
-                                params=request.query_params,
-                                content=body,
-                                cookies=cookies,
-                                follow_redirects=False) as response:
-                                status_code = response.status_code
-                                headers = response.headers
-                                async for chunk in response.aiter_lines():
-                                        logger.debug(f"chunk:\n{chunk}")
-                                        yield chunk
-                                        # await asyncio.sleep(0.1)
-                                        if "data" in chunk:
-                                            yield "\n"
-                                            yield "\n"
-                                        if "event" in chunk:
-                                            yield "\n"
-                    except Exception as e:
-                        from traceback import format_exc
-                        logger.error(format_exc())
+                    async with httpx.AsyncClient(follow_redirects=False,
+                                                 timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0,
+                                                                       pool=30.0),
+                                                 limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+                                                 ) as local_client:  # 创建局部客户端
+                        try:
+                            async with local_client.stream(
+                                    method=request.method,
+                                    url=target_url,
+                                    headers=request.headers,
+                                    params=request.query_params,
+                                    content=body,
+                                    cookies=cookies,
+                                    follow_redirects=False) as response:
 
-                    # Return a streaming response
+                                for key, value in response.headers.items():
+                                    logger.debug(f"Response header: {key}: {value}")
+
+                                async for chunk in response.aiter_lines():
+                                    logger.debug(f"chunk:\n{chunk}")
+                                    yield chunk
+                                    if "data" in chunk:
+                                        yield "\n"
+                                        yield "\n"
+                                    if "event" in chunk:
+                                        yield "\n"
+                        except Exception as e:
+                            from traceback import format_exc
+                            logger.error(format_exc())
+                            return
+                            # yield f"event: error\ndata: {{\"error\": \"{str(e)}\"}}}\n\n"
+
                 return StreamingResponse(
                         stream_response(),
                         status_code=200,
