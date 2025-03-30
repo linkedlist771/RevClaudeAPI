@@ -12,6 +12,8 @@ from starlette.background import BackgroundTask
 from loguru import logger
 import time
 
+from checking.main import headers
+
 app = FastAPI()
 
 # Configure CORS
@@ -129,55 +131,44 @@ async def proxy(request: Request, path: str = ""):
 
         try:
             if "backend-api/conversation" in str(path) and request.method == "POST":
-
-                request = client.build_request(
-                    method=request.method,
-                    url=target_url,
-                    headers=headers,
-                    params=request.query_params,
-                    content=body,
-                    cookies=cookies,
-                )
-                response = await client.send(
-                    request=request,
-                    follow_redirects=False,
-                    stream=True,
-                )
-                    # # logger.debug(f"response.is_closed :{response.is_closed}")
-                    # # logger.debug(f"response.is_closed :{response.is_closed}")
-                    # chunks = []
-                    # async for chunk in response.aiter_lines():
-                    #     if chunk:  # Only store non-empty chunks
-                    #         logger.debug(chunk)
-                    #         chunks.append(chunk)
-                    #         if "DONE" in str(chunk):
-                    #             break
+                status_code = None
+                headers = None
                 async def stream_response():
-                        try:
-                            # logger.debug(f"response.is_closed :{response.is_closed}")
-                            # Add a check if the stream is still active
-                            # if not response.is_closed:
-                            async for chunk in response.aiter_lines():
-                                    logger.debug(f"chunk:\n{chunk}")
-                                    yield chunk
-                                    # await asyncio.sleep(0.1)
-                                    if "data" in chunk:
-                                        yield "\n"
-                                        yield "\n"
-                                    if "event" in chunk:
-                                        yield "\n"
-                        except Exception as e:
-                            from traceback import format_exc
-                            logger.error(format_exc())
-                            # yield b"Error during streaming: " + str(e).encode()
-                        finally:
-                            await response.aclose()
+                    nonlocal status_code
+                    nonlocal headers
+                    try:
+                        # logger.debug(f"response.is_closed :{response.is_closed}")
+                        # Add a check if the stream is still active
+                        # if not response.is_closed:
+                        async with client.stream(
+                                method=request.method,
+                                url=target_url,
+                                headers=request.headers,
+                                params=request.query_params,
+                                content=body,
+                                cookies=cookies,
+                                follow_redirects=False) as response:
+                                status_code = response.status_code
+                                headers = response.headers
+                                async for chunk in response.aiter_lines():
+                                        logger.debug(f"chunk:\n{chunk}")
+                                        yield chunk
+                                        # await asyncio.sleep(0.1)
+                                        if "data" in chunk:
+                                            yield "\n"
+                                            yield "\n"
+                                        if "event" in chunk:
+                                            yield "\n"
+                    except Exception as e:
+                        from traceback import format_exc
+                        logger.error(format_exc())
+                        # yield b"Error during streaming: " + str(e).encode()
 
                     # Return a streaming response
                 return StreamingResponse(
                         stream_response(),
-                        status_code=response.status_code,
-                        headers=response.headers)
+                        status_code=status_code,
+                        headers=headers)
             else:
                 response = await client.request(
                     method=request.method,
