@@ -158,9 +158,9 @@ async def proxy(request: Request, path: str = ""):
                 cookies = response.cookies
                 content = response.content
                 # Add debugging
-                logger.info(f"Returning redirect to: {location}")
-                logger.info(f"Status code: {response.status_code}")
-                logger.info(f"Headers: {response_headers}")
+                logger.debug(f"Returning redirect to: {location}")
+                logger.debug(f"Status code: {response.status_code}")
+                logger.debug(f"Headers: {response_headers}")
 
 
                 # Create response with the proper redirect status and location
@@ -200,13 +200,13 @@ async def proxy(request: Request, path: str = ""):
                     else:
                         response_headers['set-cookie'] = cookie_header
 
-                logger.debug(f"content:{content}")
+                # logger.debug(f"content:{content}")
                 return Response(
                     content=content,
                     status_code=response.status_code,
                     headers=response_headers
                 )
-
+            
         except httpx.TimeoutException:
             logger.error(f"Request timed out for {target_url}")
             return Response(
