@@ -152,7 +152,7 @@ async def proxy(request: Request, path: str = ""):
                     #             break
                 async def stream_response():
                         try:
-                            logger.debug(f"response.is_closed :{response.is_closed}")
+                            # logger.debug(f"response.is_closed :{response.is_closed}")
                             # Add a check if the stream is still active
                             # if not response.is_closed:
                             async for chunk in response.aiter_lines():
@@ -166,10 +166,12 @@ async def proxy(request: Request, path: str = ""):
                                         yield "\n"
                         except httpx.ReadError as e:
                             logger.error(f"Read error during streaming: {e}")
-                            yield b"Connection interrupted. Please try again."
+                            # yield b"Connection interrupted. Please try again."
                         except Exception as e:
                             logger.error(f"Error during streaming: {e}")
-                            yield b"Error during streaming: " + str(e).encode()
+                            # yield b"Error during streaming: " + str(e).encode()
+                        finally:
+                            await response.aclose()
 
                     # Return a streaming response
                 return StreamingResponse(
