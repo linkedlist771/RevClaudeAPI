@@ -49,14 +49,14 @@ function removeTargetElements() {
     }
 
     // 查看所有有Try again的button， 如果有就惦记
-    const allButtons = document.querySelector('button');
-    for (let button of allButtons)
-    {
-        if(button.textContent.includes("Try again")
-        {
-            button.click();
-        }
+// 查看所有有Try again的button， 如果有就惦记
+const allButtons = document.querySelectorAll('button'); // 使用 querySelectorAll 来获取所有 button 元素
+for (let button of allButtons) {
+    if (button.textContent.includes("Try again")) { // 缺少右括号
+        button.click();
     }
+}
+
 
     // 删除下边的？按钮
 
