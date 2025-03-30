@@ -127,39 +127,54 @@ async def proxy(request: Request, path: str = ""):
 
         try:
             if "backend-api/conversation" in str(path) and request.method == "POST":
-                response = await client.stream(
-                    method=request.method,
-                    url=target_url,
-                    headers=headers,
-                    params=request.query_params,
-                    content=body,
-                    cookies=cookies,
-                    follow_redirects=False
-                )
-                async def stream_response(__response):
+                # 创建一个异步队列作为中间缓冲区
+                buffer_queue = asyncio.Queue()
+
+                # 启动一个后台任务来读取原始响应并填充缓冲区
+                async def fill_buffer():
                     try:
-                        async for chunk in response.aiter_lines():
-                                yield chunk
-                                # await asyncio.sleep(0.1)
+                        async with client.stream(
+                                method=request.method,
+                                url=target_url,
+                                headers=headers,
+                                params=request.query_params,
+                                content=body,
+                                cookies=cookies,
+                                follow_redirects=False
+                        ) as response:
+                            async for chunk in response.aiter_lines():
+                                await buffer_queue.put(chunk)
                                 if "data" in chunk:
-                                    yield "\n"
-                                    yield "\n"
+                                    await buffer_queue.put("\n\n")
                                 if "event" in chunk:
-                                    yield "\n"
+                                    await buffer_queue.put("\n")
                                 if "DONE" in str(chunk):
                                     break
-                    except httpx.ReadError as e:
-                        logger.error(f"Read error during streaming: {e}")
-                        yield b"Connection interrupted. Please try again."
+                            # 表示数据流结束
+                            await buffer_queue.put(None)
                     except Exception as e:
                         logger.error(f"Error during streaming: {e}")
-                        yield b"Error during streaming: " + str(e).encode()
+                        await buffer_queue.put(f"Error during streaming: {str(e)}")
+                        await buffer_queue.put(None)
 
+                # 启动填充缓冲区的任务
+                asyncio.create_task(fill_buffer())
+
+                # 创建一个从缓冲区读取数据的生成器
+                async def stream_from_buffer():
+                    while True:
+                        chunk = await buffer_queue.get()
+                        if chunk is None:  # 检测到结束标记
+                            break
+                        yield chunk
+
+                # 返回流式响应
                 return StreamingResponse(
-                    stream_response(response),
-                    status_code=response.status_code,
-                    headers=response.headers
+                    stream_from_buffer(),
+                    status_code=200,  # 这里可能需要根据原始响应设置正确的状态码
+                    headers={"Content-Type": "text/event-stream"}  # 根据需要设置适当的头部
                 )
+
             else:
                 # Send request to target server
                 response = await client.request(
