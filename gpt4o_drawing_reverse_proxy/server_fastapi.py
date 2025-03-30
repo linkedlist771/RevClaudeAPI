@@ -1,3 +1,5 @@
+import argparse
+
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,6 +7,7 @@ import httpx
 import os
 import uvicorn
 from starlette.background import BackgroundTask
+from loguru import logger
 from typing import Optional
 import asyncio
 
@@ -150,9 +153,29 @@ async def proxy(request: Request, path: str = ""):
 async def root_proxy(request: Request):
     return await proxy(request, "")
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--host", default="0.0.0.0", help="host")
+parser.add_argument("--port", default=5001, help="port")
+parser.add_argument("--workers", default=1, type=int, help="workers")
+args = parser.parse_args()
+# logger.add(LOGS_PATH / "log_file.log", rotation="1 week")  # 每周轮换一次文件
+# app = register_middleware(app)
+
+def start_server(port=args.port, host=args.host):
+    logger.info(f"Starting server at {host}:{port}")
+    config = uvicorn.Config(app, host=host, port=port, workers=args.workers)
+    server = uvicorn.Server(config=config)
+    try:
+        server.run()
+    finally:
+        logger.info("Server shutdown.")
+
+
 
 if __name__ == '__main__':
-    print("启动FastAPI反向代理服务器，监听0.0.0.0:5001...")
-    print("JavaScript注入已启用，将注入 /list.js 到所有HTML响应")
-    print(f"JavaScript文件目录: {js_dir}")
-    uvicorn.run("main:app", host="0.0.0.0", port=5001, reload=True)
+    fire.Fire(start_server)
+
+    # print("启动FastAPI反向代理服务器，监听0.0.0.0:5001...")
+    # print("JavaScript注入已启用，将注入 /list.js 到所有HTML响应")
+    # print(f"JavaScript文件目录: {js_dir}")
+    # uvicorn.run("main:app", host="0.0.0.0", port=5001, reload=True)
