@@ -9,6 +9,7 @@ import os
 import uvicorn
 from starlette.background import BackgroundTask
 from loguru import logger
+import time
 
 app = FastAPI()
 
@@ -90,11 +91,18 @@ async def process_response(response):
 # Main proxy route
 @app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
-    logger.debug(f"path:\n{path}")
+    start_time = time.time()
+    logger.info(f"Proxying request to path: {path}")
+    logger.info(f"Method: {request.method}")
+    logger.info(f"Client IP: {request.client.host if request.client else 'unknown'}")
 
-    # Create a client that will handle cookies properly
-    async with httpx.AsyncClient(follow_redirects=False) as client:
+    # Create a client with appropriate timeout settings
+    async with httpx.AsyncClient(
+            follow_redirects=False,
+            timeout=30.0  # Increase timeout to 30 seconds
+    ) as client:
         target_url = f"{TARGET_URL}/{path}"
+        logger.info(f"Target URL: {target_url}")
 
         # Get request headers
         headers = {key: value for key, value in request.headers.items()
@@ -125,24 +133,36 @@ async def proxy(request: Request, path: str = ""):
                 location = response.headers.get('Location', '')
                 logger.debug(f"Redirect detected to: {location}")
 
-                # If it's a relative URL, convert to absolute URL
-                if location.startswith('/'):
-                    # Stay on the same domain
-                    location = f"{request.base_url.scheme}://{request.base_url.netloc}/{location.lstrip('/')}"
-                elif location.startswith('http'):
-                    # If it's an absolute URL to the target, rewrite it to point to our proxy
+                # For absolute URLs to the target site
+                if location.startswith('http'):
                     target_domain = TARGET_URL.split('//')[1]
                     if target_domain in location:
+                        # Replace the target domain with our proxy domain
                         location = location.replace(
-                            f"{TARGET_URL.split('//')[0]}//{target_domain}",
+                            TARGET_URL,
                             f"{request.base_url.scheme}://{request.base_url.netloc}"
                         )
+                        logger.info(f"Rewritten absolute URL to: {location}")
+                # For relative URLs
+                elif location.startswith('/'):
+                    # Convert to absolute URL using our proxy domain
+                    location = f"{request.base_url.scheme}://{request.base_url.netloc}{location}"
+                    logger.info(f"Converted relative URL to: {location}")
 
-                # Return redirect response to client with modified location
+                # Copy original headers, removing problematic ones
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding']}
                 response_headers['Location'] = location
 
+                # Add any cookies from the response
+                cookies = response.cookies
+
+                # Add debugging
+                logger.info(f"Returning redirect to: {location}")
+                logger.info(f"Status code: {response.status_code}")
+                logger.info(f"Headers: {response_headers}")
+
+                # Create response with the proper redirect status and location
                 return Response(
                     content=b"",
                     status_code=response.status_code,
@@ -176,9 +196,29 @@ async def proxy(request: Request, path: str = ""):
                     headers=response_headers
                 )
 
+        except httpx.TimeoutException:
+            logger.error(f"Request timed out for {target_url}")
+            return Response(
+                content="The request to the target server timed out. Please try again later.".encode(),
+                status_code=504
+            )
+        except httpx.ConnectError:
+            logger.error(f"Connection error for {target_url}")
+            return Response(
+                content="Unable to connect to the target server. Please check your connection and try again.".encode(),
+                status_code=502
+            )
         except Exception as e:
             logger.error(f"Proxy error: {str(e)}")
-            return Response(content=f"Error: {str(e)}".encode(), status_code=500)
+            import traceback
+            logger.error(traceback.format_exc())
+            return Response(
+                content=f"Error: {str(e)}".encode(),
+                status_code=500
+            )
+        finally:
+            elapsed = time.time() - start_time
+            logger.info(f"Request completed in {elapsed:.2f} seconds")
 
 
 # Root path also uses proxy
@@ -196,7 +236,25 @@ args = parser.parse_args()
 
 def start_server(port=args.port, host=args.host):
     logger.info(f"Starting server at {host}:{port}")
-    config = uvicorn.Config(app, host=host, port=port, workers=args.workers)
+    logger.info(f"Proxy target URL: {TARGET_URL}")
+
+    # Configure more detailed logging
+    logger.remove()  # Remove default handler
+    logger.add(
+        "proxy_server.log",
+        rotation="10 MB",
+        retention="1 week",
+        level="INFO",
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} - {message}"
+    )
+    # Also log to console
+    logger.add(
+        lambda msg: print(msg, end=""),
+        level="INFO",
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {message}"
+    )
+
+    config = uvicorn.Config(app, host=host, port=port, workers=args.workers, log_level="info")
     server = uvicorn.Server(config=config)
     try:
         server.run()
