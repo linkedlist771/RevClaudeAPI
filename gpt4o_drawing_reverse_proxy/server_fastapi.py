@@ -126,7 +126,7 @@ async def proxy(request: Request, path: str = ""):
         cookies = request.cookies
 
         try:
-            if "backend-api/conversation" in str(path) and request.method == "POST":
+            if False:# "backend-api/conversation" in str(path) and request.method == "POST":
                 async with client.stream(
                         method=request.method,
                         url=target_url,
