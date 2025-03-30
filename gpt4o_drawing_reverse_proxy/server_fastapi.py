@@ -149,7 +149,7 @@ async def proxy(request: Request, path: str = ""):
                         try:
                             # Add a check if the stream is still active
                             # if not response.is_closed:
-                            async for chunk in response.aiter_lines():
+                            async for chunk in response.aiter_bytes():
                                 if chunk:  # Only yield non-empty chunks
                                     logger.debug(chunk)
                                     yield chunk
@@ -164,7 +164,7 @@ async def proxy(request: Request, path: str = ""):
                     return StreamingResponse(
                         stream_response(),
                         status_code=response.status_code,
-                        headers={}
+                        headers=response_headers
                     )
 
             else:
