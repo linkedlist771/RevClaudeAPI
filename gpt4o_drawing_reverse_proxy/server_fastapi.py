@@ -156,15 +156,16 @@ async def proxy(request: Request, path: str = ""):
 
                 # Add any cookies from the response
                 cookies = response.cookies
-
+                content = response.content
                 # Add debugging
                 logger.info(f"Returning redirect to: {location}")
                 logger.info(f"Status code: {response.status_code}")
                 logger.info(f"Headers: {response_headers}")
 
+
                 # Create response with the proper redirect status and location
                 return Response(
-                    content=b"",
+                    content=content,
                     status_code=response.status_code,
                     headers=response_headers
                 )
