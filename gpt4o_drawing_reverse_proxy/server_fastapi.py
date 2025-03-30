@@ -93,6 +93,7 @@ async def process_response(response):
 # 主要代理路由
 @app.route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
+    logger.debug(f"path:\n{path}")
     client = httpx.AsyncClient(follow_redirects=False)
     target_url = f"{TARGET_URL}/{path}"
 
