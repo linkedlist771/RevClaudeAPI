@@ -17,11 +17,11 @@ function removeTargetElements() {
     }
 
     // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary
-    const navigationTags = document.querySelectorAll('div.bg-token-sidebar-surface-primary');
-    for (let item of navigationTags) {
-            item.remove();
-
-    }
+    // const navigationTags = document.querySelectorAll('div.bg-token-sidebar-surface-primary');
+    // for (let item of navigationTags) {
+    //         item.remove();
+    //
+    // }
 
     // 去掉上边蓝bg-token-main-surface-primary
    const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
