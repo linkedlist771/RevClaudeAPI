@@ -237,20 +237,6 @@ def start_server(port=args.port, host=args.host):
     logger.info(f"Proxy target URL: {TARGET_URL}")
 
     # Configure more detailed logging
-    logger.remove()  # Remove default handler
-    logger.add(
-        "proxy_server.log",
-        rotation="10 MB",
-        retention="1 week",
-        level="INFO",
-        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} - {message}"
-    )
-    # Also log to console
-    logger.add(
-        lambda msg: print(msg, end=""),
-        level="INFO",
-        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {message}"
-    )
 
     config = uvicorn.Config(app, host=host, port=port, workers=args.workers, log_level="info")
     server = uvicorn.Server(config=config)
