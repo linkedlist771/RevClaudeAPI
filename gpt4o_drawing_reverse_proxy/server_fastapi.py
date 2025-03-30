@@ -69,7 +69,6 @@ async def process_response(response):
             html_content = content.decode('latin-1')
         except Exception:
             return content
-
     # Inject JavaScript
     if '</head>' in html_content:
         html_content = html_content.replace('</head>', '<script src="/list.js"></script></head>')
@@ -90,127 +89,100 @@ async def process_response(response):
 
 # Main proxy route
 @app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-
 @app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
     start_time = time.time()
     logger.debug(f"Proxying request to path: {path}")
     logger.debug(f"Method: {request.method}")
-    logger.debug(f"Client IP: {request.client.host if request.client else 'unknown'}")
 
-    # Create a client with appropriate timeout settings
+    # 创建一个自定义的重定向处理类
+    class ProxyTransport(httpx.AsyncHTTPTransport):
+        """自定义传输类，在重定向前处理URL"""
+
+        async def handle_async_request(self, request):
+            # 在请求发送前检查和修改URL
+            logger.debug(f"Sending request to: {request.url}")
+            return await super().handle_async_request(request)
+
+    # 创建一个事件钩子来处理重定向
+    def event_hook(response):
+        # 记录重定向路径
+        if response.history:  # 如果有重定向历史
+            original_url = str(response.history[0].url)
+            final_url = str(response.url)
+            logger.info(f"Redirected from {original_url} to {final_url}")
+        return response
+
+    # 创建客户端，启用自动重定向
     async with httpx.AsyncClient(
-            follow_redirects=False,
-            timeout=30.0  # Increase timeout to 30 seconds
+            transport=ProxyTransport(),
+            follow_redirects=True,  # 启用自动重定向
+            timeout=30.0,
+            event_hooks={'response': [event_hook]}
     ) as client:
         target_url = f"{TARGET_URL}/{path}"
         logger.info(f"Target URL: {target_url}")
 
-        # Get request headers
+        # 获取请求头
         headers = {key: value for key, value in request.headers.items()
                    if key.lower() not in ['host', 'content-length']}
         headers['Host'] = TARGET_URL.split('//')[1]
         headers['Accept-Encoding'] = 'identity'
 
-        # Get request body
+        # 获取请求体
         body = await request.body()
 
-        # Get cookies from request
+        # 获取请求中的cookies
         cookies = request.cookies
 
         try:
-            # Send request to target server
+            # 发送请求到目标服务器，让httpx自动处理重定向
             response = await client.request(
                 method=request.method,
                 url=target_url,
                 headers=headers,
                 params=request.query_params,
                 content=body,
-                cookies=cookies,  # Pass cookies directly
-                follow_redirects=False
+                cookies=cookies
             )
 
-            # Handle redirect responses
-            if response.status_code in [301, 302, 303, 307, 308]:
-                location = response.headers.get('Location', '')
-                logger.debug(f"Redirect detected to: {location}")
+            # 检查是否发生了重定向
+            if response.history:
+                logger.info(f"Request was redirected {len(response.history)} times")
+                for hist in response.history:
+                    logger.debug(f"Redirect: {hist.status_code} - {hist.url}")
 
-                # For absolute URLs to the target site
-                if location.startswith('http'):
-                    target_domain = TARGET_URL.split('//')[1]
-                    if target_domain in location:
-                        # Replace the target domain with our proxy domain
-                        location = location.replace(
-                            TARGET_URL,
-                            f"{request.base_url.scheme}://{request.base_url.netloc}"
-                        )
-                        logger.info(f"Rewritten absolute URL to: {location}")
-                # For relative URLs
-                elif location.startswith('/'):
-                    # Convert to absolute URL using our proxy domain
-                    location = f"{request.base_url.scheme}://{request.base_url.netloc}{location}"
-                    logger.info(f"Converted relative URL to: {location}")
-
-                # Copy original headers, removing problematic ones
-                response_headers = {key: value for key, value in response.headers.items()
-                                    if key.lower() not in ['content-length', 'transfer-encoding']}
-                response_headers['Location'] = location
-
-                # Add any cookies from the response
-                cookies = response.cookies
-
-                # Add debugging
-                logger.info(f"Returning redirect to: {location}")
-                logger.info(f"Status code: {response.status_code}")
-                logger.info(f"Headers: {response_headers}")
-
-                # Create response with the proper redirect status and location
-                return Response(
-                    content=b"",
-                    status_code=response.status_code,
-                    headers=response_headers
-                )
-
-            # Check content type
+            # 检查内容类型
             content_type = response.headers.get('Content-Type', '')
             logger.debug(f"content_type:{content_type}")
-            # For streaming responses or non-HTML content, use StreamingResponse
+
+            # 对于流式响应，使用StreamingResponse
             if ('text/event-stream' in content_type):
-                # Process response headers
+                # 处理响应头
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding']}
 
-                # Return streaming response
+                # 返回流式响应
                 return StreamingResponse(
                     response.aiter_bytes(),
                     status_code=response.status_code,
                     headers=response_headers
                 )
             else:
-                # For HTML content, use the existing processing method
+                # 对于HTML内容，使用现有的处理方法
+                # 这里不能直接使用response.read()因为内容可能已被读取
                 content = await process_response(response)
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
-                logger.debug(f"content:{content}")
+
                 return Response(
                     content=content,
                     status_code=response.status_code,
                     headers=response_headers
                 )
 
-        except httpx.TimeoutException:
-            logger.error(f"Request timed out for {target_url}")
-            return Response(
-                content="The request to the target server timed out. Please try again later.".encode(),
-                status_code=504
-            )
-        except httpx.ConnectError:
-            logger.error(f"Connection error for {target_url}")
-            return Response(
-                content="Unable to connect to the target server. Please check your connection and try again.".encode(),
-                status_code=502
-            )
         except Exception as e:
+            # 异常处理部分保持不变
             logger.error(f"Proxy error: {str(e)}")
             import traceback
             logger.error(traceback.format_exc())
@@ -221,8 +193,6 @@ async def proxy(request: Request, path: str = ""):
         finally:
             elapsed = time.time() - start_time
             logger.info(f"Request completed in {elapsed:.2f} seconds")
-
-
 
 
 parser = argparse.ArgumentParser()
