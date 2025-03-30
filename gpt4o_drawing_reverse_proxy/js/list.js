@@ -48,6 +48,16 @@ function removeTargetElements() {
         }
     }
 
+    // 查看所有有Try again的button， 如果有就惦记
+    const allButtons = document.querySelector('button');
+    for (let button of allButtons)
+    {
+        if(button.textContent.includes("Try again")
+        {
+            button.click();
+        }
+    }
+
     // 删除下边的？按钮
 
     // 移除 aria-label="yanjiu" 的按钮

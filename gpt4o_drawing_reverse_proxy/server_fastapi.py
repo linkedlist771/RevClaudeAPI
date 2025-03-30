@@ -145,8 +145,6 @@ async def proxy(request: Request, path: str = ""):
                             chunks.append(chunk)
                             if "DONE" in str(chunk):
                                 break
-                    # logger.debug(chunks)
-                    # Create an async generator for streaming with better error handling
                     async def stream_response():
                         try:
                             logger.debug(f"response.is_closed :{response.is_closed}")
