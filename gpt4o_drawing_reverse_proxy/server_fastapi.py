@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-TARGET_URL = "https://gpt4oimagedrawing.585dg.com"
+TARGET_URL = "https://soruxgpt-saas-liuli.soruxgpt.com"
 
 # Create JavaScript directory
 js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'js')
