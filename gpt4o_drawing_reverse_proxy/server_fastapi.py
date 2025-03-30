@@ -147,8 +147,9 @@ async def proxy(request: Request, path: str = ""):
                         try:
                             # Add a check if the stream is still active
                             if not response.is_closed:
-                                async for chunk in response.aiter_bytes():
+                                async for chunk in response.aiter_lines():
                                     if chunk:  # Only yield non-empty chunks
+                                        logger.debug(chunk)
                                         yield chunk
                         except httpx.ReadError as e:
                             logger.error(f"Read error during streaming: {e}")
