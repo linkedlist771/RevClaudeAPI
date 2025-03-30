@@ -156,6 +156,7 @@ async def proxy(request: Request, path: str = ""):
                             # Add a check if the stream is still active
                             # if not response.is_closed:
                             async for chunk in response.aiter_lines():
+                                    logger.debug(f"chunk:\n{chunk}")
                                     yield chunk
                                     # await asyncio.sleep(0.1)
                                     if "data" in chunk:
