@@ -141,6 +141,8 @@ async def proxy(request: Request, path: str = ""):
                         if chunk:  # Only store non-empty chunks
                             logger.debug(chunk)
                             chunks.append(chunk)
+                            if "DONE" in chunk:
+                                break
 
                     # Create a function that yields from the stored chunks
                     async def stream_from_buffer():
