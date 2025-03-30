@@ -15,10 +15,10 @@ function removeTargetElements() {
             item.remove();
         }
     }
-    
-    // 去掉<nav> </nav>这个标签
-    const navigationTag = document.querySelectorAll('nav');
-    for (let item of navigationTag) {
+
+    // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary
+    const navigationTags = document.querySelectorAll('div.bg-token-sidebar-surface-primary');
+    for (let item of navigationTags) {
             item.remove();
     }
     // 移除包含“共享”文本的 div
