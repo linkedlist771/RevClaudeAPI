@@ -25,10 +25,11 @@ function removeTargetElements() {
 
     // 去掉上边蓝bg-token-main-surface-primary
    const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
-    // for (let item of headerBar) {
-    //         item.remove();
-    // }
-    headerBar[0].remove();
+    for (let item of headerBar) {
+            item.remove();
+            break;
+    }
+    // headerBar[0].remove();
 
 
 
