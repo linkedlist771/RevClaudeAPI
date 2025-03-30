@@ -12,7 +12,6 @@ from starlette.background import BackgroundTask
 from loguru import logger
 import time
 
-from checking.main import headers
 
 app = FastAPI()
 
