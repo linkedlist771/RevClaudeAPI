@@ -130,9 +130,15 @@ async def proxy(request: Request, path: str = ""):
 
         try:
             if "backend-api/conversation" in str(path) and request.method == "POST":
-                async def stream_response(client):
+                async def stream_response():
+                    # 在流处理函数内部创建一个新的客户端
+                    async with httpx.AsyncClient(
+                            follow_redirects=False,
+                            timeout=httpx.Timeout(60.0),
+                            limits=httpx.Limits(max_connections=10)
+                    ) as local_client:
                         try:
-                            async with client.stream(
+                            async with local_client.stream(
                                     method=request.method,
                                     url=target_url,
                                     headers=request.headers,
@@ -141,27 +147,23 @@ async def proxy(request: Request, path: str = ""):
                                     cookies=cookies,
                                     follow_redirects=False) as response:
 
-                                for key, value in response.headers.items():
-                                    logger.debug(f"Response header: {key}: {value}")
-
                                 async for chunk in response.aiter_lines():
                                     logger.debug(f"chunk:\n{chunk}")
                                     yield chunk
                                     if "data" in chunk:
-                                        yield "\n"
-                                        yield "\n"
+                                        yield "\n\n"
                                     if "event" in chunk:
                                         yield "\n"
                         except Exception as e:
                             from traceback import format_exc
                             logger.error(format_exc())
-                            return
-                            # yield f"event: error\ndata: {{\"error\": \"{str(e)}\"}}}\n\n"
+                            yield f"event: error\ndata: {{\"error\": \"{str(e).replace('\"', '\\\\')}\"}}}\n\n"
 
                 return StreamingResponse(
-                        stream_response(client),
-                        status_code=200,
-                    headers={"Content-Type": "text/event-stream"})
+                    stream_response(),
+                    status_code=200,
+                    headers={"Content-Type": "text/event-stream"}
+                )
             else:
                 response = await client.request(
                     method=request.method,
