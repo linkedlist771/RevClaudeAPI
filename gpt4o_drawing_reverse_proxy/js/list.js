@@ -93,15 +93,26 @@ for (let button of allButtons) {
             div.innerHTML === 'ChatGPT 也可能会犯错。 | ©️ChatGPT 2023-2025') {
             div.remove();
         }
-
         // 移除包含“搜索”按钮的 div
-        if (div.style && (div.style.viewTransitionName === 'var(--vt-composer-search-action)'
-            || div.style.viewTransitionName==="var(--vt-composer-research-action)")&&
-            (div.querySelector('button[aria-label="搜索"]')||div.querySelector('button[aria-label="深入研究"]'))
-        ) {
+        if (div.style && div.style.viewTransitionName === 'var(--vt-composer-search-action)'
+            &&
+            div.querySelector('button[aria-label="搜索"]')
+        )
+        {
             div.remove();
         }
-// 深入研究
+
+            // 移除包含“搜索”按钮的 div
+        if (div.style && div.style.viewTransitionName==='var(--vt-composer-research-action)'
+            &&
+           div.querySelector('button[aria-label="深入研究"]')
+        )
+        {
+            div.remove();
+        }
+
+
+
         if (div.querySelector('button[aria-label="使用工具"]'))
         {
             div.querySelector('button[aria-label="使用工具"]').click()
