@@ -127,9 +127,11 @@ async def proxy(request: Request, path: str = ""):
 
         # Get cookies from request
         cookies = request.cookies
+        logger.debug(f"cookies:\n{cookies}")
 
         try:
             if "backend-api/conversation" in str(path) and request.method == "POST":
+                logger.debug(f"target url:\n{target_url}")
                 async with client.stream(
                                     method=request.method,
                                     url=target_url,
