@@ -21,7 +21,7 @@ function removeTargetElements() {
     }
 
     // 移除深入研究
-    const deepresearch = document.querySelectorAll('button');
+    const deepresearch = document.querySelectorAll('div');
     for (let item of deepresearch) {
         if (item.textContent.includes('深入研究')) {
             item.remove();
