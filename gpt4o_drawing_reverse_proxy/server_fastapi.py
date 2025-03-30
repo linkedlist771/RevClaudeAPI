@@ -156,7 +156,7 @@ async def proxy(request: Request, path: str = ""):
                 # Return a streaming response
                 return StreamingResponse(
                     stream_response(),
-                    status_code=response.status_code,
+                    status_code=200,
                     headers={key: value for key, value in response.headers.items()
                              if key.lower() not in ['content-length', 'transfer-encoding']}
                 )
