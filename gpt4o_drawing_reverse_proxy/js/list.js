@@ -156,14 +156,17 @@ for (let button of allButtons) {
 
     // 选中画布
     // 选中元素并添加span
-    // const textAreaP = document.querySelector('div[id="prompt-textarea"] p');
-    // const span = document.createElement('span');
-    // span.setAttribute('data-mention-id', 'picture_v2');
-    // span.setAttribute('data-mention-hint', '创建图像 ');
-    // span.className = 'hint-pill';
-    // span.contentEditable = false;
-    // span.textContent = '创建图像 ';
-    // textAreaP.appendChild(span);
+     const textAreaP = document.querySelector('div[id="prompt-textarea"] p');
+    if (textAreaP && !textAreaP.textContent.includes('创建图像'))
+    {
+            const span = document.createElement('span');
+            span.setAttribute('data-mention-id', 'picture_v2');
+            span.setAttribute('data-mention-hint', '创建图像');
+            span.className = 'hint-pill';
+            span.contentEditable = false;
+            span.textContent = '创建图像';
+            textAreaP.appendChild(span);
+    }
 
     // 删除特定的button
 }
