@@ -20,6 +20,16 @@ function removeTargetElements() {
         }
     }
 
+    // 移除深入研究
+    const deepresearch = document.querySelectorAll('button');
+    for (let item of deepresearch) {
+        if (item.textContent.includes('深入研究')) {
+            item.remove();
+        }
+
+    }
+
+
     // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary
     const navigationTags = document.querySelectorAll('div.bg-token-sidebar-surface-primary');
     for (let item of navigationTags) {
@@ -32,7 +42,7 @@ function removeTargetElements() {
     // 去掉上边蓝bg-token-main-surface-primary
    const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
     for (let item of headerBar) {
-        if(item.textContent.includes("ChatGPT"))
+        if(item.textContent.includes("Claude"))
             item.remove();
     }
     // headerBar[0].remove();
@@ -82,15 +92,15 @@ for (let button of allButtons) {
             div.remove();
         }
 
-        // 移除 ChatGPT 4o div
+        // 移除 Claude 4o div
         if (div.className === 'text-token-text-secondary' &&
-            div.innerHTML === 'ChatGPT <span class="text-token-text-secondary">4o</span>') {
+            div.innerHTML === 'Claude <span class="text-token-text-secondary">4o</span>') {
             div.remove();
         }
 
-        // 移除 ChatGPT copyright div
+        // 移除 Claude copyright div
         if (div.className === '' &&
-            div.innerHTML === 'ChatGPT 也可能会犯错。 | ©️ChatGPT 2023-2025') {
+            div.innerHTML === 'Claude 也可能会犯错。 | ©️Claude 2023-2025') {
             div.remove();
         }
 
@@ -111,7 +121,7 @@ for (let button of allButtons) {
     const h1s = document.getElementsByTagName('h1');
     for (let h1 of h1s) {
         if (h1.className.includes('flex h-full items-end justify-center') &&
-            h1.textContent === 'Hello, ChatGPT!') {
+            h1.textContent === 'Hello, Claude!') {
             h1.remove();
         }
     }
