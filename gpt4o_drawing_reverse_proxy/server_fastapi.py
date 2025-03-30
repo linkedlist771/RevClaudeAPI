@@ -89,7 +89,6 @@ async def process_response(response):
 
 # Main proxy route
 @app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-
 @app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
     start_time = time.time()
@@ -128,48 +127,6 @@ async def proxy(request: Request, path: str = ""):
                 cookies=cookies,  # Pass cookies directly
                 follow_redirects=True
             )
-
-            # # Handle redirect responses
-            # if response.status_code in [301, 302, 303, 307, 308]:
-            #     location = response.headers.get('Location', '')
-            #     logger.debug(f"Redirect detected to: {location}")
-            #
-            #     # For absolute URLs to the target site
-            #     if location.startswith('http'):
-            #         target_domain = TARGET_URL.split('//')[1]
-            #         if target_domain in location:
-            #             # Replace the target domain with our proxy domain
-            #             location = location.replace(
-            #                 TARGET_URL,
-            #                 f"{request.base_url.scheme}://{request.base_url.netloc}"
-            #             )
-            #             logger.info(f"Rewritten absolute URL to: {location}")
-            #     # For relative URLs
-            #     elif location.startswith('/'):
-            #         # Convert to absolute URL using our proxy domain
-            #         location = f"{request.base_url.scheme}://{request.base_url.netloc}{location}"
-            #         logger.info(f"Converted relative URL to: {location}")
-            #
-            #     # Copy original headers, removing problematic ones
-            #     response_headers = {key: value for key, value in response.headers.items()
-            #                         if key.lower() not in ['content-length', 'transfer-encoding']}
-            #     response_headers['Location'] = location
-            #
-            #     # Add any cookies from the response
-            #     cookies = response.cookies
-            #
-            #     # Add debugging
-            #     logger.info(f"Returning redirect to: {location}")
-            #     logger.info(f"Status code: {response.status_code}")
-            #     logger.info(f"Headers: {response_headers}")
-            #
-            #     # Create response with the proper redirect status and location
-            #     return Response(
-            #         content=b"",
-            #         status_code=response.status_code,
-            #         headers=response_headers
-            #     )
-
             # Check content type
             content_type = response.headers.get('Content-Type', '')
             logger.debug(f"content_type:{content_type}")
