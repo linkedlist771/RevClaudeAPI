@@ -97,11 +97,11 @@ for (let button of allButtons) {
 
         // 移除包含“搜索”按钮的 div
         if (div.style && div.style.viewTransitionName === 'var(--vt-composer-search-action)' &&
-            (div.querySelector('button[aria-label="搜索"]'))
+            (div.querySelector('button[aria-label="搜索"]')||div.querySelector('button[aria-label="深入研究"]'))
         ) {
             div.remove();
         }
-
+// 深入研究
         if (div.querySelector('button[aria-label="使用工具"]'))
         {
             div.querySelector('button[aria-label="使用工具"]').click()
