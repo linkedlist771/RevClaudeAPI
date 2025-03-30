@@ -21,6 +21,13 @@ function removeTargetElements() {
     for (let item of navigationTags) {
             item.remove();
     }
+
+    // 去掉上边蓝bg-token-main-surface-primary
+   const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
+    for (let item of headerBar) {
+            item.remove();
+    }
+
     // 移除包含“共享”文本的 div
     const shareDivs = document.querySelectorAll('div.flex.w-full.items-center.justify-center.gap-1\\.5');
     for (let div of shareDivs) {
