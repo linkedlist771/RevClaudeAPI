@@ -147,9 +147,9 @@ async def proxy(request: Request, path: str = ""):
                     #             break
                     # logger.debug(chunks)
                     # Create an async generator for streaming with better error handling
-                    async def stream_response():
+                    async def stream_response(response):
                         try:
-                            logger.debug(f"response.is_closed :{response.is_closed}")
+                            # logger.debug(f"response.is_closed :{response.is_closed}")
                             # Add a check if the stream is still active
                             # if not response.is_closed:
                             async for chunk in response.aiter_lines():
@@ -171,7 +171,7 @@ async def proxy(request: Request, path: str = ""):
 
                     # Return a streaming response
                     return StreamingResponse(
-                        stream_response(),
+                        stream_response(response),
                         status_code=response.status_code,
                         headers=response.headers
                     )
