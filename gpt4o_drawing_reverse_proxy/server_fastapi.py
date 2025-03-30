@@ -133,12 +133,7 @@ async def proxy(request: Request, path: str = ""):
                 status_code = None
                 headers = None
                 async def stream_response():
-                    nonlocal status_code
-                    nonlocal headers
                     try:
-                        # logger.debug(f"response.is_closed :{response.is_closed}")
-                        # Add a check if the stream is still active
-                        # if not response.is_closed:
                         async with client.stream(
                                 method=request.method,
                                 url=target_url,
@@ -161,13 +156,12 @@ async def proxy(request: Request, path: str = ""):
                     except Exception as e:
                         from traceback import format_exc
                         logger.error(format_exc())
-                        # yield b"Error during streaming: " + str(e).encode()
 
                     # Return a streaming response
                 return StreamingResponse(
                         stream_response(),
-                        status_code=status_code,
-                        headers=headers)
+                        status_code=200,
+                        headers={})
             else:
                 response = await client.request(
                     method=request.method,
