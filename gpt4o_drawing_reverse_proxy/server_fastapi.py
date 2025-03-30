@@ -127,55 +127,39 @@ async def proxy(request: Request, path: str = ""):
 
         try:
             if "backend-api/conversation" in str(path) and request.method == "POST":
-                async with client.stream(
-                        method=request.method,
-                        url=target_url,
-                        headers=headers,
-                        params=request.query_params,
-                        content=body,
-                        cookies=cookies,
-                        follow_redirects=False
-                ) as response:
-                    # logger.debug(f"response.is_closed :{response.is_closed}")
-                    # logger.debug(f"response.is_closed :{response.is_closed}")
-                    # chunks = []
-                    # async for chunk in response.aiter_lines():
-                    #     if chunk:  # Only store non-empty chunks
-                    #         logger.debug(chunk)
-                    #         chunks.append(chunk)
-                    #         if "DONE" in str(chunk):
-                    #             break
-                    # logger.debug(chunks)
-                    # Create an async generator for streaming with better error handling
-                    async def stream_response(response):
-                        try:
-                            # logger.debug(f"response.is_closed :{response.is_closed}")
-                            # Add a check if the stream is still active
-                            # if not response.is_closed:
-                            async for chunk in response.aiter_lines():
-                                    yield chunk
-                                    # await asyncio.sleep(0.1)
-                                    if "data" in chunk:
-                                        yield "\n"
-                                        yield "\n"
-                                    if "event" in chunk:
-                                        yield "\n"
-                                    if "DONE" in str(chunk):
-                                        break
-                        except httpx.ReadError as e:
-                            logger.error(f"Read error during streaming: {e}")
-                            yield b"Connection interrupted. Please try again."
-                        except Exception as e:
-                            logger.error(f"Error during streaming: {e}")
-                            yield b"Error during streaming: " + str(e).encode()
+                response = await client.stream(
+                    method=request.method,
+                    url=target_url,
+                    headers=headers,
+                    params=request.query_params,
+                    content=body,
+                    cookies=cookies,
+                    follow_redirects=False
+                )
+                async def stream_response(__response):
+                    try:
+                        async for chunk in response.aiter_lines():
+                                yield chunk
+                                # await asyncio.sleep(0.1)
+                                if "data" in chunk:
+                                    yield "\n"
+                                    yield "\n"
+                                if "event" in chunk:
+                                    yield "\n"
+                                if "DONE" in str(chunk):
+                                    break
+                    except httpx.ReadError as e:
+                        logger.error(f"Read error during streaming: {e}")
+                        yield b"Connection interrupted. Please try again."
+                    except Exception as e:
+                        logger.error(f"Error during streaming: {e}")
+                        yield b"Error during streaming: " + str(e).encode()
 
-                    # Return a streaming response
-                    return StreamingResponse(
-                        stream_response(response),
-                        status_code=response.status_code,
-                        headers=response.headers
-                    )
-
+                return StreamingResponse(
+                    stream_response(response),
+                    status_code=response.status_code,
+                    headers=response.headers
+                )
             else:
                 # Send request to target server
                 response = await client.request(
