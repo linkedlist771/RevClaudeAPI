@@ -129,7 +129,8 @@ async def proxy(request: Request, path: str = ""):
         cookies = request.cookies
 
         try:
-            if "backend-api/conversation" in str(path) and request.method == "POST":
+            if False: #"backend-api/conversation" in str(path) and request.method == "POST":
+
                 async def stream_response():
                     async with httpx.AsyncClient(follow_redirects=False,
                                                  timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0,
