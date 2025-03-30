@@ -48,6 +48,8 @@ function removeTargetElements() {
         }
     }
 
+    // 删除下边的？按钮
+
     // 移除 aria-label="yanjiu" 的按钮
     const yanjiuButton = document.querySelector('button[aria-label="yanjiu"]');
     if (yanjiuButton) {

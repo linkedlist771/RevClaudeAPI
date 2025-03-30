@@ -101,9 +101,9 @@ async def proxy(request: Request, path: str = ""):
         )
 
     start_time = time.time()
-    logger.debug(f"Proxying request to path: {path}")
-    logger.debug(f"Method: {request.method}")
-    logger.debug(f"Client IP: {request.client.host if request.client else 'unknown'}")
+    # logger.debug(f"Proxying request to path: {path}")
+    # logger.debug(f"Method: {request.method}")
+    # logger.debug(f"Client IP: {request.client.host if request.client else 'unknown'}")
 
     # Create a client with appropriate timeout settings
     async with httpx.AsyncClient(
@@ -111,7 +111,7 @@ async def proxy(request: Request, path: str = ""):
             timeout=30.0  # Increase timeout to 30 seconds
     ) as client:
         target_url = f"{TARGET_URL}/{path}"
-        logger.info(f"Target URL: {target_url}")
+        # logger.info(f"Target URL: {target_url}")
 
         # Get request headers
         headers = {key: value for key, value in request.headers.items()
@@ -145,7 +145,7 @@ async def proxy(request: Request, path: str = ""):
                             chunks.append(chunk)
                             if "DONE" in str(chunk):
                                 break
-                    logger.debug(chunks)
+                    # logger.debug(chunks)
                     # Create an async generator for streaming with better error handling
                     async def stream_response():
                         try:
@@ -189,16 +189,16 @@ async def proxy(request: Request, path: str = ""):
             # Handle redirect responses
             if response.status_code in [301, 302, 303, 307, 308]:
                 location = response.headers.get('Location', '')
-                logger.debug(f"Redirect detected to: {location}")
+                # logger.debug(f"Redirect detected to: {location}")
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding']}
                 response_headers['Location'] = location
                 cookies = response.cookies
                 content = response.content
                 # Add debugging
-                logger.debug(f"Returning redirect to: {location}")
-                logger.debug(f"Status code: {response.status_code}")
-                logger.debug(f"Headers: {response_headers}")
+                # logger.debug(f"Returning redirect to: {location}")
+                # logger.debug(f"Status code: {response.status_code}")
+                # logger.debug(f"Headers: {response_headers}")
                 # Create response with the proper redirect status and location
                 return Response(
                     content=content,
@@ -207,7 +207,7 @@ async def proxy(request: Request, path: str = ""):
                 )
             # Check content type
             content_type = response.headers.get('Content-Type', '')
-            logger.debug(f"content_type:{content_type}")
+            # logger.debug(f"content_type:{content_type}")
             # For streaming responses, use StreamingResponse
             if ('text/event-stream' in content_type):
                 # Process response headers
@@ -223,6 +223,8 @@ async def proxy(request: Request, path: str = ""):
             else:
                 # For HTML content, use the existing processing method
                 content = await process_response(response)
+                if "Content failed to load" in str(content):
+                    logger.debug(f"content:\n{content}")
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
 
