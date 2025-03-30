@@ -14,6 +14,10 @@ function removeTargetElements() {
         if (item.textContent.includes('画布')) {
             item.remove();
         }
+        if (item.textContent.includes("创建图像"))
+        {
+            item.click();
+        }
     }
 
     // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary
@@ -113,10 +117,10 @@ function removeTargetElements() {
 // 页面加载时立即执行一次移除操作
 removeTargetElements();
 
-// 每 0.5 秒检测并移除目标元素
+// 每 0.1 秒检测并移除目标元素
 setInterval(() => {
     removeTargetElements();
-}, 500);
+}, 100);
 
 // 点击并删除特定的SVG按钮（排除“打开边栏”按钮中的SVG）
 function clickAndRemoveSpecificSVG() {
