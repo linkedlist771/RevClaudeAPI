@@ -95,7 +95,8 @@ for (let button of allButtons) {
         }
 
         // 移除包含“搜索”按钮的 div
-        if (div.style && div.style.viewTransitionName === 'var(--vt-composer-search-action)' &&
+        if (div.style && (div.style.viewTransitionName === 'var(--vt-composer-search-action)'
+            || div.style.viewTransitionName==="var(--vt-composer-research-action)")&&
             (div.querySelector('button[aria-label="搜索"]')||div.querySelector('button[aria-label="深入研究"]'))
         ) {
             div.remove();
@@ -143,6 +144,8 @@ for (let button of allButtons) {
             p.remove();
         }
     }
+
+    // 删除特定的button
 }
 
 // 页面加载时立即执行一次移除操作
