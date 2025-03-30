@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 
 import fire
 from fastapi import FastAPI, Request, Response
@@ -153,6 +154,7 @@ async def proxy(request: Request, path: str = ""):
                             # if not response.is_closed:
                             for chunk in chunks:
                                     yield chunk
+                                    await asyncio.sleep(0.1)
                         except httpx.ReadError as e:
                             logger.error(f"Read error during streaming: {e}")
                             yield b"Connection interrupted. Please try again."
