@@ -26,7 +26,6 @@ import json
 import re
 import uuid
 import os
-import chardet
 from bs4 import BeautifulSoup
 import traceback
 import time
@@ -160,42 +159,9 @@ def proxy(path):
         return f"Error: {str(e)}", 500
 
 
-@app.route('/jk.js', methods=['GET'])
-def serve_jk_js():
-    js_code = read_js_file('jk.js')
-    return Response(js_code, mimetype='application/javascript')
-
-
-@app.route('/chaxun', methods=['GET'])
-def chaxun():
-    # 获取cookie中的usertoken
-    usertoken = request.cookies.get('usertoken')
-
-    if not usertoken:
-        return jsonify({"error": "usertoken is missing"}), 400
-
-    # 目标URL
-    target_url = f"http://127.0.0.1:5999/usage_info?token={usertoken}"
-
-    try:
-        # 发送请求到目标服务器
-        response = requests.get(target_url)
-
-        # 返回目标服务器的响应内容
-        return Response(response.content, status=response.status_code, headers=dict(response.headers))
-    except requests.RequestException as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/huidang.js', methods=['GET'])
-def serve_huidang_js():
-    js_code = read_js_file('huidang.js')
-    return Response(js_code, mimetype='application/javascript')
-
-
 if __name__ == '__main__':
-    print("启动反向代理服务器，监听0.0.0.0:5000...")
+    print("启动反向代理服务器，监听0.0.0.0:5001...")
     print("JavaScript注入已启用，将注入 /list.js 到所有HTML响应")
     print(f"JavaScript文件目录: {js_dir}")
     # 在生产环境中，你可能需要使用更强大的WSGI服务器如Gunicorn
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=5001, debug=True, threaded=True)
