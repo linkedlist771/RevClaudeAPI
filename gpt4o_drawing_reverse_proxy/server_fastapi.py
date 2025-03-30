@@ -133,21 +133,21 @@ async def proxy(request: Request, path: str = ""):
                 location = response.headers.get('Location', '')
                 logger.debug(f"Redirect detected to: {location}")
 
-                # For absolute URLs to the target site
-                if location.startswith('http'):
-                    target_domain = TARGET_URL.split('//')[1]
-                    if target_domain in location:
-                        # Replace the target domain with our proxy domain
-                        location = location.replace(
-                            TARGET_URL,
-                            f"{request.base_url.scheme}://{request.base_url.netloc}"
-                        )
-                        logger.info(f"Rewritten absolute URL to: {location}")
-                # For relative URLs
-                elif location.startswith('/'):
-                    # Convert to absolute URL using our proxy domain
-                    location = f"{request.base_url.scheme}://{request.base_url.netloc}{location}"
-                    logger.info(f"Converted relative URL to: {location}")
+            #     # For absolute URLs to the target site
+            #     if location.startswith('http'):
+            #         target_domain = TARGET_URL.split('//')[1]
+            #         if target_domain in location:
+            #             # Replace the target domain with our proxy domain
+            #             location = location.replace(
+            #                 TARGET_URL,
+            #                 f"{request.base_url.scheme}://{request.base_url.netloc}"
+            #             )
+            #             logger.info(f"Rewritten absolute URL to: {location}")
+            #     # For relative URLs
+            #     elif location.startswith('/'):
+            #         # Convert to absolute URL using our proxy domain
+            #         location = f"{request.base_url.scheme}://{request.base_url.netloc}{location}"
+            #         logger.info(f"Converted relative URL to: {location}")
 
                 # Copy original headers, removing problematic ones
                 response_headers = {key: value for key, value in response.headers.items()
@@ -169,7 +169,6 @@ async def proxy(request: Request, path: str = ""):
                     status_code=response.status_code,
                     headers=response_headers
                 )
-
             # Check content type
             content_type = response.headers.get('Content-Type', '')
             logger.debug(f"content_type:{content_type}")
