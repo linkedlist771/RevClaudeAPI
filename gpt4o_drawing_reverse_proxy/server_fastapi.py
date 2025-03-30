@@ -91,7 +91,7 @@ async def process_response(response):
 
 
 # 主要代理路由
-@app.route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+@app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
     logger.debug(f"path:\n{path}")
     client = httpx.AsyncClient(follow_redirects=False)
@@ -117,6 +117,28 @@ async def proxy(request: Request, path: str = ""):
             cookies=request.cookies,
             follow_redirects=False
         )
+
+        # 特殊处理重定向响应
+        if response.status_code in [301, 302, 303, 307, 308]:
+            location = response.headers.get('Location', '')
+            logger.debug(f"Redirect detected to: {location}")
+
+            # 如果是相对URL，转换为绝对URL
+            if location.startswith('/'):
+                # 保持在相同域名下
+                location = f"{request.base_url.scheme}://{request.base_url.netloc}/{location.lstrip('/')}"
+
+            # 返回重定向响应给客户端
+            response_headers = {key: value for key, value in response.headers.items()
+                                if key.lower() not in ['content-length', 'transfer-encoding']}
+            response_headers['Location'] = location
+
+            await client.aclose()
+            return Response(
+                content="",
+                status_code=response.status_code,
+                headers=response_headers
+            )
 
         # 检查内容类型
         content_type = response.headers.get('Content-Type', '')
@@ -147,20 +169,24 @@ async def proxy(request: Request, path: str = ""):
             )
 
     except Exception as e:
+        logger.error(f"Proxy error: {str(e)}")
         await client.aclose()
         return Response(content=f"Error: {str(e)}", status_code=500)
 
 
 # 根路径也使用代理
-@app.route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+@app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def root_proxy(request: Request):
     return await proxy(request, "")
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", default="0.0.0.0", help="host")
 parser.add_argument("--port", default=5001, help="port")
 parser.add_argument("--workers", default=1, type=int, help="workers")
 args = parser.parse_args()
+
+
 # logger.add(LOGS_PATH / "log_file.log", rotation="1 week")  # 每周轮换一次文件
 # app = register_middleware(app)
 
@@ -172,7 +198,6 @@ def start_server(port=args.port, host=args.host):
         server.run()
     finally:
         logger.info("Server shutdown.")
-
 
 
 if __name__ == '__main__':
