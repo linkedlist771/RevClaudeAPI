@@ -13,9 +13,7 @@ from flask import Flask, request, make_response, jsonify, redirect
 from datetime import datetime, timedelta
 
 import requests
-import pymysql
 import logging
-import pymysql.cursors
 from datetime import datetime
 from flask import Flask, request, jsonify, send_file
 import requests
