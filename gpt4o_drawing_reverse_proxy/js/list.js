@@ -15,7 +15,12 @@ function removeTargetElements() {
             item.remove();
         }
     }
-
+    
+    // 去掉<nav> </nav>这个标签
+    const navigationTag = document.querySelectorAll('nav');
+    for (let item of navigationTag) {
+            item.remove();
+    }
     // 移除包含“共享”文本的 div
     const shareDivs = document.querySelectorAll('div.flex.w-full.items-center.justify-center.gap-1\\.5');
     for (let div of shareDivs) {
