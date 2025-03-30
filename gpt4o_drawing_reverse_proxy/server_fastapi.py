@@ -1,5 +1,6 @@
 import argparse
 
+import fire
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,7 @@ import os
 import uvicorn
 from starlette.background import BackgroundTask
 from loguru import logger
+
 from typing import Optional
 import asyncio
 
