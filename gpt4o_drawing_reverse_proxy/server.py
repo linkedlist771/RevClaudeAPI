@@ -96,6 +96,7 @@ async def generate_modified_stream(response) -> AsyncGenerator[bytes, None]:
 
 
 # Main proxy route
+@app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 @app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
     start_time = time.time()
@@ -184,10 +185,7 @@ async def proxy(request: Request, path: str = ""):
         logger.info(f"Request completed in {elapsed:.2f} seconds")
 
 
-# Root path also uses proxy
-@app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-async def root_proxy(request: Request):
-    return await proxy(request, "")
+
 
 
 parser = argparse.ArgumentParser()
