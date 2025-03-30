@@ -134,32 +134,38 @@ async def proxy(request: Request, path: str = ""):
             #         timeout=10,
             # ) as response:
             if "backend-api/conversation" in str(path) and request.method == "POST":
-                # Handle streaming response
-                response = client.stream(
-                    method=request.method,
-                    url=target_url,
-                    headers=headers,
-                    params=request.query_params,
-                    content=body,
-                    cookies=cookies,  # Pass cookies directly
-                    follow_redirects=False  # CRITICAL CHANGE: Don't automatically follow redirects
-                )
-                # If not a redirect, create a streaming response
-                async def stream_response():
-                    try:
-                        async for chunk in response.aiter_bytes():
-                            yield chunk
-                    except Exception as e:
-                        logger.error(f"Error during streaming: {e}")
-                        yield b"Error during streaming"
+                async with client.stream(
+                        method=request.method,
+                        url=target_url,
+                        headers=headers,
+                        params=request.query_params,
+                        content=body,
+                        cookies=cookies,
+                        follow_redirects=False
+                ) as response:
 
-                # Return a streaming response
-                return StreamingResponse(
-                    stream_response(),
-                    status_code=200,
-                    headers={key: value for key, value in response.headers.items()
-                             if key.lower() not in ['content-length', 'transfer-encoding']}
-                )
+                    # If not a redirect, create a streaming response
+                    response_headers = {
+                        key: value for key, value in response.headers.items()
+                        if key.lower() not in ['content-length', 'transfer-encoding']
+                    }
+
+                    # Create an async generator for streaming
+                    async def stream_response():
+                        try:
+                            async for chunk in response.aiter_bytes():
+                                yield chunk
+                        except Exception as e:
+                            logger.error(f"Error during streaming: {e}")
+                            yield b"Error during streaming"
+
+                    # Return a streaming response
+                    return StreamingResponse(
+                        stream_response(),
+                        status_code=response.status_code,
+                        headers=response_headers
+                    )
+
             else:
                 # Send request to target server
                 response = await client.request(
