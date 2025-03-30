@@ -127,30 +127,35 @@ async def proxy(request: Request, path: str = ""):
 
         try:
             if "backend-api/conversation" in str(path) and request.method == "POST":
-                async with client.stream(
-                        method=request.method,
-                        url=target_url,
-                        headers=headers,
-                        params=request.query_params,
-                        content=body,
-                        cookies=cookies,
-                        follow_redirects=False
-                ) as response:
-                    # logger.debug(f"response.is_closed :{response.is_closed}")
-                    # logger.debug(f"response.is_closed :{response.is_closed}")
-                    chunks = []
-                    async for chunk in response.aiter_lines():
-                        if chunk:  # Only store non-empty chunks
-                            logger.debug(chunk)
-                            chunks.append(chunk)
-                            if "DONE" in str(chunk):
-                                break
-                    async def stream_response():
+
+                request = client.build_request(
+                    method=request.method,
+                    url=target_url,
+                    headers=headers,
+                    params=request.query_params,
+                    content=body,
+                    cookies=cookies,
+                )
+                response = await client.send(
+                    request=request,
+                    follow_redirects=False,
+                    stream=True,
+                )
+                    # # logger.debug(f"response.is_closed :{response.is_closed}")
+                    # # logger.debug(f"response.is_closed :{response.is_closed}")
+                    # chunks = []
+                    # async for chunk in response.aiter_lines():
+                    #     if chunk:  # Only store non-empty chunks
+                    #         logger.debug(chunk)
+                    #         chunks.append(chunk)
+                    #         if "DONE" in str(chunk):
+                    #             break
+                async def stream_response():
                         try:
                             logger.debug(f"response.is_closed :{response.is_closed}")
                             # Add a check if the stream is still active
                             # if not response.is_closed:
-                            for chunk in chunks:
+                            for chunk in response:
                                     yield chunk
                                     # await asyncio.sleep(0.1)
                                     if "data" in chunk:
@@ -166,14 +171,11 @@ async def proxy(request: Request, path: str = ""):
                             yield b"Error during streaming: " + str(e).encode()
 
                     # Return a streaming response
-                    return StreamingResponse(
+                return StreamingResponse(
                         stream_response(),
                         status_code=response.status_code,
-                        headers=response.headers
-                    )
-
+                        headers=response.headers)
             else:
-                # Send request to target server
                 response = await client.request(
                     method=request.method,
                     url=target_url,
