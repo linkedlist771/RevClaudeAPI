@@ -96,19 +96,15 @@ async def proxy(request: Request, path: str = ""):
     logger.debug(f"Method: {request.method}")
     logger.debug(f"Client IP: {request.client.host if request.client else 'unknown'}")
 
-    # Create a client with appropriate timeout settings
+    # Create a client with appropriate settings
+    transport = httpx.AsyncHTTPTransport(retries=1)
     async with httpx.AsyncClient(
             follow_redirects=False,
-            timeout=30.0  # Increase timeout to 30 seconds
+            timeout=30.0,
+            transport=transport
     ) as client:
         target_url = f"{TARGET_URL}/{path}"
         logger.info(f"Target URL: {target_url}")
-
-        # Get request headers
-        headers = {key: value for key, value in request.headers.items()
-                   if key.lower() not in ['host', 'content-length']}
-        headers['Host'] = TARGET_URL.split('//')[1]
-        headers['Accept-Encoding'] = 'identity'
 
         # Get request body
         body = await request.body()
@@ -116,56 +112,153 @@ async def proxy(request: Request, path: str = ""):
         # Get cookies from request
         cookies = request.cookies
 
+        # Create browser-like headers
+        browser_headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'Sec-Ch-Ua-Platform': '"Windows"',
+            'Cache-Control': 'max-age=0',
+            'Host': TARGET_URL.split('//')[1],
+        }
+
+        # Add referer for non-root requests
+        if path:
+            base_url = f"{request.base_url.scheme}://{request.base_url.netloc}"
+            browser_headers['Referer'] = f"{base_url}/"
+
+        # Override with any specific headers from the original request
+        # Exclude some headers that should be controlled by our browser simulation
+        excluded_headers = ['host', 'content-length', 'user-agent', 'accept', 'accept-encoding']
+        for key, value in request.headers.items():
+            if key.lower() not in excluded_headers:
+                browser_headers[key] = value
+
+        # Debug headers
+        logger.debug(f"Request headers: {browser_headers}")
+        logger.debug(f"Request cookies: {cookies}")
+
         try:
-            # Send request to target server
+            # For POST requests, set appropriate Content-Type header
+            if request.method == 'POST':
+                content_type = request.headers.get('Content-Type', '')
+                if content_type:
+                    browser_headers['Content-Type'] = content_type
+
+                logger.debug(f"POST request with Content-Type: {content_type}")
+
+                # Attempt first session request to establish cookies/session
+                # Some sites need an initial GET before accepting POSTs
+                if not cookies:
+                    logger.debug("Making initial GET request to establish session")
+                    try:
+                        init_response = await client.get(
+                            TARGET_URL,
+                            headers=browser_headers,
+                            cookies=cookies,
+                            follow_redirects=True
+                        )
+                        # Update cookies
+                        cookies = {**cookies, **init_response.cookies}
+                        logger.debug(f"Initial cookies: {cookies}")
+                    except Exception as e:
+                        logger.warning(f"Initial GET request failed: {e}")
+
+            # Make the actual request
             response = await client.request(
                 method=request.method,
                 url=target_url,
-                headers=headers,
+                headers=browser_headers,
                 params=request.query_params,
                 content=body,
-                cookies=cookies,  # Pass cookies directly
-                follow_redirects=True
+                cookies=cookies,
+                follow_redirects=False
             )
-            # Check content type
-            content_type = response.headers.get('Content-Type', '')
-            logger.debug(f"content_type:{content_type}")
-            # For streaming responses, use StreamingResponse
-            if ('text/event-stream' in content_type):
-                # Process response headers
+
+            logger.debug(f"Response status: {response.status_code}")
+            logger.debug(f"Response headers: {dict(response.headers)}")
+
+            # For 403 responses, try to get more details
+            if response.status_code == 403:
+                logger.warning(f"403 Forbidden from {target_url}")
+                try:
+                    resp_body = await response.aread()
+                    logger.debug(f"Full response body: {resp_body}")
+
+                    # Check if there's any CloudFlare or security challenge
+                    if b'captcha' in resp_body.lower() or b'cloudflare' in resp_body.lower() or b'challenge' in resp_body.lower():
+                        logger.warning("Security challenge detected in response")
+                except Exception as e:
+                    logger.debug(f"Could not read full response body: {e}")
+
+            # Handle redirects
+            if response.status_code in [301, 302, 303, 307, 308]:
+                location = response.headers.get('Location', '')
+                logger.debug(f"Redirect detected to: {location}")
+
+                # Rewrite location as needed
+                if location.startswith('http'):
+                    target_domain = TARGET_URL.split('//')[1]
+                    if target_domain in location:
+                        location = location.replace(
+                            TARGET_URL,
+                            f"{request.base_url.scheme}://{request.base_url.netloc}"
+                        )
+                elif location.startswith('/'):
+                    location = f"{request.base_url.scheme}://{request.base_url.netloc}{location}"
+
+                # Create response headers including cookies
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding']}
+                response_headers['Location'] = location
 
-                # Return streaming response
+                return Response(
+                    content=b"",
+                    status_code=response.status_code,
+                    headers=response_headers
+                )
+
+            # Process content based on type
+            content_type = response.headers.get('Content-Type', '')
+
+            if 'text/event-stream' in content_type:
+                response_headers = {key: value for key, value in response.headers.items()
+                                    if key.lower() not in ['content-length', 'transfer-encoding']}
                 return StreamingResponse(
                     response.aiter_bytes(),
                     status_code=response.status_code,
                     headers=response_headers
                 )
             else:
-                # For HTML content, use the existing processing method
                 content = await process_response(response)
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
-                logger.debug(f"content:{content}")
+
+                # Add all cookies from response
+                for cookie_name, cookie_value in response.cookies.items():
+                    cookie_header = f"{cookie_name}={cookie_value}; Path=/"
+                    if 'set-cookie' in response_headers:
+                        if not isinstance(response_headers['set-cookie'], list):
+                            response_headers['set-cookie'] = [response_headers['set-cookie']]
+                        response_headers['set-cookie'].append(cookie_header)
+                    else:
+                        response_headers['set-cookie'] = cookie_header
+
                 return Response(
                     content=content,
                     status_code=response.status_code,
                     headers=response_headers
                 )
 
-        except httpx.TimeoutException:
-            logger.error(f"Request timed out for {target_url}")
-            return Response(
-                content="The request to the target server timed out. Please try again later.".encode(),
-                status_code=504
-            )
-        except httpx.ConnectError:
-            logger.error(f"Connection error for {target_url}")
-            return Response(
-                content="Unable to connect to the target server. Please check your connection and try again.".encode(),
-                status_code=502
-            )
         except Exception as e:
             logger.error(f"Proxy error: {str(e)}")
             import traceback
@@ -177,8 +270,6 @@ async def proxy(request: Request, path: str = ""):
         finally:
             elapsed = time.time() - start_time
             logger.info(f"Request completed in {elapsed:.2f} seconds")
-
-
 
 
 parser = argparse.ArgumentParser()
