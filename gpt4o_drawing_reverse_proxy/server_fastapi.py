@@ -129,16 +129,10 @@ async def proxy(request: Request, path: str = ""):
         cookies = request.cookies
 
         try:
-            if False: #"backend-api/conversation" in str(path) and request.method == "POST":
-
-                async def stream_response():
-                    async with httpx.AsyncClient(follow_redirects=False,
-                                                 timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0,
-                                                                       pool=30.0),
-                                                 limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-                                                 ) as local_client:  # 创建局部客户端
+            if "backend-api/conversation" in str(path) and request.method == "POST":
+                async def stream_response(client):
                         try:
-                            async with local_client.stream(
+                            async with client.stream(
                                     method=request.method,
                                     url=target_url,
                                     headers=request.headers,
@@ -165,9 +159,9 @@ async def proxy(request: Request, path: str = ""):
                             # yield f"event: error\ndata: {{\"error\": \"{str(e)}\"}}}\n\n"
 
                 return StreamingResponse(
-                        stream_response(),
+                        stream_response(client),
                         status_code=200,
-                        headers={})
+                    headers={"Content-Type": "text/event-stream"})
             else:
                 response = await client.request(
                     method=request.method,
