@@ -165,7 +165,8 @@ async def proxy(request: Request, path: str = ""):
                                     if "event" in chunk:
                                         yield "\n"
                         except Exception as e:
-                            logger.error(f"Error during streaming: {e}")
+                            from traceback import format_exc
+                            logger.error(format_exc())
                             # yield b"Error during streaming: " + str(e).encode()
                         finally:
                             await response.aclose()
