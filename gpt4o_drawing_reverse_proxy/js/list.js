@@ -97,37 +97,35 @@ for (let button of allButtons) {
         if (div.style && div.style.viewTransitionName === 'var(--vt-composer-search-action)'
             &&
             div.querySelector('button[aria-label="搜索"]')
-        )
-        {
+        ) {
             div.remove();
         }
 
-            // 移除包含“搜索”按钮的 div
-        if (div.style && div.style.viewTransitionName==='var(--vt-composer-research-action)'
+        // 移除包含“搜索”按钮的 div
+        if (div.style && div.style.viewTransitionName === 'var(--vt-composer-research-action)'
             &&
-           div.querySelector('button[aria-label="深入研究"]')
-        )
-        {
+            div.querySelector('button[aria-label="深入研究"]')
+        ) {
             div.remove();
         }
 
+        // <span data-mention-id="picture_v2" data-mention-hint="创建图像 " className="hint-pill"
+        //       contentEditable="false">创建图像 </span>
 
+        // if (div.querySelector('button[aria-label="使用工具"]'))
+        // {
+        //     div.querySelector('button[aria-label="使用工具"]').click()
+        //         // 移除特定的“画布”按钮
+        // const menuItems = document.querySelectorAll('div[role="menuitem"]');
+        // for (let item of menuItems) {
+        //     if (item.textContent.includes("创建图像"))
+        //     {
+        //         item.click();
+        //     }
+        // }
+        // }
 
-        if (div.querySelector('button[aria-label="使用工具"]'))
-        {
-            div.querySelector('button[aria-label="使用工具"]').click()
-                // 移除特定的“画布”按钮
-        const menuItems = document.querySelectorAll('div[role="menuitem"]');
-        for (let item of menuItems) {
-            if (item.textContent.includes("创建图像"))
-            {
-                item.click();
-            }
-        }
-        }
-
-        if(div.className==="group absolute bottom-2 end-2 z-20 flex flex-col gap-1 md:flex lg:bottom-3 lg:end-3" && div.querySelector('button[aria-haspopup="menu"]'))
-        {
+        if (div.className === "group absolute bottom-2 end-2 z-20 flex flex-col gap-1 md:flex lg:bottom-3 lg:end-3" && div.querySelector('button[aria-haspopup="menu"]')) {
             div.remove()
         }
 
@@ -155,6 +153,17 @@ for (let button of allButtons) {
             p.remove();
         }
     }
+
+    // 选中画布
+    // 选中元素并添加span
+    const textAreaP = document.querySelector('div[id="prompt-textarea"] p');
+    const span = document.createElement('span');
+    span.setAttribute('data-mention-id', 'picture_v2');
+    span.setAttribute('data-mention-hint', '创建图像 ');
+    span.className = 'hint-pill';
+    span.contentEditable = false;
+    span.textContent = '创建图像 ';
+    textAreaP.appendChild(span);
 
     // 删除特定的button
 }
