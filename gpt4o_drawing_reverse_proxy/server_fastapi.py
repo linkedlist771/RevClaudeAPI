@@ -107,8 +107,10 @@ async def proxy(request: Request, path: str = ""):
 
     # Create a client with appropriate timeout settings
     async with httpx.AsyncClient(
-            follow_redirects=False,  # CRITICAL CHANGE: Don't automatically follow redirects
-            timeout=30.0  # Increase timeout to 30 seconds
+            follow_redirects=False,
+            timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
+            limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+            http2=True
     ) as client:
         target_url = f"{TARGET_URL}/{path}"
         # logger.info(f"Target URL: {target_url}")
