@@ -157,7 +157,6 @@ async def proxy(request: Request, path: str = ""):
                         except Exception as e:
                             from traceback import format_exc
                             logger.error(format_exc())
-                            yield f"event: error\ndata: {{\"error\": \"{str(e).replace('\"', '\\\\')}\"}}}\n\n"
 
                 return StreamingResponse(
                     stream_response(),
