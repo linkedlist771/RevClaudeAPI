@@ -91,6 +91,7 @@ async def process_response(response):
 
 
 # 主要代理路由
+# 主要代理路由
 @app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
     logger.debug(f"path:\n{path}")
@@ -127,6 +128,14 @@ async def proxy(request: Request, path: str = ""):
             if location.startswith('/'):
                 # 保持在相同域名下
                 location = f"{request.base_url.scheme}://{request.base_url.netloc}/{location.lstrip('/')}"
+            elif location.startswith('http'):
+                # If it's an absolute URL to the target, rewrite it to point to our proxy
+                target_domain = TARGET_URL.split('//')[1]
+                if target_domain in location:
+                    location = location.replace(
+                        f"{TARGET_URL.split('//')[0]}//{target_domain}",
+                        f"{request.base_url.scheme}://{request.base_url.netloc}"
+                    )
 
             # 返回重定向响应给客户端
             response_headers = {key: value for key, value in response.headers.items()
@@ -135,7 +144,7 @@ async def proxy(request: Request, path: str = ""):
 
             await client.aclose()
             return Response(
-                content="",
+                content=b"",  # Use bytes instead of string
                 status_code=response.status_code,
                 headers=response_headers
             )
@@ -171,7 +180,7 @@ async def proxy(request: Request, path: str = ""):
     except Exception as e:
         logger.error(f"Proxy error: {str(e)}")
         await client.aclose()
-        return Response(content=f"Error: {str(e)}", status_code=500)
+        return Response(content=f"Error: {str(e)}".encode(), status_code=500)  # Encode the error message
 
 
 # 根路径也使用代理
