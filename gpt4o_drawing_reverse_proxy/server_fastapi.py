@@ -135,7 +135,8 @@ async def proxy(request: Request, path: str = ""):
                         cookies=cookies,
                         follow_redirects=False
                 ) as response:
-                    # Create a buffer to store chunks while the response is open
+                    # logger.debug(f"response.is_closed :{response.is_closed}")
+                    # logger.debug(f"response.is_closed :{response.is_closed}")
                     chunks = []
                     async for chunk in response.aiter_lines():
                         if chunk:  # Only store non-empty chunks
@@ -143,19 +144,29 @@ async def proxy(request: Request, path: str = ""):
                             chunks.append(chunk)
                             if "DONE" in str(chunk):
                                 break
+                    logger.debug(chunks)
+                    # Create an async generator for streaming with better error handling
+                    async def stream_response():
+                        try:
+                            logger.debug(f"response.is_closed :{response.is_closed}")
+                            # Add a check if the stream is still active
+                            # if not response.is_closed:
+                            for chunk in chunks:
+                                    yield chunk
+                        except httpx.ReadError as e:
+                            logger.error(f"Read error during streaming: {e}")
+                            yield b"Connection interrupted. Please try again."
+                        except Exception as e:
+                            logger.error(f"Error during streaming: {e}")
+                            yield b"Error during streaming: " + str(e).encode()
 
-                    logger.debug(f"chunks:{chunks}")
-                    # Create a function that yields from the stored chunks
-                    async def stream_from_buffer():
-                        for chunk in chunks:
-                            yield chunk
-
-                    # Return a streaming response from our buffer
+                    # Return a streaming response
                     return StreamingResponse(
-                        stream_from_buffer(),
+                        stream_response(),
                         status_code=response.status_code,
                         headers=response.headers
                     )
+
             else:
                 # Send request to target server
                 response = await client.request(
