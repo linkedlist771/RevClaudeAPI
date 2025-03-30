@@ -91,6 +91,14 @@ async def process_response(response):
 @app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 @app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
+    if "error" in str(path):
+        # 204 not found
+        return Response(
+            status_code=204,
+            content="",
+            media_type="application/json"
+        )
+
     start_time = time.time()
     logger.debug(f"Proxying request to path: {path}")
     logger.debug(f"Method: {request.method}")
@@ -206,7 +214,7 @@ async def proxy(request: Request, path: str = ""):
                     status_code=response.status_code,
                     headers=response_headers
                 )
-            
+
         except httpx.TimeoutException:
             logger.error(f"Request timed out for {target_url}")
             return Response(
