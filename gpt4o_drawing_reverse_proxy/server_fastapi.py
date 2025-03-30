@@ -89,12 +89,14 @@ async def process_response(response):
 
 
 # Main proxy route
+@app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+
 @app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 async def proxy(request: Request, path: str = ""):
     start_time = time.time()
-    logger.info(f"Proxying request to path: {path}")
-    logger.info(f"Method: {request.method}")
-    logger.info(f"Client IP: {request.client.host if request.client else 'unknown'}")
+    logger.debug(f"Proxying request to path: {path}")
+    logger.debug(f"Method: {request.method}")
+    logger.debug(f"Client IP: {request.client.host if request.client else 'unknown'}")
 
     # Create a client with appropriate timeout settings
     async with httpx.AsyncClient(
@@ -189,7 +191,7 @@ async def proxy(request: Request, path: str = ""):
                 content = await process_response(response)
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
-
+                logger.debug(f"content:{content}")
                 return Response(
                     content=content,
                     status_code=response.status_code,
@@ -221,10 +223,6 @@ async def proxy(request: Request, path: str = ""):
             logger.info(f"Request completed in {elapsed:.2f} seconds")
 
 
-# Root path also uses proxy
-@app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-async def root_proxy(request: Request):
-    return await proxy(request, "")
 
 
 parser = argparse.ArgumentParser()
