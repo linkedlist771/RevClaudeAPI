@@ -125,52 +125,66 @@ async def proxy(request: Request, path: str = ""):
         cookies = request.cookies
 
         try:
-            # Send request to target server
-            response = await client.request(
-                method=request.method,
-                url=target_url,
-                headers=headers,
-                params=request.query_params,
-                content=body,
-                cookies=cookies,  # Pass cookies directly
-                follow_redirects=False  # CRITICAL CHANGE: Don't automatically follow redirects
-            )
+
+            # async with client.stream(
+            #         method="POST",
+            #         url=url,
+            #         headers=headers,
+            #         json=payload,
+            #         timeout=10,
+            # ) as response:
+            if "backend-api/conversation" in str(path) and request.method == "POST":
+                # Handle streaming response
+                response = client.stream(
+                    method=request.method,
+                    url=target_url,
+                    headers=headers,
+                    params=request.query_params,
+                    content=body,
+                    cookies=cookies,  # Pass cookies directly
+                    follow_redirects=False  # CRITICAL CHANGE: Don't automatically follow redirects
+                )
+                # If not a redirect, create a streaming response
+                async def stream_response():
+                    try:
+                        async for chunk in response.aiter_bytes():
+                            yield chunk
+                    except Exception as e:
+                        logger.error(f"Error during streaming: {e}")
+                        yield b"Error during streaming"
+
+                # Return a streaming response
+                return StreamingResponse(
+                    stream_response(),
+                    status_code=response.status_code,
+                    headers={key: value for key, value in response.headers.items()
+                             if key.lower() not in ['content-length', 'transfer-encoding']}
+                )
+            else:
+                # Send request to target server
+                response = await client.request(
+                    method=request.method,
+                    url=target_url,
+                    headers=headers,
+                    params=request.query_params,
+                    content=body,
+                    cookies=cookies,  # Pass cookies directly
+                    follow_redirects=False  # CRITICAL CHANGE: Don't automatically follow redirects
+                )
 
             # Handle redirect responses
             if response.status_code in [301, 302, 303, 307, 308]:
                 location = response.headers.get('Location', '')
                 logger.debug(f"Redirect detected to: {location}")
-
-            #     # For absolute URLs to the target site
-            #     if location.startswith('http'):
-            #         target_domain = TARGET_URL.split('//')[1]
-            #         if target_domain in location:
-            #             # Replace the target domain with our proxy domain
-            #             location = location.replace(
-            #                 TARGET_URL,
-            #                 f"{request.base_url.scheme}://{request.base_url.netloc}"
-            #             )
-            #             logger.info(f"Rewritten absolute URL to: {location}")
-            #     # For relative URLs
-            #     elif location.startswith('/'):
-            #         # Convert to absolute URL using our proxy domain
-            #         location = f"{request.base_url.scheme}://{request.base_url.netloc}{location}"
-            #         logger.info(f"Converted relative URL to: {location}")
-
-                # Copy original headers, removing problematic ones
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding']}
                 response_headers['Location'] = location
-
-                # Add any cookies from the response
                 cookies = response.cookies
                 content = response.content
                 # Add debugging
                 logger.debug(f"Returning redirect to: {location}")
                 logger.debug(f"Status code: {response.status_code}")
                 logger.debug(f"Headers: {response_headers}")
-
-
                 # Create response with the proper redirect status and location
                 return Response(
                     content=content,
@@ -208,7 +222,6 @@ async def proxy(request: Request, path: str = ""):
                     else:
                         response_headers['set-cookie'] = cookie_header
 
-                # logger.debug(f"content:{content}")
                 return Response(
                     content=content,
                     status_code=response.status_code,
