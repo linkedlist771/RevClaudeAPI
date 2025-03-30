@@ -56,7 +56,7 @@ async def process_response(response):
 
     # For non-HTML content, return directly
     if 'text/html' not in content_type:
-        return await response.read()
+        return response.read()
 
     # Process HTML content
     content = response.read()
