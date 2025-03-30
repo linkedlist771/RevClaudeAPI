@@ -137,10 +137,11 @@ async def proxy(request: Request, path: str = ""):
                 ) as response:
 
                     # If not a redirect, create a streaming response
-                    response_headers = {
-                        key: value for key, value in response.headers.items()
-                        if key.lower() not in ['content-length', 'transfer-encoding']
-                    }
+                    # response_headers = {
+                    #     key: value for key, value in response.headers.items()
+                    #     if key.lower() not in ['content-length', 'transfer-encoding']
+                    # }
+                    logger.debug(f"response :{response}")
 
                     # Create an async generator for streaming with better error handling
                     async def stream_response():
@@ -162,7 +163,7 @@ async def proxy(request: Request, path: str = ""):
                     return StreamingResponse(
                         stream_response(),
                         status_code=response.status_code,
-                        headers=response_headers
+                        headers={}
                     )
 
             else:
