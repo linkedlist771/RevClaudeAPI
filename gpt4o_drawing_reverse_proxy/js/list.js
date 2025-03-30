@@ -14,20 +14,11 @@ function removeTargetElements() {
         if (item.textContent.includes('画布')) {
             item.remove();
         }
-        if (item.textContent.includes("创建图像"))
-        {
-            item.click();
-        }
+
     }
 
     // 移除深入研究
-    const deepresearch = document.querySelectorAll('div');
-    for (let item of deepresearch) {
-        if (item.textContent.includes('深入研究')) {
-            item.remove();
-        }
 
-    }
 
 
     // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary
@@ -106,9 +97,24 @@ for (let button of allButtons) {
 
         // 移除包含“搜索”按钮的 div
         if (div.style && div.style.viewTransitionName === 'var(--vt-composer-search-action)' &&
-            div.querySelector('button[aria-label="搜索"]')) {
+            (div.querySelector('button[aria-label="搜索"]'))
+        ) {
             div.remove();
         }
+
+        if (div.querySelector('button[aria-label="使用工具"]'))
+        {
+            div.querySelector('button[aria-label="使用工具"]').click()
+                // 移除特定的“画布”按钮
+        const menuItems = document.querySelectorAll('div[role="menuitem"]');
+        for (let item of menuItems) {
+            if (item.textContent.includes("创建图像"))
+            {
+                item.click();
+            }
+        }
+        }
+
 
         // 移除 yanjiu div
         if (div.className === 'whitespace-nowrap pl-1 pr-1 [display:--force-hide-label]' &&
