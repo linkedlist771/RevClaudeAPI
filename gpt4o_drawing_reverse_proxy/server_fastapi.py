@@ -175,7 +175,7 @@ async def proxy(request: Request, path: str = ""):
             content_type = response.headers.get('Content-Type', '')
             logger.debug(f"content_type:{content_type}")
             # For streaming responses or non-HTML content, use StreamingResponse
-            if ('text/html' not in content_type) or ('text/event-stream' in content_type):
+            if ('text/event-stream' in content_type):
                 # Process response headers
                 response_headers = {key: value for key, value in response.headers.items()
                                     if key.lower() not in ['content-length', 'transfer-encoding']}
