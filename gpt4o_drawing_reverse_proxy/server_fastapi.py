@@ -59,7 +59,7 @@ async def process_response(response):
         return await response.read()
 
     # Process HTML content
-    content = await response.read()
+    content = response.read()
 
     # Try to decode content
     try:
