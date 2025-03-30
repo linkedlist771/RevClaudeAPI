@@ -1,159 +1,231 @@
-from flask import Flask, request, Response, stream_with_context
-import requests
-from bs4 import BeautifulSoup
-import re
-import gzip
-import brotli
-import zlib
-from io import BytesIO
+import argparse
+import fire
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+import httpx
 import os
-from flask import Flask, request, Response, jsonify
-from flask import Flask, request, Response, send_from_directory
-from flask import Flask, request, make_response, jsonify, redirect
-from datetime import datetime, timedelta
-
-import requests
-import pymysql
-import logging
-import pymysql.cursors
-from datetime import datetime
-from flask import Flask, request, jsonify, send_file
-import requests
-from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
-from urllib.parse import quote
-import json
-import re
-import uuid
-import os
-import chardet
-from bs4 import BeautifulSoup
-import traceback
+import uvicorn
+from loguru import logger
 import time
+import traceback
+from typing import AsyncGenerator
 
-app = Flask(__name__)
+app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 TARGET_URL = "https://gpt4oimagedrawing.585dg.com"
 
-# Create a directory for JavaScript files if it doesn't exist
+# Create JavaScript directory
 js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'js')
 os.makedirs(js_dir, exist_ok=True)
 
 
-# Function to read JavaScript files
+# Read JavaScript file function
 def read_js_file(filename):
     file_path = os.path.join(js_dir, filename)
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
     except FileNotFoundError:
-        # If file doesn't exist, create it with default content
+        # If file doesn't exist, create default content
         default_content = "// Default content for " + filename
         with open(file_path, 'w', encoding='utf-8') as file:
             file.write(default_content)
         return default_content
 
 
-# 提供list.js文件
-@app.route('/list.js')
-def list_js():
+# Serve list.js file
+@app.get('/list.js')
+async def list_js():
     js_content = read_js_file('list.js')
-    return Response(js_content, mimetype='application/javascript')
+    return Response(content=js_content, media_type='application/javascript')
 
-# 处理所有请求的主要函数
-@app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-@app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-def proxy(path):
-    # 构建目标URL
-    target_url = f"{TARGET_URL}/{path}"
 
-    # 获取所有请求头
-    headers = {key: value for key, value in request.headers.items()
-               if key.lower() not in ['host', 'content-length']}
-    headers['Host'] = TARGET_URL.split('//')[1]
+# Generate modified content stream
+async def generate_modified_stream(response) -> AsyncGenerator[bytes, None]:
+    content_type = response.headers.get('Content-Type', '')
 
-    # 关键修改：不要接受压缩内容，这样我们就能正确处理响应
-    headers['Accept-Encoding'] = 'identity'
+    # For non-HTML content, stream directly
+    if 'text/html' not in content_type:
+        async for chunk in response.aiter_bytes():
+            yield chunk
+        return
 
-    # 处理请求参数
-    params = request.args.to_dict()
+    # For HTML content, collect all chunks first
+    content = b''
+    async for chunk in response.aiter_bytes():
+        content += chunk
 
-    # 获取请求体
-    data = request.get_data()
+    # Try to decode content
+    try:
+        html_content = content.decode('utf-8')
+    except UnicodeDecodeError:
+        try:
+            html_content = content.decode('latin-1')
+        except Exception:
+            # If all decoding attempts fail, return original content
+            yield content
+            return
+
+    # Inject JavaScript
+    if '</head>' in html_content:
+        html_content = html_content.replace('</head>', '<script src="/list.js"></script></head>')
+    elif '<body' in html_content:
+        body_pos = html_content.find('<body')
+        body_end = html_content.find('>', body_pos)
+        if body_end != -1:
+            html_content = (
+                    html_content[:body_end + 1] +
+                    '<script src="/list.js"></script>' +
+                    html_content[body_end + 1:]
+            )
+    else:
+        html_content = '<script src="/list.js"></script>' + html_content
+
+    # Return modified content
+    yield html_content.encode('utf-8')
+
+
+# Main proxy route
+@app.api_route('/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+async def proxy(request: Request, path: str = ""):
+    start_time = time.time()
+    logger.info(f"Proxying request to path: {path}")
+    logger.info(f"Method: {request.method}")
 
     try:
-        # 使用适当的方法发送请求
-        resp = requests.request(
-            method=request.method,
-            url=target_url,
-            headers=headers,
-            params=params,
-            data=data,
-            cookies=request.cookies,
-            allow_redirects=False,
-            stream=True
+        # Build target URL
+        target_url = f"{TARGET_URL}/{path}"
+        logger.info(f"Target URL: {target_url}")
+
+        # Get request headers
+        headers = {key: value for key, value in request.headers.items()
+                   if key.lower() not in ['host', 'content-length']}
+        headers['Host'] = TARGET_URL.split('//')[1]
+
+        # Key change: Don't accept compressed content to correctly handle response
+        headers['Accept-Encoding'] = 'identity'
+
+        # Get request body
+        body = await request.body()
+
+        # Create a client to send request
+        async with httpx.AsyncClient(follow_redirects=False, timeout=30.0) as client:
+            # Send request to target server
+            resp = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=headers,
+                params=request.query_params,
+                content=body,
+                cookies=request.cookies
+            )
+
+            # Handle redirects - similar to the Flask implementation
+            if resp.status_code in [301, 302, 303, 307, 308]:
+                logger.info(f"Redirect detected with status code: {resp.status_code}")
+
+                # Get the location header
+                location = resp.headers.get('Location', '')
+                logger.info(f"Original redirect location: {location}")
+
+                # Preserve all headers except content-length and transfer-encoding
+                resp_headers = {k: v for k, v in resp.headers.items()
+                                if k.lower() not in ['content-length', 'transfer-encoding']}
+
+                # Return the redirect response as-is
+                return Response(
+                    content=b"",
+                    status_code=resp.status_code,
+                    headers=resp_headers
+                )
+
+            # Set up response headers, excluding problematic ones
+            response_headers = {key: value for key, value in resp.headers.items()
+                                if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
+
+            # Create a streaming response with modified content
+            return StreamingResponse(
+                generate_modified_stream(resp),
+                status_code=resp.status_code,
+                headers=response_headers
+            )
+
+    except httpx.TimeoutException:
+        logger.error(f"Request timed out for {path}")
+        return Response(
+            content="The request to the target server timed out. Please try again later.".encode(),
+            status_code=504
         )
-
-        # 创建一个函数来处理响应内容
-        def generate():
-            # 对于非HTML内容，直接流式传输
-            if 'text/html' not in resp.headers.get('Content-Type', ''):
-                for chunk in resp.iter_content(chunk_size=1024):
-                    yield chunk
-                return
-
-            # 对于HTML内容，完整收集然后处理
-            content = b''
-            for chunk in resp.iter_content(chunk_size=1024):
-                content += chunk
-
-            # 尝试解码内容
-            try:
-                html_content = content.decode('utf-8')
-            except UnicodeDecodeError:
-                try:
-                    # 尝试其他编码
-                    html_content = content.decode('latin-1')
-                except Exception:
-                    # 如果所有尝试都失败，返回原始内容
-                    yield content
-                    return
-
-            # 注入JavaScript
-            if '</head>' in html_content:
-                html_content = html_content.replace('</head>', '<script src="/list.js"></script></head>')
-            elif '<body' in html_content:
-                body_pos = html_content.find('<body')
-                body_end = html_content.find('>', body_pos)
-                if body_end != -1:
-                    html_content = html_content[:body_end + 1] + '<script src="/list.js"></script>' + html_content[
-                                                                                                      body_end + 1:]
-            else:
-                html_content = '<script src="/list.js"></script>' + html_content
-
-            # 返回修改后的内容
-            yield html_content.encode('utf-8')
-
-        # 处理响应头，复制原始头，但排除某些特定的头
-        response_headers = {key: value for key, value in resp.headers.items()
-                            if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
-
-        # 创建Flask响应对象
-        flask_response = Response(
-            stream_with_context(generate()),
-            status=resp.status_code,
-            headers=response_headers
+    except httpx.ConnectError:
+        logger.error(f"Connection error for {path}")
+        return Response(
+            content="Unable to connect to the target server. Please check your connection and try again.".encode(),
+            status_code=502
         )
+    except Exception as e:
+        logger.error(f"Proxy error: {str(e)}")
+        logger.error(traceback.format_exc())
+        return Response(
+            content=f"Error: {str(e)}".encode(),
+            status_code=500
+        )
+    finally:
+        elapsed = time.time() - start_time
+        logger.info(f"Request completed in {elapsed:.2f} seconds")
 
-        return flask_response
 
-    except requests.RequestException as e:
-        # 处理请求错误
-        return f"Error: {str(e)}", 500
+# Root path also uses proxy
+@app.api_route('/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+async def root_proxy(request: Request):
+    return await proxy(request, "")
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--host", default="0.0.0.0", help="host")
+parser.add_argument("--port", default=5001, help="port")
+parser.add_argument("--workers", default=1, type=int, help="workers")
+args = parser.parse_args()
+
+
+def start_server(port=args.port, host=args.host):
+    logger.info(f"Starting server at {host}:{port}")
+    logger.info(f"Proxy target URL: {TARGET_URL}")
+    logger.info(f"JavaScript injection is enabled, will inject /list.js into all HTML responses")
+    logger.info(f"JavaScript files directory: {js_dir}")
+
+    # Configure logging
+    logger.remove()  # Remove default handler
+    logger.add(
+        "proxy_server.log",
+        rotation="10 MB",
+        retention="1 week",
+        level="INFO",
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {message}"
+    )
+    # Also log to console
+    logger.add(
+        lambda msg: print(msg, end=""),
+        level="INFO",
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {message}"
+    )
+
+    config = uvicorn.Config(app, host=host, port=port, workers=args.workers, log_level="info")
+    server = uvicorn.Server(config=config)
+    try:
+        server.run()
+    finally:
+        logger.info("Server shutdown.")
+
 
 if __name__ == '__main__':
-    print("启动反向代理服务器，监听0.0.0.0:5000...")
-    print("JavaScript注入已启用，将注入 /list.js 到所有HTML响应")
-    print(f"JavaScript文件目录: {js_dir}")
-    # 在生产环境中，你可能需要使用更强大的WSGI服务器如Gunicorn
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    fire.Fire(start_server)
