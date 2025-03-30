@@ -130,6 +130,17 @@ async def proxy(request: Request, path: str = ""):
 
         try:
             if "backend-api/conversation" in str(path) and request.method == "POST":
+                async with client.stream(
+                                    method=request.method,
+                                    url=target_url,
+                                    headers=request.headers,
+                                    params=request.query_params,
+                                    content=body,
+                                    cookies=cookies,
+                                    follow_redirects=False) as response:
+
+                                async for chunk in response.aiter_lines():
+                                    logger.debug(f"chunk:\n{chunk}")
                 async def stream_response():
                     # 在流处理函数内部创建一个新的客户端
                     async with httpx.AsyncClient(
