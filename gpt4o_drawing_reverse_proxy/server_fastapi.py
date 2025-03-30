@@ -138,15 +138,16 @@ async def proxy(request: Request, path: str = ""):
                     logger.debug(f"response.is_closed :{response.is_closed}")
 
                     # If not a redirect, create a streaming response
-                    response_headers = {
-                        key: value for key, value in response.headers.items()
-                        if key.lower() not in ['content-length', 'transfer-encoding']
-                    }
+                    # response_headers = {
+                    #     key: value for key, value in response.headers.items()
+                    #     # if key.lower() not in ['content-length', 'transfer-encoding']
+                    # }
                     logger.debug(f"response.is_closed :{response.is_closed}")
 
                     # Create an async generator for streaming with better error handling
                     async def stream_response():
                         try:
+                            logger.debug(f"response.is_closed :{response.is_closed}")
                             # Add a check if the stream is still active
                             # if not response.is_closed:
                             async for chunk in response.aiter_bytes():
@@ -164,7 +165,7 @@ async def proxy(request: Request, path: str = ""):
                     return StreamingResponse(
                         stream_response(),
                         status_code=response.status_code,
-                        headers=response_headers
+                        headers=response.headers
                     )
 
             else:
