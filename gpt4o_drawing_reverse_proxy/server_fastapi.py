@@ -137,7 +137,7 @@ async def proxy(request: Request, path: str = ""):
                 ) as response:
                     # Create a buffer to store chunks while the response is open
                     chunks = []
-                    async for chunk in response.aiter_bytes():
+                    async for chunk in response.aiter_lines():
                         if chunk:  # Only store non-empty chunks
                             logger.debug(chunk)
                             chunks.append(chunk)
