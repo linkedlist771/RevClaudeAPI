@@ -142,24 +142,24 @@ async def proxy(request: Request, path: str = ""):
                         if key.lower() not in ['content-length', 'transfer-encoding']
                     }
 
-                    # # Create an async generator for streaming with better error handling
-                    # async def stream_response():
-                    #     try:
-                    #         # Add a check if the stream is still active
-                    #         if not response.is_closed:
-                    #             async for chunk in response.aiter_bytes():
-                    #                 if chunk:  # Only yield non-empty chunks
-                    #                     yield chunk
-                    #     except httpx.ReadError as e:
-                    #         logger.error(f"Read error during streaming: {e}")
-                    #         yield b"Connection interrupted. Please try again."
-                    #     except Exception as e:
-                    #         logger.error(f"Error during streaming: {e}")
-                    #         yield b"Error during streaming: " + str(e).encode()
+                    # Create an async generator for streaming with better error handling
+                    async def stream_response():
+                        try:
+                            # Add a check if the stream is still active
+                            if not response.is_closed:
+                                async for chunk in response.aiter_bytes():
+                                    if chunk:  # Only yield non-empty chunks
+                                        yield chunk
+                        except httpx.ReadError as e:
+                            logger.error(f"Read error during streaming: {e}")
+                            yield b"Connection interrupted. Please try again."
+                        except Exception as e:
+                            logger.error(f"Error during streaming: {e}")
+                            yield b"Error during streaming: " + str(e).encode()
 
                     # Return a streaming response
                     return StreamingResponse(
-                        response,
+                        stream_response(),
                         status_code=response.status_code,
                         headers=response_headers
                     )
