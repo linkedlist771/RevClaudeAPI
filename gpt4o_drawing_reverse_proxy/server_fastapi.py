@@ -154,7 +154,12 @@ async def proxy(request: Request, path: str = ""):
                             # if not response.is_closed:
                             for chunk in chunks:
                                     yield chunk
-                                    await asyncio.sleep(0.1)
+                                    # await asyncio.sleep(0.1)
+                                    if "data" in chunk:
+                                        yield "\n"
+                                        yield "\n"
+                                    if "event" in chunk:
+                                        yield "\n"
                         except httpx.ReadError as e:
                             logger.error(f"Read error during streaming: {e}")
                             yield b"Connection interrupted. Please try again."
