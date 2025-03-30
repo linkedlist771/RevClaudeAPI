@@ -24,7 +24,6 @@ function removeTargetElements() {
     // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary
     const navigationTags = document.querySelectorAll('div.bg-token-sidebar-surface-primary');
     for (let item of navigationTags) {
-
             item.remove();
 
     }
@@ -115,6 +114,10 @@ for (let button of allButtons) {
         }
         }
 
+        if(div.className==="group absolute bottom-2 end-2 z-20 flex flex-col gap-1 md:flex lg:bottom-3 lg:end-3" && div.querySelector('button[aria-haspopup="menu"]'))
+        {
+            div.remove()
+        }
 
         // 移除 yanjiu div
         if (div.className === 'whitespace-nowrap pl-1 pr-1 [display:--force-hide-label]' &&
