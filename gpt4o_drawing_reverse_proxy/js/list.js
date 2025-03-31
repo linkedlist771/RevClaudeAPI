@@ -14,7 +14,7 @@ function createNewConversationButton(){
   button.id = buttonId;
 
   // 设置按钮属性和样式
-  button.setAttribute('aria-label', '新聊天');
+  button.setAttribute('aria-label', '新的聊天');
   button.title = '新建对话'; // 悬浮提示文本
         // 设置按钮样式 - 全部使用内联样式
   Object.assign(button.style, {
