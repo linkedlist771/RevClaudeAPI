@@ -20,7 +20,7 @@ function createNewConversationButton(){
   Object.assign(button.style, {
     position: 'fixed',
     top: '20px',
-    left: '106px',
+    left: '100px',
     zIndex: '9999',
     backgroundColor: 'rgba(52, 53, 65, 0.7)',
     border: 'none',
@@ -35,11 +35,10 @@ function createNewConversationButton(){
     transition: 'background-color 0.2s'
   });
 
-
   // 设置按钮位置样式
   button.style.position = 'fixed';
   button.style.top = '20px';
-  button.style.left = '106px';
+  button.style.left = '100px';
   button.style.zIndex = '9999';
   button.style.backgroundColor = 'rgba(52, 53, 65, 0.7)';
   button.style.border = 'none';
