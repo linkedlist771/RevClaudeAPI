@@ -197,9 +197,9 @@ for (let button of allButtons) {
             div.remove()
         }
         // 删除aria-haspopup="menu"的button
-        if (div.querySelector('button[aria-haspopup="menu"]')) {
-            div.remove()
-        }
+        // if (div.querySelector('button[aria-haspopup="menu"]')) {
+        //     div.remove()
+        // }
 
         // 移除 yanjiu div
         if (div.className === 'whitespace-nowrap pl-1 pr-1 [display:--force-hide-label]' &&
