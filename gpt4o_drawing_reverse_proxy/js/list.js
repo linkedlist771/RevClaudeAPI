@@ -278,7 +278,6 @@ function clickAndRemoveSpecificSVG() {
 window.addEventListener('load', () => {
     clickAndRemoveSpecificSVG();
     // 创建新建对话
-    createNewConversationButton();
 
 });
 
@@ -286,6 +285,12 @@ window.addEventListener('load', () => {
 setInterval(() => {
     clickAndRemoveSpecificSVG();
 }, 500);
+
+
+// 每隔1秒创建新建对话
+setInterval(() => {
+    createNewConversationButton();
+, 1000);
 
 // 保留“新建聊天”按钮但禁用其新建逻辑
 function disableNewChatLogic() {
