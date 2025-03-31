@@ -76,6 +76,12 @@ for (let button of allButtons) {
     // 移除特定的 div 元素
     const divs = document.getElementsByTagName('div');
     for (let div of divs) {
+
+        // 把role为role="dialog" 的div背景换成黑色
+        if (div.getAttribute('role') === 'dialog') {
+            div.style.backgroundColor = 'rgb(16, 19, 24)';
+        }
+
         // 移除包含“复制”按钮的 div
         if (div.className === 'flex absolute left-0 right-0 flex justify-start' &&
             div.querySelector('button[aria-label="复制"]')) {
