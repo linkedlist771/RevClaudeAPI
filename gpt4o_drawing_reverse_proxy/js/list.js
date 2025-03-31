@@ -160,7 +160,8 @@ for (let button of allButtons) {
             textAreaP.appendChild(span);
     }
 
-    // 删除特定的button
+    // 背景改成黑色
+    document.querySelector('main').style.backgroundColor='rgb(16, 19, 24)'
 }
 
 // 页面加载时立即执行一次移除操作
