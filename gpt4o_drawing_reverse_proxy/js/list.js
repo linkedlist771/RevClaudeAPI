@@ -23,9 +23,10 @@ function removeTargetElements() {
 
     // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary, 只保留其第一个
     const navigationTags = document.querySelector('div.bg-token-sidebar-surface-primary');
-    for (let item of navigationTags) {
-            item.remove();
-    }
+    // for (let item of navigationTags) {
+    //         item.remove();
+    // }
+    navigationTags.remove();
 
 
 
