@@ -31,10 +31,18 @@ function removeTargetElements() {
     // 只保存nav下面的一级div的第一个
     // const firstDiv = nav.querySelector('div')
     const navDivs = nav.querySelectorAll('div');
-    for (let i = 0; i < navDivs.length; i++) {
-        if(i>0){
-            navDivs[i].remove();
+    // for (let i = 0; i < navDivs.length; i++) {
+    //     if(i>0){
+    //         navDivs[i].remove();
+    //     }
+    // }
+    var index = 0;
+    for (let div of navDivs) {
+        if (index > 0) {
+            div.remove();
         }
+        index++;
+
     }
 
     // document.querySelectorAll('div.bg-token-sidebar-surface-primary');
