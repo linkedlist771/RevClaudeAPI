@@ -21,15 +21,12 @@ function removeTargetElements() {
 
 
 
-    // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary, 只保留其第一个
-    const navigationTags = document.querySelector('div.bg-token-sidebar-surface-primary');
-    // for (let item of navigationTags) {
-    //         item.remove();
-    // }
-    navigationTags.remove();
+    // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary
+    const navigationTags = document.querySelectorAll('div.bg-token-sidebar-surface-primary');
+    for (let item of navigationTags) {
+            item.remove();
 
-
-
+    }
     // document.querySelectorAll('div.bg-token-sidebar-surface-primary');
 
     // 去掉上边蓝bg-token-main-surface-primary
@@ -112,6 +109,21 @@ for (let button of allButtons) {
             div.remove();
         }
 
+        // <span data-mention-id="picture_v2" data-mention-hint="创建图像 " className="hint-pill"
+        //       contentEditable="false">创建图像 </span>
+
+        // if (div.querySelector('button[aria-label="使用工具"]'))
+        // {
+        //     div.querySelector('button[aria-label="使用工具"]').click()
+        //         // 移除特定的“画布”按钮
+        // const menuItems = document.querySelectorAll('div[role="menuitem"]');
+        // for (let item of menuItems) {
+        //     if (item.textContent.includes("创建图像"))
+        //     {
+        //         item.click();
+        //     }
+        // }
+        // }
 
         if (div.className === "group absolute bottom-2 end-2 z-20 flex flex-col gap-1 md:flex lg:bottom-3 lg:end-3" && div.querySelector('button[aria-haspopup="menu"]')) {
             div.remove()
