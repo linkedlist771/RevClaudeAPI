@@ -30,11 +30,12 @@ function removeTargetElements() {
     // document.querySelectorAll('div.bg-token-sidebar-surface-primary');
 
     // 去掉上边蓝bg-token-main-surface-primary
-   const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
-    for (let item of headerBar) {
-        if(item.textContent.includes("ChatGPT"))
-            item.remove();
-    }
+    // 上边栏不去掉，看看怎么处理
+   // const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
+   //  for (let item of headerBar) {
+   //      if(item.textContent.includes("ChatGPT")||item.textContent.includes("Claude"))
+   //          item.remove();
+   //  }
     // headerBar[0].remove();
 
 
@@ -90,7 +91,7 @@ for (let button of allButtons) {
 
         // 移除 ChatGPT copyright div
         if (div.className === '' &&
-            div.innerHTML === 'ChatGPT 也可能会犯错。 | ©️ChatGPT 2023-2025') {
+            (div.innerHTML === 'ChatGPT 也可能会犯错。 | ©️ChatGPT 2023-2025'||div.innerHTML === 'Claude 也可能会犯错。 | ©️Claude 2023-2025')) {
             div.remove();
         }
         // 移除包含“搜索”按钮的 div
@@ -109,21 +110,6 @@ for (let button of allButtons) {
             div.remove();
         }
 
-        // <span data-mention-id="picture_v2" data-mention-hint="创建图像 " className="hint-pill"
-        //       contentEditable="false">创建图像 </span>
-
-        // if (div.querySelector('button[aria-label="使用工具"]'))
-        // {
-        //     div.querySelector('button[aria-label="使用工具"]').click()
-        //         // 移除特定的“画布”按钮
-        // const menuItems = document.querySelectorAll('div[role="menuitem"]');
-        // for (let item of menuItems) {
-        //     if (item.textContent.includes("创建图像"))
-        //     {
-        //         item.click();
-        //     }
-        // }
-        // }
 
         if (div.className === "group absolute bottom-2 end-2 z-20 flex flex-col gap-1 md:flex lg:bottom-3 lg:end-3" && div.querySelector('button[aria-haspopup="menu"]')) {
             div.remove()
@@ -140,7 +126,7 @@ for (let button of allButtons) {
     const h1s = document.getElementsByTagName('h1');
     for (let h1 of h1s) {
         if (h1.className.includes('flex h-full items-end justify-center') &&
-            h1.textContent === 'Hello, ChatGPT!') {
+            (h1.textContent === 'Hello, ChatGPT!'||h1.textContent === 'Hello, Claude!')) {
             h1.remove();
         }
     }
