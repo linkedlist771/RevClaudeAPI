@@ -23,23 +23,11 @@ function removeTargetElements() {
 
     // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary, 只保留其第一个
     const navigationTags = document.querySelector('div.bg-token-sidebar-surface-primary');
-    const nav = navigationTags.querySelector('nav');
-    // 只保存nav下面的一级div的第一个
-    // const firstDiv = nav.querySelector('div')
-    if(nav) {
-        const navDivs = nav.querySelectorAll('div');
-        console.log(`navDivs.length: ${navDivs.length}`);
-        if (navDivs.length >= 3) {
-            var index = 0;
-            for (let div of navDivs) {
-                if (index > 0) {
-                    div.remove();
-                }
-                index++;
-
-            }
-        }
+    for (let item of navigationTags) {
+            item.remove();
     }
+
+
 
     // document.querySelectorAll('div.bg-token-sidebar-surface-primary');
 
