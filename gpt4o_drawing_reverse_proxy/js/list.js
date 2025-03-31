@@ -223,7 +223,6 @@ for (let button of allButtons) {
     if(main ) {
        main.style.backgroundColor = 'rgb(16, 19, 24)'
     }
-    createNewConversationButton();
 
 }
 
@@ -234,6 +233,10 @@ removeTargetElements();
 setInterval(() => {
     removeTargetElements();
 }, 100);
+
+setTimeout(() => {
+        createNewConversationButton();}
+    , 1000);
 
 // 点击并删除特定的SVG按钮（排除“打开边栏”按钮中的SVG）
 function clickAndRemoveSpecificSVG() {
