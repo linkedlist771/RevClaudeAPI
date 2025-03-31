@@ -20,7 +20,7 @@ function createNewConversationButton(){
   Object.assign(button.style, {
     position: 'fixed',
     top: '20px',
-    left: '20px',
+    left: '1000px',
     zIndex: '9999',
     backgroundColor: 'rgba(52, 53, 65, 0.7)',
     border: 'none',
@@ -194,6 +194,10 @@ for (let button of allButtons) {
         }
 
         if (div.className === "group absolute bottom-2 end-2 z-20 flex flex-col gap-1 md:flex lg:bottom-3 lg:end-3" && div.querySelector('button[aria-haspopup="menu"]')) {
+            div.remove()
+        }
+        // 删除aria-haspopup="menu"的button
+        if (div.querySelector('button[aria-haspopup="menu"]')) {
             div.remove()
         }
 
