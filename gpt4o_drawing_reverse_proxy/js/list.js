@@ -4,7 +4,7 @@ function createNewConversationButton(){
   // 检查页面上是否已存在我们的按钮（使用一个自定义ID来识别）
   const buttonId = 'custom-new-chat-button';
   if (document.getElementById(buttonId)) {
-    console.log('按钮已存在，无需重复创建');
+    // console.log('按钮已存在，无需重复创建');
   }
   else{
   // 创建按钮元素
