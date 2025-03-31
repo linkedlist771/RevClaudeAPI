@@ -143,6 +143,17 @@ def proxy(path):
         response_headers = {key: value for key, value in resp.headers.items()
                             if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
 
+        # 如果存在 Set-Cookie，则追加 SameSite=None; Secure
+        # 进行iframe打开
+        if 'Set-Cookie' in response_headers:
+            # 假设 Set-Cookie 只有一个值。如果有多个值，需要分别处理
+            cookies = response_headers['Set-Cookie']
+            # 检查是否已经包含 SameSite 或 Secure 属性，不包含则追加
+            if 'SameSite' not in cookies:
+                cookies += '; SameSite=None'
+            if 'Secure' not in cookies:
+                cookies += '; Secure'
+            response_headers['Set-Cookie'] = cookies
         # 创建Flask响应对象
         flask_response = Response(
             stream_with_context(generate()),

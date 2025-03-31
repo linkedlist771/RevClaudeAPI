@@ -1,0 +1,53 @@
+<!--draw.html-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>绘画页面</title>
+    <script>
+        async function login() {
+            try {
+                // 创建一个表单并提交
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'https://drawgpt4o.qqyunsd.com/login';
+
+                // 添加账号字段
+                const accountField = document.createElement('input');
+                accountField.type = 'hidden';
+                accountField.name = 'account';
+                accountField.value = 'chatgpt_30_c3b3246e67df';
+                form.appendChild(accountField);
+
+                // 添加密码字段
+                const passwordField = document.createElement('input');
+                passwordField.type = 'hidden';
+                passwordField.name = 'password';
+                passwordField.value = 'b13270b8d16d';
+                form.appendChild(passwordField);
+                // 添加action字段
+                const actionField = document.createElement('input');
+                actionField.type = 'hidden';
+                actionField.name = 'action';
+                actionField.value = 'default';
+                form.appendChild(actionField);
+                form.target = '_top';  // 这样可以避免在 iframe 中加载时的 Cookie 问题
+
+                // 添加表单到文档并提交
+                document.body.appendChild(form);
+                form.submit();
+            } catch (error) {
+                console.error('登录出错:', error);
+            }
+        }
+
+        // 页面加载时执行登录
+        window.onload = login;
+    </script>
+</head>
+<body>
+    <div style="text-align: center; margin-top: 100px;">
+        <p>正在登录中，请稍候...</p>
+    </div>
+</body>
+</html>
