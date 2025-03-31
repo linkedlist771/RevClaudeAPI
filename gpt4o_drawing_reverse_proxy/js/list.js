@@ -22,20 +22,19 @@ function removeTargetElements() {
 
 
     // 去掉<nav> </nav>这个标签class 含有 bg-token-sidebar-surface-primary
-    const navigationTags = document.querySelectorAll('div.bg-token-sidebar-surface-primary');
-    for (let item of navigationTags) {
-            item.remove();
-
-    }
+    // const navigationTags = document.querySelectorAll('div.bg-token-sidebar-surface-primary');
+    // for (let item of navigationTags) {
+    //         item.remove();
+    //
+    // }
     // document.querySelectorAll('div.bg-token-sidebar-surface-primary');
 
     // 去掉上边蓝bg-token-main-surface-primary
-    // 上边栏不去掉，看看怎么处理
-   // const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
-   //  for (let item of headerBar) {
-   //      if(item.textContent.includes("ChatGPT")||item.textContent.includes("Claude"))
-   //          item.remove();
-   //  }
+   const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
+    for (let item of headerBar) {
+        if(item.textContent.includes("ChatGPT")||item.textContent.includes("Claude"))
+            item.remove();
+    }
     // headerBar[0].remove();
 
 
