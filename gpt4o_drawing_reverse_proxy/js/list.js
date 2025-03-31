@@ -196,10 +196,7 @@ for (let button of allButtons) {
         if (div.className === "group absolute bottom-2 end-2 z-20 flex flex-col gap-1 md:flex lg:bottom-3 lg:end-3" && div.querySelector('button[aria-haspopup="menu"]')) {
             div.remove()
         }
-        // 删除aria-haspopup="menu"的button
-        // if (div.querySelector('button[aria-haspopup="menu"]')) {
-        //     div.remove()
-        // }
+
 
         // 移除 yanjiu div
         if (div.className === 'whitespace-nowrap pl-1 pr-1 [display:--force-hide-label]' &&
@@ -245,6 +242,19 @@ for (let button of allButtons) {
     if(main ) {
        main.style.backgroundColor = 'rgb(16, 19, 24)'
     }
+
+    // 删除特定的span
+    const spans = document.querySelectorAll('span');
+    for (let span of spans)
+    {
+            // 删除aria-haspopup="menu"的button
+        if (span.querySelector('button[aria-haspopup="menu"]')||
+        span.querySelector('button[aria-label="在画布中编辑"]')) {
+            span.remove()
+        }
+    }
+
+
 
 }
 
