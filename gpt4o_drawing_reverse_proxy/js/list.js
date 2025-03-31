@@ -201,6 +201,8 @@ for (let button of allButtons) {
     if(main ) {
        main.style.backgroundColor = 'rgb(16, 19, 24)'
     }
+
+    createNewConversationButton();
 }
 
 // 页面加载时立即执行一次移除操作
