@@ -112,18 +112,10 @@ for (let button of allButtons) {
         // <span data-mention-id="picture_v2" data-mention-hint="创建图像 " className="hint-pill"
         //       contentEditable="false">创建图像 </span>
 
-        // if (div.querySelector('button[aria-label="使用工具"]'))
-        // {
-        //     div.querySelector('button[aria-label="使用工具"]').click()
-        //         // 移除特定的“画布”按钮
-        // const menuItems = document.querySelectorAll('div[role="menuitem"]');
-        // for (let item of menuItems) {
-        //     if (item.textContent.includes("创建图像"))
-        //     {
-        //         item.click();
-        //     }
-        // }
-        // }
+        if (div.querySelector('button[aria-label="使用工具"]'))
+        {
+            div.querySelector('button[aria-label="使用工具"]').remove();
+        }
 
         if (div.className === "group absolute bottom-2 end-2 z-20 flex flex-col gap-1 md:flex lg:bottom-3 lg:end-3" && div.querySelector('button[aria-haspopup="menu"]')) {
             div.remove()
