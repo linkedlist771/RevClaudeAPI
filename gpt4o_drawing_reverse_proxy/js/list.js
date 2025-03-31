@@ -50,7 +50,6 @@ function createNewConversationButton(){
   // 将按钮添加到文档
   document.body.appendChild(button);
 
-
 }
 
 // 移除其他不必要的元素（包括“打开边栏”按钮）
@@ -225,7 +224,6 @@ for (let button of allButtons) {
        main.style.backgroundColor = 'rgb(16, 19, 24)'
     }
 
-    createNewConversationButton();
 }
 
 // 页面加载时立即执行一次移除操作
@@ -261,6 +259,9 @@ function clickAndRemoveSpecificSVG() {
 // 页面加载时尝试点击并删除特定的SVG按钮
 window.addEventListener('load', () => {
     clickAndRemoveSpecificSVG();
+    // 创建新建对话
+    createNewConversationButton();
+
 });
 
 // 每 0.5 秒监控并点击删除特定的SVG按钮
