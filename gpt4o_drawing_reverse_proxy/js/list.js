@@ -223,6 +223,7 @@ for (let button of allButtons) {
     if(main ) {
        main.style.backgroundColor = 'rgb(16, 19, 24)'
     }
+    createNewConversationButton();
 
 }
 
@@ -260,8 +261,6 @@ function clickAndRemoveSpecificSVG() {
 window.addEventListener('load', () => {
     clickAndRemoveSpecificSVG();
     // 创建新建对话
-    createNewConversationButton();
-
 });
 
 // 每 0.5 秒监控并点击删除特定的SVG按钮
