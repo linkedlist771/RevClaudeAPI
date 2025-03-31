@@ -15,8 +15,26 @@ function createNewConversationButton(){
 
   // 设置按钮属性和样式
   button.setAttribute('aria-label', '新聊天');
-  button.className = 'h-10 rounded-lg px-2 text-token-text-secondary focus-visible:bg-token-surface-hover focus-visible:outline-0 enabled:hover:bg-token-surface-hover disabled:text-token-text-quaternary';
   button.title = '新建对话'; // 悬浮提示文本
+        // 设置按钮样式 - 全部使用内联样式
+  Object.assign(button.style, {
+    position: 'fixed',
+    top: '20px',
+    left: '20px',
+    zIndex: '9999',
+    backgroundColor: 'rgba(52, 53, 65, 0.7)',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '8px',
+    borderRadius: '8px',
+    height: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    transition: 'background-color 0.2s'
+  });
+
 
   // 设置按钮位置样式
   button.style.position = 'fixed';
@@ -234,10 +252,6 @@ setInterval(() => {
     removeTargetElements();
 }, 100);
 
-setTimeout(() => {
-        createNewConversationButton();}
-    , 1000);
-
 // 点击并删除特定的SVG按钮（排除“打开边栏”按钮中的SVG）
 function clickAndRemoveSpecificSVG() {
     const svgs = document.getElementsByTagName('svg');
@@ -264,6 +278,8 @@ function clickAndRemoveSpecificSVG() {
 window.addEventListener('load', () => {
     clickAndRemoveSpecificSVG();
     // 创建新建对话
+    createNewConversationButton();
+
 });
 
 // 每 0.5 秒监控并点击删除特定的SVG按钮
