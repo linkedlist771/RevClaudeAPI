@@ -1,12 +1,24 @@
 // list.js
 
 function createNewConversationButton(){
+  // 检查页面上是否已存在我们的按钮（使用一个自定义ID来识别）
+  const buttonId = 'custom-new-chat-button';
+  if (document.getElementById(buttonId)) {
+    console.log('按钮已存在，无需重复创建');
+    return;
+  }
+
   // 创建按钮元素
   const button = document.createElement('button');
+
+  // 设置按钮ID用于后续识别
+  button.id = buttonId;
+
   // 设置按钮属性和样式
   button.setAttribute('aria-label', '新聊天');
   button.className = 'h-10 rounded-lg px-2 text-token-text-secondary focus-visible:bg-token-surface-hover focus-visible:outline-0 enabled:hover:bg-token-surface-hover disabled:text-token-text-quaternary';
   button.title = '新建对话'; // 悬浮提示文本
+
   // 设置按钮位置样式
   button.style.position = 'fixed';
   button.style.top = '20px';
@@ -26,8 +38,19 @@ function createNewConversationButton(){
     window.location.href = window.location.origin;
   });
 
+  // 添加一些悬浮效果
+  button.addEventListener('mouseover', function() {
+    this.style.backgroundColor = 'rgba(52, 53, 65, 0.9)';
+  });
+
+  button.addEventListener('mouseout', function() {
+    this.style.backgroundColor = 'rgba(52, 53, 65, 0.7)';
+  });
+
   // 将按钮添加到文档
   document.body.appendChild(button);
+
+
 }
 
 // 移除其他不必要的元素（包括“打开边栏”按钮）
