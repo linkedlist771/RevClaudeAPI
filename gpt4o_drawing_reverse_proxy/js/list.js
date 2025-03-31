@@ -161,7 +161,10 @@ for (let button of allButtons) {
     }
 
     // 背景改成黑色
-    document.querySelector('main').style.backgroundColor='rgb(16, 19, 24)'
+    const main = document.querySelector('main');
+    if(main ) {
+       main.style.backgroundColor = 'rgb(16, 19, 24)'
+    }
 }
 
 // 页面加载时立即执行一次移除操作
