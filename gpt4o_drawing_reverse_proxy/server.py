@@ -223,9 +223,6 @@ def proxy(path):
         response_headers = {key: value for key, value in resp.headers.items()
                             if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
 
-        # Track cookies for login requests
-        if 'Set-Cookie' in response_headers and account:
-            cookies = response_headers['Set-Cookie']
 
 
         # Update usage count for conversation API requests
