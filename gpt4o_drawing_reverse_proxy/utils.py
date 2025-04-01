@@ -417,7 +417,7 @@ class SoruxGPTManager:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
-                    f"{self.base_url}/editPassword",
+                    f"{self.base_url}/agent/editPassword",
                     headers=self.headers,
                     params={"token": self.token},
                     data={
