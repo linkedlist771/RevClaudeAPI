@@ -114,6 +114,9 @@ def proxy(path):
         "backend-api/conversation" in path and request.method == "POST"
     )
     is_login_request = request.method == "POST" and path == "login"
+    if "file_download_diy" in path:
+        logger.debug(f"file_download_diy:\n{file_download_diy}")
+
     account = None
     if is_login_request:
         account = extract_account_from_request(request)
@@ -165,8 +168,8 @@ def proxy(path):
             # 对于非HTML内容，直接流式传输
             if "text/html" not in resp.headers.get("Content-Type", ""):
                 for chunk in resp.iter_content(chunk_size=1024):
-                    if is_conversation_request:
-                        logger.debug(f"chunk:\n{chunk}")
+                    # if is_conversation_request:
+                    #     logger.debug(f"chunk:\n{chunk}")
                     yield chunk
                 return
 
