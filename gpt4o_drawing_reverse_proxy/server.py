@@ -163,6 +163,8 @@ def proxy(path):
             # 对于非HTML内容，直接流式传输
             if "text/html" not in resp.headers.get("Content-Type", ""):
                 for chunk in resp.iter_content(chunk_size=1024):
+                    if is_conversation_request:
+                        logger.debug(f"chunk:\n{chunk}")
                     yield chunk
                 return
 
