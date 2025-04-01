@@ -63,58 +63,58 @@ init_db()
 
 # Helper function to extract account from login request
 def extract_account_from_request(request):
-    def extract_request_info(request):
-        # 请求方法
-        method = request.method
+    # def extract_request_info(request):
+    #     # 请求方法
+    #     method = request.method
+    #
+    #     # URL和路由信息
+    #     url = request.url
+    #     path = request.path
+    #     base_url = request.base_url
+    #
+    #     # 请求头
+    #     headers = dict(request.headers)
+    #
+    #     # 查询参数
+    #     args = dict(request.args)
+    #
+    #     # 表单数据
+    #     form = dict(request.form) if request.form else None
+    #
+    #     # JSON数据
+    #     json_data = request.get_json(silent=True) if request.is_json else None
+    #
+    #     # 文件
+    #     files = {key: request.files[key].filename for key in request.files} if request.files else None
+    #
+    #     # Cookies
+    #     cookies = dict(request.cookies)
+    #
+    #     # 客户端信息
+    #     remote_addr = request.remote_addr
+    #     user_agent = request.user_agent.string
+    #
+    #     # 汇总所有信息
+    #     request_info = {
+    #         "method": method,
+    #         "url": url,
+    #         "path": path,
+    #         "base_url": base_url,
+    #         "headers": headers,
+    #         "args": args,
+    #         "form": form,
+    #         "json": json_data,
+    #         "files": files,
+    #         "cookies": cookies,
+    #         "remote_addr": remote_addr,
+    #         "user_agent": user_agent
+    #     }
+    #
+    #     return request_info
+    # info = extract_request_info(request)
+    # logger.debug(info)
 
-        # URL和路由信息
-        url = request.url
-        path = request.path
-        base_url = request.base_url
-
-        # 请求头
-        headers = dict(request.headers)
-
-        # 查询参数
-        args = dict(request.args)
-
-        # 表单数据
-        form = dict(request.form) if request.form else None
-
-        # JSON数据
-        json_data = request.get_json(silent=True) if request.is_json else None
-
-        # 文件
-        files = {key: request.files[key].filename for key in request.files} if request.files else None
-
-        # Cookies
-        cookies = dict(request.cookies)
-
-        # 客户端信息
-        remote_addr = request.remote_addr
-        user_agent = request.user_agent.string
-
-        # 汇总所有信息
-        request_info = {
-            "method": method,
-            "url": url,
-            "path": path,
-            "base_url": base_url,
-            "headers": headers,
-            "args": args,
-            "form": form,
-            "json": json_data,
-            "files": files,
-            "cookies": cookies,
-            "remote_addr": remote_addr,
-            "user_agent": user_agent
-        }
-
-        return request_info
-    info = extract_request_info(request)
-    logger.debug(info)
-
-    return None
+    return request.form['account']
 
 # Helper function to extract cookies
 def extract_cookies(cookie_header):
