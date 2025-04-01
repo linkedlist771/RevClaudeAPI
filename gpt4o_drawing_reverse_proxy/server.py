@@ -71,11 +71,12 @@ def yulan_js():
 @app.route('/editPassword')
 def edit_password():
     gpt_manager = get_souruxgpt_manager()
+    data = request.get_json()
 
     # 获取请求参数
-    account = request.get_data().get('account')
-    password = request.get_data().get('password')
-    new_password = request.get_data().get('new_password')
+    account = data.get('account')
+    password = data.get('password')
+    new_password = data.get('new_password')
 
     # 验证参数
     if not account or not password or not new_password:
