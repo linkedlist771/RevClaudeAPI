@@ -90,7 +90,6 @@ function removeTargetElements() {
         item.remove();
 
     }
-    // document.querySelectorAll('div.bg-token-sidebar-surface-primary');
 
     // 去掉上边蓝bg-token-main-surface-primary
     const headerBar = document.querySelectorAll('div.bg-token-main-surface-primary');
@@ -98,8 +97,6 @@ function removeTargetElements() {
         if (item.textContent.includes("ChatGPT") || item.textContent.includes("Claude"))
             item.remove();
     }
-    // headerBar[0].remove();
-
 
     // 移除包含“共享”文本的 div
     const shareDivs = document.querySelectorAll('div.flex.w-full.items-center.justify-center.gap-1\\.5');
@@ -111,16 +108,12 @@ function removeTargetElements() {
     }
 
     // 查看所有有Try again的button， 如果有就惦记
-// 查看所有有Try again的button， 如果有就惦记
     const allButtons = document.querySelectorAll('button'); // 使用 querySelectorAll 来获取所有 button 元素
     for (let button of allButtons) {
         if (button.textContent.includes("Try again")) { // 缺少右括号
             button.click();
         }
     }
-
-
-    // 删除下边的？按钮
 
     // 移除 aria-label="yanjiu" 的按钮
     const yanjiuButton = document.querySelector('button[aria-label="yanjiu"]');
@@ -143,7 +136,6 @@ function removeTargetElements() {
         if (div.getAttribute('role') === 'dialog') {
             div.style.backgroundColor = 'rgb(16, 19, 24)';
         }
-
         // 移除包含“复制”按钮的 div
         if (div.className === 'flex absolute left-0 right-0 flex justify-start' &&
             div.querySelector('button[aria-label="复制"]')) {

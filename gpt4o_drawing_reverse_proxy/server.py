@@ -21,21 +21,23 @@ def save_image_from_dict(data_dict):
     try:
         download_url = data_dict.get("download_url")
         if not download_url:
-            return "错误: 字典中没有找到下载URL"
+            return "错误: 字典中没有找到下载URL", False
         if data_dict.get("file_name"):
             file_name = Path(data_dict["file_name"]).name
         else:
             file_name = f"image_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        if "part" in file_name:
+            return "中间图片，不保存", False
         response = requests.get(download_url)
         if response.status_code != 200:
-            return f"错误: 下载失败，状态码 {response.status_code}"
+            return f"错误: 下载失败，状态码 {response.status_code}", False
         save_path = IMAGES_DIR / file_name
         with open(save_path, 'wb') as f:
             f.write(response.content)
         logger.debug(f"图片已保存到: \n{save_path}")
-        return file_name
+        return file_name, True
     except Exception as e:
-        return f"错误: {str(e)}"
+        return f"错误: {str(e)}", False
 
 
 # Helper function to extract account from login request
@@ -199,10 +201,10 @@ def proxy(path):
                 if "download" in path:
                     logger.debug(f"download path:\n{path}")
                     logger.debug(f"all_content:\n{all_content}")
-                    file_name = save_image_from_dict(json.loads(all_content))
+                    file_name, save = save_image_from_dict(json.loads(all_content))
                     cookies = request.cookies
                     logger.debug(f"cookies:\n{cookies}")
-                    if "gfsessionid" in cookies:
+                    if "gfsessionid" in cookies and save:
                         gfsessionid = cookies["gfsessionid"]
                         image_url = f"{SERVER_BASE_URL}/images/{file_name}"
                         user_record_manager.add_image_to_account_by_gfsessionid(gfsessionid, image_url)
