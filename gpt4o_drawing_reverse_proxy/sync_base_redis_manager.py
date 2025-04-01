@@ -135,6 +135,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
             logger.error(f"Error updating usage count: {str(e)}")
             return False
 
+
     def add_image_to_account(self, account, image_url):
         """Add a generated image to an account's history"""
         try:
@@ -159,6 +160,23 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
         except Exception as e:
             logger.error(f"Error adding image to account: {str(e)}")
             return False
+        
+    def add_image_to_account_by_gfsessionid(self, gfsessionid, image_url):
+        """Get account information by gfsessionid"""
+        try:
+            for raw_key in self.redis.keys("account:*"):
+                account_key = raw_key
+                user_data = self.get_dict_value_async(account_key)
+                
+                # Check both the backward compatibility field and the new list
+                gfsessionids = user_data.get("gfsessionids", [])
+                if gfsessionid in gfsessionids:
+                    self.add_image_to_account(account_key.removeprefix("account:"), image_url)
+                    return user_data
+            return None
+        except Exception as e:
+            logger.error(f"Error getting account by gfsessionid: {str(e)}")
+            return None
 
     def get_account_by_gfsessionid(self, gfsessionid):
         """Get account information by gfsessionid"""
@@ -169,7 +187,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
                 
                 # Check both the backward compatibility field and the new list
                 gfsessionids = user_data.get("gfsessionids", [])
-                if user_data.get("cookie") == gfsessionid or gfsessionid in gfsessionids:
+                if gfsessionid in gfsessionids:
                     return user_data
             return None
         except Exception as e:

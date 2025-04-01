@@ -6,6 +6,8 @@ REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
 REDIS_DB = int(os.environ.get("REDIS_DB", 0))
 
+SERVER_BASE_URL = os.environ.get("SERVER_BASE_URL", "https://drawgpt4o.qqyunsd.com")
+
 ROOT = Path(__file__).parent
 JS_DIR = ROOT / "js"
 IMAGES_DIR = ROOT / "images"

@@ -9,7 +9,7 @@ from flask import (Flask, Response, jsonify, make_response, redirect, request,
                    send_file, send_from_directory, stream_with_context)
 from loguru import logger
 from utils import get_souruxgpt_manager
-from configs import ROOT, JS_DIR, TARGET_URL, IMAGES_DIR
+from configs import ROOT, JS_DIR, TARGET_URL, IMAGES_DIR, SERVER_BASE_URL
 from sync_base_redis_manager import FlaskUserRecordManager
 
 logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
@@ -34,7 +34,7 @@ def save_image_from_dict(data_dict):
         with open(save_path, 'wb') as f:
             f.write(response.content)
         logger.debug(f"图片已保存到: \n{save_path}")
-        return str(save_path)
+        return file_name
     except Exception as e:
         return f"错误: {str(e)}"
 
@@ -67,6 +67,11 @@ def read_js_file(filename):
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(default_content)
         return default_content
+
+# 提供图片文件的路由
+@app.route("/images/<path:file_path>")
+def serve_image(file_path):
+    return send_from_directory(IMAGES_DIR, file_path)
 
 # 提供list.js文件
 @app.route("/list.js")
@@ -195,7 +200,14 @@ def proxy(path):
                 if "download" in path:
                     logger.debug(f"download path:\n{path}")
                     logger.debug(f"all_content:\n{all_content}")
-                    save_image_from_dict(json.loads(all_content))
+                    file_name = save_image_from_dict(json.loads(all_content))
+                    cookies = request.cookies
+                    logger.debug(f"cookies:\n{cookies}")
+                    if "gfsessionid" in cookies:
+                        gfsessionid = cookies["gfsessionid"]
+                        image_url = f"{SERVER_BASE_URL}/images/{file_name}"
+                        user_record_manager.add_image_to_account_by_gfsessionid(gfsessionid, image_url)
+                        logger.debug(f"图片已添加到用户账号, gfsessionid: {gfsessionid}, image_url: {image_url}")
                 return
 
 
