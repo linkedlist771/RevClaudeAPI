@@ -40,6 +40,49 @@ TARGET_URL = "https://gpt4oimagedrawing.585dg.com"
 js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'js')
 os.makedirs(js_dir, exist_ok=True)
 
+import sqlite3
+from functools import wraps
+
+# Initialize SQLite database
+def init_db():
+    conn = sqlite3.connect('user_stats.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        account TEXT PRIMARY KEY,
+        cookie TEXT,
+        usage_count INTEGER DEFAULT 0,
+        last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Call init_db at startup
+init_db()
+
+# Helper function to extract account from login request
+def extract_account_from_request(request_data):
+    try:
+        if request.is_json:
+            data = request.get_json()
+            return data.get('account')
+        return None
+    except:
+        return None
+
+# Helper function to extract cookies
+def extract_cookies(cookie_header):
+    if not cookie_header:
+        return {}
+    cookies = {}
+    parts = cookie_header.split('; ')
+    for part in parts:
+        if '=' in part:
+            name, value = part.split('=', 1)
+            cookies[name] = value
+    return cookies
+
 
 # Function to read JavaScript files
 def read_js_file(filename):
@@ -72,27 +115,17 @@ def yulan_js():
 def edit_password():
     gpt_manager = asyncio.run(get_souruxgpt_manager())
     data = request.get_json()
-
     # 获取请求参数
     account = data.get('account')
     password = data.get('password')
     new_password = data.get('new_password')
-
     # 验证参数
     if not account or not password or not new_password:
         return jsonify({
             'status': 'error',
             'message': '缺少必要参数：account、password 或 new_password'
         }), 400
-
-    # 使用异步运行时来执行异步方法
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        success = loop.run_until_complete(gpt_manager.change_password(account, password, new_password))
-    finally:
-        loop.close()
-
+    success = asyncio.run(gpt_manager.change_password(account, password, new_password))
     if success:
         return jsonify({
             'status': 'success',
@@ -104,12 +137,58 @@ def edit_password():
             'message': '密码修改失败，请检查用户名和密码是否正确'
         }), 400
 
+
+@app.route('/usage_stats', methods=['POST'])
+def usage_stats():
+    try:
+        data = request.get_json()
+        account = data.get('account')
+
+        conn = sqlite3.connect('user_stats.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        if account:
+            # Get stats for specific account
+            cursor.execute("SELECT account, usage_count, last_used FROM users WHERE account = ?", (account,))
+            row = cursor.fetchone()
+
+            if row:
+                stats = {
+                    'account': row['account'],
+                    'usage_count': row['usage_count'],
+                    'last_used': row['last_used']
+                }
+                result = stats
+            else:
+                result = {'message': f'No data found for account: {account}'}
+        else:
+            # If no account provided, return all stats (sorted by usage)
+            cursor.execute("SELECT account, usage_count, last_used FROM users ORDER BY usage_count DESC")
+            rows = cursor.fetchall()
+
+            stats = [{'account': row['account'],
+                      'usage_count': row['usage_count'],
+                      'last_used': row['last_used']} for row in rows]
+            result = stats
+
+        conn.close()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # 处理所有请求的主要函数
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 def proxy(path):
     # 构建目标URL
     target_url = f"{TARGET_URL}/{path}"
+
+    # Get account if this is a login request
+    account = None
+    if request.method == 'POST' and path == 'login':
+        account = extract_account_from_request(request)
 
     # 获取所有请求头
     headers = {key: value for key, value in request.headers.items()
@@ -125,6 +204,9 @@ def proxy(path):
     # 获取请求体
     data = request.get_data()
 
+    # Check if this is a conversation API request
+    is_conversation_request = "backend-api/conversation" in path
+
     try:
         # 使用适当的方法发送请求
         resp = requests.request(
@@ -137,6 +219,65 @@ def proxy(path):
             allow_redirects=False,
             stream=True
         )
+
+        # 处理响应头，复制原始头，但排除某些特定的头
+        response_headers = {key: value for key, value in resp.headers.items()
+                            if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
+
+        # Track cookies for login requests
+        if 'Set-Cookie' in response_headers and account:
+            cookies = response_headers['Set-Cookie']
+            # Store the account and cookie in the database
+            conn = sqlite3.connect('user_stats.db')
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT OR REPLACE INTO users (account, cookie) VALUES (?, ?)",
+                (account, cookies)
+            )
+            conn.commit()
+            conn.close()
+
+        # Update usage count for conversation API requests
+        if is_conversation_request and 'Cookie' in headers:
+            cookie_str = headers['Cookie']
+            extracted_cookies = extract_cookies(cookie_str)
+
+            # Find the account associated with this cookie
+            conn = sqlite3.connect('user_stats.db')
+            cursor = conn.cursor()
+
+            # Try to find a match with any cookie in our database
+            cursor.execute("SELECT account FROM users")
+            all_accounts = cursor.fetchall()
+
+            found_account = None
+            for acc in all_accounts:
+                cursor.execute("SELECT cookie FROM users WHERE account = ?", (acc[0],))
+                stored_cookie = cursor.fetchone()
+                if stored_cookie and any(cookie_part in cookie_str for cookie_part in stored_cookie[0].split('; ')):
+                    found_account = acc[0]
+                    break
+
+            if found_account:
+                cursor.execute(
+                    "UPDATE users SET usage_count = usage_count + 1, last_used = CURRENT_TIMESTAMP WHERE account = ?",
+                    (found_account,)
+                )
+                conn.commit()
+
+            conn.close()
+
+        # 如果存在 Set-Cookie，则追加 SameSite=None; Secure
+        # 进行iframe打开
+        if 'Set-Cookie' in response_headers:
+            # 假设 Set-Cookie 只有一个值。如果有多个值，需要分别处理
+            cookies = response_headers['Set-Cookie']
+            # 检查是否已经包含 SameSite 或 Secure 属性，不包含则追加
+            if 'SameSite' not in cookies:
+                cookies += '; SameSite=None'
+            if 'Secure' not in cookies:
+                cookies += '; Secure'
+            response_headers['Set-Cookie'] = cookies
 
         # 创建一个函数来处理响应内容
         def generate():
@@ -178,21 +319,6 @@ def proxy(path):
             # 返回修改后的内容
             yield html_content.encode('utf-8')
 
-        # 处理响应头，复制原始头，但排除某些特定的头
-        response_headers = {key: value for key, value in resp.headers.items()
-                            if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
-
-        # 如果存在 Set-Cookie，则追加 SameSite=None; Secure
-        # 进行iframe打开
-        if 'Set-Cookie' in response_headers:
-            # 假设 Set-Cookie 只有一个值。如果有多个值，需要分别处理
-            cookies = response_headers['Set-Cookie']
-            # 检查是否已经包含 SameSite 或 Secure 属性，不包含则追加
-            if 'SameSite' not in cookies:
-                cookies += '; SameSite=None'
-            if 'Secure' not in cookies:
-                cookies += '; Secure'
-            response_headers['Set-Cookie'] = cookies
         # 创建Flask响应对象
         flask_response = Response(
             stream_with_context(generate()),
