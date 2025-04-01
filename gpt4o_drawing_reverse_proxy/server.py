@@ -63,7 +63,7 @@ init_db()
 
 # Helper function to extract account from login request
 def extract_account_from_request(request):
-    def extract_request_info():
+    def extract_request_info(request):
         # 请求方法
         method = request.method
 
