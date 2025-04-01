@@ -1,3 +1,5 @@
+import asyncio
+
 from flask import Flask, request, Response, stream_with_context
 import requests
 from bs4 import BeautifulSoup
@@ -27,6 +29,8 @@ import os
 from bs4 import BeautifulSoup
 import traceback
 import time
+
+from gpt4o_drawing_reverse_proxy.utils import get_souruxgpt_manager
 
 app = Flask(__name__)
 
@@ -64,6 +68,40 @@ def yulan_js():
     js_content = read_js_file('yulan.js')
     return Response(js_content, mimetype='application/javascript')
 
+@app.route('/editPassword', methods=['POST'])
+def edit_password():
+    gpt_manager = get_souruxgpt_manager()
+
+    # 获取请求参数
+    account = request.form.get('username')
+    password = request.form.get('password')
+    new_password = request.form.get('new_password')
+
+    # 验证参数
+    if not account or not password or not new_password:
+        return jsonify({
+            'status': 'error',
+            'message': '缺少必要参数：username、password 或 new_password'
+        }), 400
+
+    # 使用异步运行时来执行异步方法
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        success = loop.run_until_complete(gpt_manager.change_password(account, password, new_password))
+    finally:
+        loop.close()
+
+    if success:
+        return jsonify({
+            'status': 'success',
+            'message': '密码修改成功'
+        })
+    else:
+        return jsonify({
+            'status': 'error',
+            'message': '密码修改失败，请检查用户名和密码是否正确'
+        }), 400
 
 # 处理所有请求的主要函数
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
