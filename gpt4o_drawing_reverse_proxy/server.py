@@ -114,8 +114,8 @@ def proxy(path):
         "backend-api/conversation" in path and request.method == "POST"
     )
     is_login_request = request.method == "POST" and path == "login"
-    if "file_download_diy" in path:
-        logger.debug(f"file_download_diy:\n{file_download_diy}")
+    if "download" in path:
+        logger.debug(f"download path:\n{path}")
 
     account = None
     if is_login_request:
