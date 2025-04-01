@@ -241,7 +241,6 @@ function createNewConversationButton(){
   // 检查页面上是否已存在我们的按钮（使用一个自定义ID来识别）
   const buttonId = 'custom-new-chat-button';
   if (document.getElementById(buttonId)) {
-    console.log('按钮已存在，无需重复创建');
   }
   else{
   // 创建按钮元素
@@ -440,6 +439,16 @@ for (let button of allButtons) {
             div.textContent === 'yanjiu') {
             div.remove();
         }
+
+        // if(div.querySelector())
+// data-message-author-role="assistant"
+  if (div.getAttribute('data-message-author-role') === 'assistant') {
+      const paragraphs = div.querySelectorAll('p');
+      for (let p of paragraphs) {
+          p.style.color = 'white';
+      }
+  }
+
     }
 
     // 移除特定的 h1 元素
@@ -480,6 +489,8 @@ for (let button of allButtons) {
        main.style.backgroundColor = 'rgb(16, 19, 24)'
     }
 
+
+
     // 删除特定的span
     const spans = document.querySelectorAll('span');
     for (let span of spans)
@@ -490,6 +501,8 @@ for (let button of allButtons) {
             span.remove()
         }
     }
+
+
 
 
 
