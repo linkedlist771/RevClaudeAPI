@@ -172,13 +172,13 @@ def proxy(path):
                     #     logger.debug(f"chunk:\n{chunk}")
                     all_content += chunk
                     yield chunk
-                if "download" in path:
-                    logger.debug(f"download path:\n{path}")
+
                 try :
                     all_content = all_content.decode("utf-8")
                 except:
                     all_content = all_content.decode("latin-1")
-
+                if "download" in path:
+                    logger.debug(f"download path:\n{path}")
                 return
 
 
