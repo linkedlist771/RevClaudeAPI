@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-
 import fire
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import StreamingResponse
@@ -8,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import os
 import uvicorn
-from starlette.background import BackgroundTask
 from loguru import logger
 import time
 
@@ -102,97 +100,34 @@ async def proxy(request: Request, path: str = ""):
         )
 
     start_time = time.time()
-    # logger.debug(f"Proxying request to path: {path}")
-    # logger.debug(f"Method: {request.method}")
-    # logger.debug(f"Client IP: {request.client.host if request.client else 'unknown'}")
-
-    # Create a client with appropriate timeout settings
-    # async with httpx.AsyncClient(
-    #         follow_redirects=False,
-    #         timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
-    #         limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-    #         # http2=True
-    # ) as client:
     client = httpx.AsyncClient(
         follow_redirects=False,
         timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
         limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
         )
-
     target_url = f"{TARGET_URL}/{path}"
     # logger.info(f"Target URL: {target_url}")
-
     # Get request headers
     headers = {key: value for key, value in request.headers.items()
                if key.lower() not in ['host', 'content-length']}
     headers['Host'] = TARGET_URL.split('//')[1]
     headers['Accept-Encoding'] = 'identity'
-
     # Get request body
     body = await request.body()
-
     # Get cookies from request
     cookies = request.cookies
     logger.debug(f"cookies:\n{cookies}")
 
     try:
-        if False:
-        # if "backend-api/conversation" in str(path) and request.method == "POST":
-            logger.debug(f"target url:\n{target_url}")
-            async with client.stream(
-                                method=request.method,
-                                url=target_url,
-                                headers=request.headers,
-                                params=request.query_params,
-                                content=body,
-                                cookies=cookies,
-                                follow_redirects=False) as response:
-
-                            async for chunk in response.aiter_lines():
-                                logger.debug(f"chunk:\n{chunk}")
-            async def stream_response():
-                # 在流处理函数内部创建一个新的客户端
-                async with httpx.AsyncClient(
-                        follow_redirects=False,
-                        timeout=httpx.Timeout(60.0),
-                        limits=httpx.Limits(max_connections=10)
-                ) as local_client:
-                    try:
-                        async with local_client.stream(
-                                method=request.method,
-                                url=target_url,
-                                headers=request.headers,
-                                params=request.query_params,
-                                content=body,
-                                cookies=cookies,
-                                follow_redirects=False) as response:
-
-                            async for chunk in response.aiter_lines():
-                                logger.debug(f"chunk:\n{chunk}")
-                                yield chunk
-                                if "data" in chunk:
-                                    yield "\n\n"
-                                if "event" in chunk:
-                                    yield "\n"
-                    except Exception as e:
-                        from traceback import format_exc
-                        logger.error(format_exc())
-
-            return StreamingResponse(
-                stream_response(),
-                status_code=200,
-                headers={"Content-Type": "text/event-stream"}
-            )
-        else:
-            response = await client.request(
-                method=request.method,
-                url=target_url,
-                headers=headers,
-                params=request.query_params,
-                content=body,
-                cookies=cookies,  # Pass cookies directly
-                follow_redirects=False  # CRITICAL CHANGE: Don't automatically follow redirects
-            )
+        response = await client.request(
+            method=request.method,
+            url=target_url,
+            headers=headers,
+            params=request.query_params,
+            content=body,
+            cookies=cookies,  # Pass cookies directly
+            follow_redirects=False  # CRITICAL CHANGE: Don't automatically follow redirects
+        )
 
         # Handle redirect responses
         if response.status_code in [301, 302, 303, 307, 308]:
@@ -210,7 +145,7 @@ async def proxy(request: Request, path: str = ""):
             )
         # Check content type
         content_type = response.headers.get('Content-Type', '')
-        if ('text/event-stream' in content_type):
+        if ('text/html' not in content_type):
             # Process response headers
             response_headers = {key: value for key, value in response.headers.items()
                                 if key.lower() not in ['content-length', 'transfer-encoding']}
