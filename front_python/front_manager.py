@@ -14,6 +14,7 @@ import pytz
 import redis
 import requests
 import streamlit as st
+from conversation_utils import get_all_conversations, get_single_conversation
 from front_configs import *
 from front_utils import (create_sorux_accounts, create_sorux_accounts_v2,
                          create_sorux_redemption_codes, delete_sorux_accounts,
@@ -21,7 +22,7 @@ from front_utils import (create_sorux_accounts, create_sorux_accounts_v2,
 from httpx import AsyncClient
 from loguru import logger
 from tqdm import tqdm
-from conversation_utils import get_all_conversations, get_single_conversation
+
 # running:  streamlit run front_python/front_manager.py --server.port 5000
 
 
@@ -786,24 +787,26 @@ def main():
         # API密钥管理部分
         conversation_function = st.sidebar.radio(
             "对话管理",
-            [
-                "Claude镜像对话管理"
-            ],
+            ["Claude镜像对话管理"],
         )
         if conversation_function == "Claude镜像对话管理":
             st.subheader("Claude镜像对话管理")
-            
+
             # Create tabs for different query types
             tab1, tab2 = st.tabs(["单一用户查询", "所有用户查询"])
-            
+
             with tab1:
                 st.subheader("单一用户查询")
                 api_key = st.text_input("输入API Key")
                 conversation_id = st.text_input("输入对话ID (可选)")
-                
+
                 if st.button("查询单一用户对话"):
                     if api_key:
-                        result = asyncio.run(get_single_conversation(api_key, conversation_id if conversation_id else None))
+                        result = asyncio.run(
+                            get_single_conversation(
+                                api_key, conversation_id if conversation_id else None
+                            )
+                        )
                         if result:
                             # Display the result
                             # st.json(result)
@@ -812,12 +815,14 @@ def main():
                             col1, col2 = st.columns(2)
                             with col1:
                                 # JSON download
-                                json_str = json.dumps(result, ensure_ascii=False, indent=2)
+                                json_str = json.dumps(
+                                    result, ensure_ascii=False, indent=2
+                                )
                                 st.download_button(
                                     label="下载JSON格式",
                                     data=json_str,
                                     file_name="conversation.json",
-                                    mime="application/json"
+                                    mime="application/json",
                                 )
                             with col2:
                                 # Text download
@@ -826,13 +831,13 @@ def main():
                                     label="下载文本格式",
                                     data=text_str,
                                     file_name="conversation.txt",
-                                    mime="text/plain"
+                                    mime="text/plain",
                                 )
                         else:
                             st.error("未找到对话记录")
                     else:
                         st.warning("请输入API Key")
-            
+
             with tab2:
                 st.subheader("所有用户查询")
                 time_filter = st.selectbox(
@@ -843,10 +848,10 @@ def main():
                         "three_days": "三天内",
                         "one_week": "一周内",
                         "one_month": "一个月内",
-                        "all": "全部"
-                    }[x]
+                        "all": "全部",
+                    }[x],
                 )
-                
+
                 if st.button("查询所有用户对话"):
                     result = asyncio.run(get_all_conversations(time_filter))
                     if result:
@@ -862,7 +867,7 @@ def main():
                                 label="下载JSON格式",
                                 data=json_str,
                                 file_name=f"all_conversations_{time_filter}.json",
-                                mime="application/json"
+                                mime="application/json",
                             )
                         with col2:
                             # Text download
@@ -872,7 +877,7 @@ def main():
                                 label="下载文本格式",
                                 data=text_str,
                                 file_name=f"all_conversations_{time_filter}.txt",
-                                mime="text/plain"
+                                mime="text/plain",
                             )
                     else:
                         st.error("未找到对话记录")

@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+
 import httpx
 from loguru import logger
 from tqdm.asyncio import tqdm
@@ -386,19 +387,17 @@ class SoruxGPTManager:
 
     async def is_account_valid(self, account: str, password: str) -> bool:
         async with httpx.AsyncClient() as client:
-            data = {
-                "account": account,
-                "password": password,
-                "action": "default"
-            }
-            res = await client.post('https://chat.qqyunsd.com/login', json=data)
+            data = {"account": account, "password": password, "action": "default"}
+            res = await client.post("https://chat.qqyunsd.com/login", json=data)
             logger.debug(res.cookies)
             if res.cookies:
                 return True
             else:
                 return False
 
-    async def change_password(self, account: str, password: str, new_password: str) -> bool:
+    async def change_password(
+        self, account: str, password: str, new_password: str
+    ) -> bool:
         # 首先判断账号密码是否正确， 如果正确就修改， 否则不修改， 账号或者密码错误
         if await self.is_account_valid(account, password):
             pass
@@ -409,7 +408,6 @@ class SoruxGPTManager:
         user_info = await self.get_user_info(account)
         logger.debug(f"User info: {user_info}")
         if not user_info or not user_info.get("data") or len(user_info["data"]) == 0:
-
             return False
 
         user_id = user_info["data"][0]["ID"]
@@ -420,10 +418,7 @@ class SoruxGPTManager:
                     f"{self.base_url}/agent/editPassword",
                     headers=self.headers,
                     params={"token": self.token},
-                    data={
-                        "user_id": user_id,
-                        "password": new_password
-                    }
+                    data={"user_id": user_id, "password": new_password},
                 )
                 response.raise_for_status()
                 return True
@@ -440,10 +435,14 @@ async def get_souruxgpt_manager():
 
 async def amain():
     from loguru import logger
+
     sorux_gpt_manager = SoruxGPTManager(admin_username, admin_password)
     await sorux_gpt_manager.login()
     user_info = await sorux_gpt_manager.get_user_info("98_1_f90173d55e3c")
     logger.debug(f"User info: {user_info}")
+
+
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(amain())

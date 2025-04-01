@@ -1,8 +1,12 @@
-import httpx
 from typing import Union
+
+import httpx
 from front_configs import CLAUDE_AUDIT_BASE_URL
 
-async def get_single_conversation(api_key: str, conversation_id: Union[str, None] = None):
+
+async def get_single_conversation(
+    api_key: str, conversation_id: Union[str, None] = None
+):
     async with httpx.AsyncClient() as client:
         url = f"{CLAUDE_AUDIT_BASE_URL}/conversations/{api_key}"
         if conversation_id:
@@ -17,6 +21,3 @@ async def get_all_conversations(time_filter: str):
         # params = {"time_filter": time_filter}
         response = await client.post(url, timeout=600)
         return response.json()
-
-
-

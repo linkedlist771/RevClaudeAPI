@@ -1,14 +1,16 @@
-from fastapi import APIRouter
-import httpx
-from pydantic import BaseModel
-from typing import Union
 import base64
 import json
+from typing import Union
+
+import httpx
+from fastapi import APIRouter
+from pydantic import BaseModel
+
 
 class LogInRequest(BaseModel):
     account: Union[str, None] = None
     password: Union[str, None] = None
-    action: str = 'default'
+    action: str = "default"
     encoded_account_and_password: Union[str, None] = None
 
 
@@ -22,21 +24,23 @@ async def login(login_request: LogInRequest):
         if login_request.encoded_account_and_password:
             try:
                 # Decode the base64 encoded credentials
-                decoded_bytes = base64.b64decode(login_request.encoded_account_and_password)
-                decoded_str = decoded_bytes.decode('utf-8')
+                decoded_bytes = base64.b64decode(
+                    login_request.encoded_account_and_password
+                )
+                decoded_str = decoded_bytes.decode("utf-8")
                 credentials = json.loads(decoded_str)
-                
+
                 # Extract account and password
                 data = {
                     "account": credentials.get("account"),
                     "password": credentials.get("password"),
-                    "action": login_request.action
+                    "action": login_request.action,
                 }
             except Exception as e:
                 return {"error": f"Failed to decode credentials: {str(e)}"}
         else:
-            data=login_request.model_dump()
-        res = await client.post('https://chat.qqyunsd.com/login', json=data)
+            data = login_request.model_dump()
+        res = await client.post("https://chat.qqyunsd.com/login", json=data)
         cookies_dict = {}
         try:
             for name, value in res.cookies.items():
