@@ -186,9 +186,7 @@ def proxy(path):
     target_url = f"{TARGET_URL}/{path}"
 
     # Get account if this is a login request
-    account = None
-    if request.method == 'POST' and path == 'login':
-        account = extract_account_from_request(request)
+
 
     # 获取所有请求头
     headers = {key: value for key, value in request.headers.items()
@@ -228,15 +226,7 @@ def proxy(path):
         # Track cookies for login requests
         if 'Set-Cookie' in response_headers and account:
             cookies = response_headers['Set-Cookie']
-            # Store the account and cookie in the database
-            conn = sqlite3.connect('user_stats.db')
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT OR REPLACE INTO users (account, cookie) VALUES (?, ?)",
-                (account, cookies)
-            )
-            conn.commit()
-            conn.close()
+
 
         # Update usage count for conversation API requests
         if is_conversation_request and 'Cookie' in headers:
@@ -244,31 +234,6 @@ def proxy(path):
             # logger.debug(f"cookie_str:\n{cookie_str}")
             extracted_cookies = extract_cookies(cookie_str)
             logger.debug(extracted_cookies)
-
-            # Find the account associated with this cookie
-            conn = sqlite3.connect('user_stats.db')
-            cursor = conn.cursor()
-
-            # Try to find a match with any cookie in our database
-            cursor.execute("SELECT account FROM users")
-            all_accounts = cursor.fetchall()
-
-            found_account = None
-            for acc in all_accounts:
-                cursor.execute("SELECT cookie FROM users WHERE account = ?", (acc[0],))
-                stored_cookie = cursor.fetchone()
-                if stored_cookie and any(cookie_part in cookie_str for cookie_part in stored_cookie[0].split('; ')):
-                    found_account = acc[0]
-                    break
-
-            if found_account:
-                cursor.execute(
-                    "UPDATE users SET usage_count = usage_count + 1, last_used = CURRENT_TIMESTAMP WHERE account = ?",
-                    (found_account,)
-                )
-                conn.commit()
-
-            conn.close()
 
         # 如果存在 Set-Cookie，则追加 SameSite=None; Secure
         # 进行iframe打开
@@ -281,8 +246,10 @@ def proxy(path):
             if 'Secure' not in cookies:
                 cookies += '; Secure'
             response_headers['Set-Cookie'] = cookies
-            logger.debug(f"account:\n{request.get_json().get('account')}")
-
+            account = None
+            if request.method == 'POST' and path == 'login':
+                account = extract_account_from_request(request)
+            logger.debug(f"account:\n{account}")
         # 创建一个函数来处理响应内容
         def generate():
             # 对于非HTML内容，直接流式传输
