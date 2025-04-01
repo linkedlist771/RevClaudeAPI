@@ -61,59 +61,93 @@ def init_db():
 # Call init_db at startup
 init_db()
 
+# Database helper functions
+def bind_gfsessionid_to_account(account, gfsessionid):
+    """Bind a gfsessionid to an account"""
+    try:
+        conn = sqlite3.connect('user_stats.db')
+        cursor = conn.cursor()
+        
+        # Check if account already exists
+        cursor.execute("SELECT * FROM users WHERE account = ?", (account,))
+        user = cursor.fetchone()
+        
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        if user:
+            # Update existing account
+            cursor.execute(
+                "UPDATE users SET cookie = ?, last_used = ? WHERE account = ?",
+                (gfsessionid, current_time, account)
+            )
+        else:
+            # Create new account
+            cursor.execute(
+                "INSERT INTO users (account, cookie, usage_count, last_used) VALUES (?, ?, ?, ?)",
+                (account, gfsessionid, 0, current_time)
+            )
+        
+        conn.commit()
+        conn.close()
+        logger.debug(f"Successfully bound gfsessionid to account: {account}")
+        return True
+    except Exception as e:
+        logger.error(f"Error binding gfsessionid to account: {str(e)}")
+        return False
+
+def update_usage_for_gfsessionid(gfsessionid):
+    """Update usage count for an account based on gfsessionid"""
+    try:
+        conn = sqlite3.connect('user_stats.db')
+        cursor = conn.cursor()
+        
+        # Find account by gfsessionid
+        cursor.execute("SELECT account FROM users WHERE cookie = ?", (gfsessionid,))
+        account = cursor.fetchone()
+        
+        if account:
+            account = account[0]
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Update usage count and last_used
+            cursor.execute(
+                "UPDATE users SET usage_count = usage_count + 1, last_used = ? WHERE account = ?",
+                (current_time, account)
+            )
+            
+            conn.commit()
+            conn.close()
+            logger.debug(f"Updated usage count for account: {account}")
+            return True
+        else:
+            conn.close()
+            logger.warning(f"No account found for gfsessionid: {gfsessionid}")
+            return False
+    except Exception as e:
+        logger.error(f"Error updating usage count: {str(e)}")
+        return False
+
+def get_account_by_gfsessionid(gfsessionid):
+    """Get account information by gfsessionid"""
+    try:
+        conn = sqlite3.connect('user_stats.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM users WHERE cookie = ?", (gfsessionid,))
+        user = cursor.fetchone()
+        
+        conn.close()
+        
+        if user:
+            return dict(user)
+        return None
+    except Exception as e:
+        logger.error(f"Error getting account by gfsessionid: {str(e)}")
+        return None
+
 # Helper function to extract account from login request
 def extract_account_from_request(request):
-    # def extract_request_info(request):
-    #     # 请求方法
-    #     method = request.method
-    #
-    #     # URL和路由信息
-    #     url = request.url
-    #     path = request.path
-    #     base_url = request.base_url
-    #
-    #     # 请求头
-    #     headers = dict(request.headers)
-    #
-    #     # 查询参数
-    #     args = dict(request.args)
-    #
-    #     # 表单数据
-    #     form = dict(request.form) if request.form else None
-    #
-    #     # JSON数据
-    #     json_data = request.get_json(silent=True) if request.is_json else None
-    #
-    #     # 文件
-    #     files = {key: request.files[key].filename for key in request.files} if request.files else None
-    #
-    #     # Cookies
-    #     cookies = dict(request.cookies)
-    #
-    #     # 客户端信息
-    #     remote_addr = request.remote_addr
-    #     user_agent = request.user_agent.string
-    #
-    #     # 汇总所有信息
-    #     request_info = {
-    #         "method": method,
-    #         "url": url,
-    #         "path": path,
-    #         "base_url": base_url,
-    #         "headers": headers,
-    #         "args": args,
-    #         "form": form,
-    #         "json": json_data,
-    #         "files": files,
-    #         "cookies": cookies,
-    #         "remote_addr": remote_addr,
-    #         "user_agent": user_agent
-    #     }
-    #
-    #     return request_info
-    # info = extract_request_info(request)
-    # logger.debug(info)
-
     return request.form['account']
 
 # Helper function to extract cookies
@@ -189,38 +223,115 @@ def usage_stats():
         data = request.get_json()
         account = data.get('account')
 
-        conn = sqlite3.connect('user_stats.db')
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-
         if account:
-            # Get stats for specific account
+            # Get stats for specific account using a helper function
+            conn = sqlite3.connect('user_stats.db')
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
             cursor.execute("SELECT account, usage_count, last_used FROM users WHERE account = ?", (account,))
             row = cursor.fetchone()
+            conn.close()
 
             if row:
-                stats = {
+                result = {
                     'account': row['account'],
                     'usage_count': row['usage_count'],
                     'last_used': row['last_used']
                 }
-                result = stats
             else:
                 result = {'message': f'No data found for account: {account}'}
         else:
-            # If no account provided, return all stats (sorted by usage)
+            # If no identifiers provided, return all stats
+            conn = sqlite3.connect('user_stats.db')
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
             cursor.execute("SELECT account, usage_count, last_used FROM users ORDER BY usage_count DESC")
             rows = cursor.fetchall()
+            conn.close()
 
-            stats = [{'account': row['account'],
-                      'usage_count': row['usage_count'],
-                      'last_used': row['last_used']} for row in rows]
+            stats = [{
+                'account': row['account'],
+                'usage_count': row['usage_count'],
+                'last_used': row['last_used']
+            } for row in rows]
             result = stats
 
-        conn.close()
         return jsonify(result)
     except Exception as e:
+        logger.error(f"Error in usage_stats: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/batch_usage_stats', methods=['POST'])
+def batch_usage_stats():
+    try:
+        data = request.get_json()
+        accounts = data.get('accounts', [])
+        
+        if not accounts or not isinstance(accounts, list):
+            return jsonify({'error': 'Invalid or missing accounts parameter'}), 400
+            
+        results = {}
+        conn = sqlite3.connect('user_stats.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        for account in accounts:
+            cursor.execute("SELECT account, usage_count, last_used FROM users WHERE account = ?", (account,))
+            row = cursor.fetchone()
+            
+            if row:
+                results[account] = {
+                    'account': row['account'],
+                    'usage_count': row['usage_count'],
+                    'last_used': row['last_used']
+                }
+            else:
+                results[account] = {'message': f'No data found'}
+        
+        conn.close()
+        return jsonify(results)
+    except Exception as e:
+        logger.error(f"Error in batch_usage_stats: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/top_users', methods=['GET'])
+def top_users():
+    try:
+        limit = request.args.get('limit', default=10, type=int)
+        users = get_top_users(limit)
+        
+        # Filter out cookie information for security
+        for user in users:
+            if 'cookie' in user:
+                del user['cookie']
+        
+        return jsonify(users)
+    except Exception as e:
+        logger.error(f"Error in top_users: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+
+def get_top_users(limit=10):
+    """Get top users by usage count"""
+    try:
+        conn = sqlite3.connect('user_stats.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "SELECT account, cookie, usage_count, last_used FROM users ORDER BY usage_count DESC LIMIT ?", 
+            (limit,)
+        )
+        rows = cursor.fetchall()
+        
+        conn.close()
+        
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.error(f"Error getting top users: {str(e)}")
+        return []
 
 
 # 处理所有请求的主要函数
@@ -229,9 +340,6 @@ def usage_stats():
 def proxy(path):
     # 构建目标URL
     target_url = f"{TARGET_URL}/{path}"
-
-    # Get account if this is a login request
-
 
     # 获取所有请求头
     headers = {key: value for key, value in request.headers.items()
@@ -249,6 +357,13 @@ def proxy(path):
 
     # Check if this is a conversation API request
     is_conversation_request = "backend-api/conversation" in path
+    
+    # Check if this is a login request
+    is_login_request = request.method == 'POST' and path == 'login'
+    account = None
+    if is_login_request:
+        account = extract_account_from_request(request)
+
     # logger.debug(path)
 
     try:
@@ -268,15 +383,24 @@ def proxy(path):
         response_headers = {key: value for key, value in resp.headers.items()
                             if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
 
-
-
         # Update usage count for conversation API requests
         if is_conversation_request and 'Cookie' in headers:
             cookie_str = headers['Cookie']
-            # logger.debug(f"cookie_str:\n{cookie_str}")
             extracted_cookies = extract_cookies(cookie_str)
-            # gfsessionid
-            logger.debug(extracted_cookies)
+            
+            # 检查是否包含 gfsessionid
+            if 'gfsessionid' in extracted_cookies:
+                gfsessionid = extracted_cookies['gfsessionid']
+                update_usage_for_gfsessionid(gfsessionid)
+        
+        # 处理登录响应，绑定gfsessionid到账户
+        if is_login_request and account and resp.status_code == 200 and 'Set-Cookie' in resp.headers:
+            cookie_str = resp.headers['Set-Cookie']
+            extracted_cookies = extract_cookies(cookie_str)
+            
+            if 'gfsessionid' in extracted_cookies:
+                gfsessionid = extracted_cookies['gfsessionid']
+                bind_gfsessionid_to_account(account, gfsessionid)
 
         # 如果存在 Set-Cookie，则追加 SameSite=None; Secure
         # 进行iframe打开
@@ -289,10 +413,7 @@ def proxy(path):
             if 'Secure' not in cookies:
                 cookies += '; Secure'
             response_headers['Set-Cookie'] = cookies
-            account = None
-            if request.method == 'POST' and path == 'login':
-                account = extract_account_from_request(request)
-            logger.debug(f"account:\n{account}")
+
         # 创建一个函数来处理响应内容
         def generate():
             # 对于非HTML内容，直接流式传输
@@ -345,6 +466,8 @@ def proxy(path):
     except requests.RequestException as e:
         # 处理请求错误
         return f"Error: {str(e)}", 500
+
+
 
 
 if __name__ == '__main__':
