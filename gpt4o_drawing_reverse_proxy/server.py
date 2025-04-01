@@ -68,7 +68,7 @@ def yulan_js():
     js_content = read_js_file('yulan.js')
     return Response(js_content, mimetype='application/javascript')
 
-@app.route('/editPassword')
+@app.route('/editPassword', methods=['POST'])
 def edit_password():
     gpt_manager = get_souruxgpt_manager()
     data = request.get_json()
