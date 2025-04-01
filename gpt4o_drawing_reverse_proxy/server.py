@@ -114,8 +114,7 @@ def proxy(path):
         "backend-api/conversation" in path and request.method == "POST"
     )
     is_login_request = request.method == "POST" and path == "login"
-    if "download" in path:
-        logger.debug(f"download path:\n{path}")
+
 
     account = None
     if is_login_request:
@@ -165,13 +164,24 @@ def proxy(path):
 
         # 创建一个函数来处理响应内容
         def generate():
-            # 对于非HTML内容，直接流式传输
+            # 对于非HTML内容，直接流式传
+            all_content = b""
             if "text/html" not in resp.headers.get("Content-Type", ""):
                 for chunk in resp.iter_content(chunk_size=1024):
                     # if is_conversation_request:
                     #     logger.debug(f"chunk:\n{chunk}")
+                    all_content += chunk
                     yield chunk
+                if "download" in path:
+                    logger.debug(f"download path:\n{path}")
+                try :
+                    all_content = all_content.decode("utf-8")
+                except:
+                    all_content = all_content.decode("latin-1")
+
                 return
+
+
 
             content = b""
             for chunk in resp.iter_content(chunk_size=1024):
