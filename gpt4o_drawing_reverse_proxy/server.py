@@ -3,7 +3,6 @@ import json
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-
 import requests
 from flask import (Flask, Response, jsonify, make_response, redirect, request,
                    send_file, send_from_directory, stream_with_context)
@@ -26,7 +25,7 @@ def save_image_from_dict(data_dict):
         if data_dict.get("file_name"):
             file_name = Path(data_dict["file_name"]).name
         else:
-            file_name = "downloaded_image.png"
+            file_name = f"image_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
         response = requests.get(download_url)
         if response.status_code != 200:
             return f"错误: 下载失败，状态码 {response.status_code}"
