@@ -8,6 +8,8 @@ REDIS_DB = int(os.environ.get("REDIS_DB", 0))
 
 ROOT = Path(__file__).parent
 JS_DIR = ROOT / "js"
+IMAGES_DIR = ROOT / "images"
+IMAGES_DIR.mkdir(exist_ok=True)
 JS_DIR.mkdir(exist_ok=True)
 
 if __name__ == "__main__":

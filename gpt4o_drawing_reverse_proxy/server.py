@@ -1,20 +1,43 @@
 import asyncio
+import json
 import os
 from datetime import datetime, timedelta
+from pathlib import Path
+
 import requests
 from flask import (Flask, Response, jsonify, make_response, redirect, request,
                    send_file, send_from_directory, stream_with_context)
 from loguru import logger
 from utils import get_souruxgpt_manager
-from configs import ROOT, JS_DIR, TARGET_URL
+from configs import ROOT, JS_DIR, TARGET_URL, IMAGES_DIR
 from sync_base_redis_manager import FlaskUserRecordManager
 
 logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
 
 app = Flask(__name__)
 
-# Initialize Redis manager
 user_record_manager = FlaskUserRecordManager()
+
+def save_image_from_dict(data_dict):
+    try:
+        download_url = data_dict.get("download_url")
+        if not download_url:
+            return "错误: 字典中没有找到下载URL"
+        if data_dict.get("file_name"):
+            file_name = Path(data_dict["file_name"]).name
+        else:
+            file_name = "downloaded_image.png"
+        response = requests.get(download_url)
+        if response.status_code != 200:
+            return f"错误: 下载失败，状态码 {response.status_code}"
+        save_path = IMAGES_DIR / file_name
+        with open(save_path, 'wb') as f:
+            f.write(response.content)
+        logger.debug(f"图片已保存到: \n{save_path}")
+        return str(save_path)
+    except Exception as e:
+        return f"错误: {str(e)}"
+
 
 # Helper function to extract account from login request
 def extract_account_from_request(request):
@@ -98,9 +121,7 @@ def usage_stats():
 )
 @app.route("/<path:path>", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
 def proxy(path):
-    # 构建目标URL
     target_url = f"{TARGET_URL}/{path}"
-    # 获取所有请求头
     headers = {
         key: value
         for key, value in request.headers.items()
@@ -114,8 +135,6 @@ def proxy(path):
         "backend-api/conversation" in path and request.method == "POST"
     )
     is_login_request = request.method == "POST" and path == "login"
-
-
     account = None
     if is_login_request:
         account = extract_account_from_request(request)
@@ -141,13 +160,9 @@ def proxy(path):
         if is_conversation_request and "Cookie" in headers:
             cookie_str = headers["Cookie"]
             extracted_cookies = extract_cookies(cookie_str)
-
-            # 检查是否包含 gfsessionid
             if "gfsessionid" in extracted_cookies:
                 gfsessionid = extracted_cookies["gfsessionid"]
                 user_record_manager.update_usage_for_gfsessionid(gfsessionid)
-
-        # 处理登录响应，绑定gfsessionid到账户
         if is_login_request and account and "Set-Cookie" in resp.headers:
             cookies = resp.headers["Set-Cookie"]
             extracted_cookies = extract_cookies(cookies)
@@ -180,6 +195,7 @@ def proxy(path):
                 if "download" in path:
                     logger.debug(f"download path:\n{path}")
                     logger.debug(f"all_content:\n{all_content}")
+                    save_image_from_dict(json.loads(all_content))
                 return
 
 
