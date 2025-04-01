@@ -600,13 +600,6 @@ setInterval(() => {
 
 }
 
-// 页面加载时立即执行一次移除操作
-removeTargetElements();
-
-// 每 0.1 秒检测并移除目标元素
-setInterval(() => {
-    removeTargetElements();
-}, 100);
 
 // 点击并删除特定的SVG按钮（排除“打开边栏”按钮中的SVG）
 function clickAndRemoveSpecificSVG() {
@@ -630,24 +623,6 @@ function clickAndRemoveSpecificSVG() {
     return false;
 }
 
-// 页面加载时尝试点击并删除特定的SVG按钮
-window.addEventListener('load', () => {
-    clickAndRemoveSpecificSVG();
-    // 创建新建对话
-
-});
-
-// 每 0.5 秒监控并点击删除特定的SVG按钮
-setInterval(() => {
-    clickAndRemoveSpecificSVG();
-}, 500);
-
-
-// 每隔1秒创建新建对话
-setInterval(() => {
-    createNewConversationButton();
-}, 1000);
-
 // 保留“新建聊天”按钮但禁用其新建逻辑
 function disableNewChatLogic() {
     const newChatButton = document.querySelector('button[aria-label="新聊天"]');
@@ -661,12 +636,43 @@ function disableNewChatLogic() {
     }
 }
 
+
+
+// 页面加载时尝试点击并删除特定的SVG按钮
+window.addEventListener('load', () => {
+    clickAndRemoveSpecificSVG();
+    // 创建新建对话
+
+});
+
 // 页面加载时禁用“新建聊天”按钮逻辑
 window.addEventListener('load', () => {
     disableNewChatLogic();
 });
 
+
+// 页面加载时立即执行一次移除操作
+removeTargetElements();
+
+// 每 0.1 秒检测并移除目标元素
+setInterval(() => {
+    removeTargetElements();
+}, 100);
+
+// 每 0.5 秒监控并点击删除特定的SVG按钮
+setInterval(() => {
+    clickAndRemoveSpecificSVG();
+}, 500);
+
+
+// 每隔1秒创建新建对话
+setInterval(() => {
+    createNewConversationButton();
+}, 1000);
+
+
 // 每 0.5 秒监控并禁用“新建聊天”按钮逻辑
 setInterval(() => {
     disableNewChatLogic();
 }, 500);
+
