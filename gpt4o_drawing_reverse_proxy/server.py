@@ -206,6 +206,7 @@ def proxy(path):
 
     # Check if this is a conversation API request
     is_conversation_request = "backend-api/conversation" in path
+    logger.debug(path)
 
     try:
         # 使用适当的方法发送请求
