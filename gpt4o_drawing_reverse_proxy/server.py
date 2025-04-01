@@ -30,7 +30,7 @@ from bs4 import BeautifulSoup
 import traceback
 import time
 
-from gpt4o_drawing_reverse_proxy.utils import get_souruxgpt_manager
+from utils import get_souruxgpt_manager
 
 app = Flask(__name__)
 
