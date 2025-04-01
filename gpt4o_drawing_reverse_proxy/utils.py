@@ -432,13 +432,18 @@ class SoruxGPTManager:
                 return False
 
 
-def get_souruxgpt_manager():
-    return SoruxGPTManager(admin_username, admin_password)
+async def get_souruxgpt_manager():
+    sorux_gpt_manager = SoruxGPTManager(admin_username, admin_password)
+    await sorux_gpt_manager.login()
+    return sorux_gpt_manager
 
 
 async def amain():
     from loguru import logger
     sorux_gpt_manager = SoruxGPTManager(admin_username, admin_password)
+    await sorux_gpt_manager.login()
+    user_info = await sorux_gpt_manager.get_user_info("98_1_f90173d55e3c")
+    logger.debug(f"User info: {user_info}")
 if __name__ == "__main__":
     import asyncio
     asyncio.run(amain())
