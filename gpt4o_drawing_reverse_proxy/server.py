@@ -13,7 +13,6 @@ from flask import Flask, request, Response, jsonify
 from flask import Flask, request, Response, send_from_directory
 from flask import Flask, request, make_response, jsonify, redirect
 from datetime import datetime, timedelta
-
 import requests
 import logging
 from datetime import datetime
@@ -34,7 +33,7 @@ from utils import get_souruxgpt_manager
 
 app = Flask(__name__)
 
-TARGET_URL = "https://gpt4oimagedrawing.585dg.com"
+TARGET_URL = "https://soruxgpt-saas-liuli.soruxgpt.com"
 
 # Create a directory for JavaScript files if it doesn't exist
 js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'js')
