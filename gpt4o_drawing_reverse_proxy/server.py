@@ -340,7 +340,6 @@ def get_top_users(limit=10):
 def proxy(path):
     # 构建目标URL
     target_url = f"{TARGET_URL}/{path}"
-
     # 获取所有请求头
     headers = {key: value for key, value in request.headers.items()
                if key.lower() not in ['host', 'content-length']}
@@ -471,8 +470,12 @@ def proxy(path):
 
 
 if __name__ == '__main__':
-    print("启动反向代理服务器，监听0.0.0.0:5001...")
-    print("JavaScript注入已启用，将注入 /list.js 到所有HTML响应")
-    print(f"JavaScript文件目录: {js_dir}")
+    import argparse
+    parser = argparse.ArgumentParser(description='启动反向代理服务器')
+    parser.add_argument('--port', type=int, default=5001, help='端口号')
+    args = parser.parse_args()
+    # print("启动反向代理服务器，监听0.0.0.0:5001...")
+    # print("JavaScript注入已启用，将注入 /list.js 到所有HTML响应")
+    # print(f"JavaScript文件目录: {js_dir}")
     # 在生产环境中，你可能需要使用更强大的WSGI服务器如Gunicorn
-    app.run(host='0.0.0.0', port=5001, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=args.port, debug=True, threaded=True)
