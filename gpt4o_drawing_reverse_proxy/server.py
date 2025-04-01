@@ -394,7 +394,7 @@ def proxy(path):
                 update_usage_for_gfsessionid(gfsessionid)
         
         # 处理登录响应，绑定gfsessionid到账户
-        if is_login_request and account and resp.status_code == 200 and 'Set-Cookie' in resp.headers:
+        if is_login_request and account and 'Set-Cookie' in resp.headers:
             cookie_str = resp.headers['Set-Cookie']
             extracted_cookies = extract_cookies(cookie_str)
             
