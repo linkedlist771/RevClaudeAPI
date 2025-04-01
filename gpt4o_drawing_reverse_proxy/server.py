@@ -356,7 +356,7 @@ def proxy(path):
     data = request.get_data()
 
     # Check if this is a conversation API request
-    is_conversation_request = "backend-api/conversation" in path
+    is_conversation_request = "backend-api/conversation" in path and request.method == 'POST'
     
     # Check if this is a login request
     is_login_request = request.method == 'POST' and path == 'login'
