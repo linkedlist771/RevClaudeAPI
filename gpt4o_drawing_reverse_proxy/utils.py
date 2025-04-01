@@ -400,12 +400,16 @@ class SoruxGPTManager:
 
     async def change_password(self, account: str, password: str, new_password: str) -> bool:
         # 首先判断账号密码是否正确， 如果正确就修改， 否则不修改， 账号或者密码错误
-        if not await self.is_account_valid(account, password):
+        if await self.is_account_valid(account, password):
+            pass
+        else:
             return False
 
         # Get user info to retrieve user_id
         user_info = await self.get_user_info(account)
+        logger.debug(f"User info: {user_info}")
         if not user_info or not user_info.get("data") or len(user_info["data"]) == 0:
+
             return False
 
         user_id = user_info["data"][0]["ID"]
