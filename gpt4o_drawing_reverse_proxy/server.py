@@ -29,7 +29,7 @@ import os
 from bs4 import BeautifulSoup
 import traceback
 import time
-
+from loguru import logger
 from utils import get_souruxgpt_manager
 
 app = Flask(__name__)
@@ -240,6 +240,7 @@ def proxy(path):
         # Update usage count for conversation API requests
         if is_conversation_request and 'Cookie' in headers:
             cookie_str = headers['Cookie']
+            logger.debug(f"cookie_str:\n{cookie_str}")
             extracted_cookies = extract_cookies(cookie_str)
 
             # Find the account associated with this cookie
