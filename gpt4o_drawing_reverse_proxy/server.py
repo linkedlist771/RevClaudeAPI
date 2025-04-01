@@ -70,7 +70,7 @@ def yulan_js():
 
 @app.route('/editPassword', methods=['POST'])
 def edit_password():
-    gpt_manager = get_souruxgpt_manager()
+    gpt_manager = asyncio.run(get_souruxgpt_manager())
     data = request.get_json()
 
     # 获取请求参数
