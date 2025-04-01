@@ -73,9 +73,9 @@ def edit_password():
     gpt_manager = get_souruxgpt_manager()
 
     # 获取请求参数
-    account = request.form.get('account')
-    password = request.form.get('password')
-    new_password = request.form.get('new_password')
+    account = request.get_data().get('account')
+    password = request.get_data().get('password')
+    new_password = request.get_data().get('new_password')
 
     # 验证参数
     if not account or not password or not new_password:
