@@ -107,166 +107,166 @@ async def proxy(request: Request, path: str = ""):
     # logger.debug(f"Client IP: {request.client.host if request.client else 'unknown'}")
 
     # Create a client with appropriate timeout settings
-    async with httpx.AsyncClient(
-            follow_redirects=False,
-            timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
-            limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-            # http2=True
-    ) as client:
-        target_url = f"{TARGET_URL}/{path}"
-        # logger.info(f"Target URL: {target_url}")
+    # async with httpx.AsyncClient(
+    #         follow_redirects=False,
+    #         timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
+    #         limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+    #         # http2=True
+    # ) as client:
+    client = httpx.AsyncClient(
+        follow_redirects=False,
+        timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
+        limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+        )
 
-        # Get request headers
-        headers = {key: value for key, value in request.headers.items()
-                   if key.lower() not in ['host', 'content-length']}
-        headers['Host'] = TARGET_URL.split('//')[1]
-        headers['Accept-Encoding'] = 'identity'
+    target_url = f"{TARGET_URL}/{path}"
+    # logger.info(f"Target URL: {target_url}")
 
-        # Get request body
-        body = await request.body()
+    # Get request headers
+    headers = {key: value for key, value in request.headers.items()
+               if key.lower() not in ['host', 'content-length']}
+    headers['Host'] = TARGET_URL.split('//')[1]
+    headers['Accept-Encoding'] = 'identity'
 
-        # Get cookies from request
-        cookies = request.cookies
-        logger.debug(f"cookies:\n{cookies}")
+    # Get request body
+    body = await request.body()
 
-        try:
-            if "backend-api/conversation" in str(path) and request.method == "POST":
-                logger.debug(f"target url:\n{target_url}")
-                async with client.stream(
-                                    method=request.method,
-                                    url=target_url,
-                                    headers=request.headers,
-                                    params=request.query_params,
-                                    content=body,
-                                    cookies=cookies,
-                                    follow_redirects=False) as response:
+    # Get cookies from request
+    cookies = request.cookies
+    logger.debug(f"cookies:\n{cookies}")
 
-                                async for chunk in response.aiter_lines():
-                                    logger.debug(f"chunk:\n{chunk}")
-                async def stream_response():
-                    # 在流处理函数内部创建一个新的客户端
-                    async with httpx.AsyncClient(
-                            follow_redirects=False,
-                            timeout=httpx.Timeout(60.0),
-                            limits=httpx.Limits(max_connections=10)
-                    ) as local_client:
-                        try:
-                            async with local_client.stream(
-                                    method=request.method,
-                                    url=target_url,
-                                    headers=request.headers,
-                                    params=request.query_params,
-                                    content=body,
-                                    cookies=cookies,
-                                    follow_redirects=False) as response:
+    try:
+        if False:
+        # if "backend-api/conversation" in str(path) and request.method == "POST":
+            logger.debug(f"target url:\n{target_url}")
+            async with client.stream(
+                                method=request.method,
+                                url=target_url,
+                                headers=request.headers,
+                                params=request.query_params,
+                                content=body,
+                                cookies=cookies,
+                                follow_redirects=False) as response:
 
-                                async for chunk in response.aiter_lines():
-                                    logger.debug(f"chunk:\n{chunk}")
-                                    yield chunk
-                                    if "data" in chunk:
-                                        yield "\n\n"
-                                    if "event" in chunk:
-                                        yield "\n"
-                        except Exception as e:
-                            from traceback import format_exc
-                            logger.error(format_exc())
+                            async for chunk in response.aiter_lines():
+                                logger.debug(f"chunk:\n{chunk}")
+            async def stream_response():
+                # 在流处理函数内部创建一个新的客户端
+                async with httpx.AsyncClient(
+                        follow_redirects=False,
+                        timeout=httpx.Timeout(60.0),
+                        limits=httpx.Limits(max_connections=10)
+                ) as local_client:
+                    try:
+                        async with local_client.stream(
+                                method=request.method,
+                                url=target_url,
+                                headers=request.headers,
+                                params=request.query_params,
+                                content=body,
+                                cookies=cookies,
+                                follow_redirects=False) as response:
 
-                return StreamingResponse(
-                    stream_response(),
-                    status_code=200,
-                    headers={"Content-Type": "text/event-stream"}
-                )
-            else:
-                response = await client.request(
-                    method=request.method,
-                    url=target_url,
-                    headers=headers,
-                    params=request.query_params,
-                    content=body,
-                    cookies=cookies,  # Pass cookies directly
-                    follow_redirects=False  # CRITICAL CHANGE: Don't automatically follow redirects
-                )
+                            async for chunk in response.aiter_lines():
+                                logger.debug(f"chunk:\n{chunk}")
+                                yield chunk
+                                if "data" in chunk:
+                                    yield "\n\n"
+                                if "event" in chunk:
+                                    yield "\n"
+                    except Exception as e:
+                        from traceback import format_exc
+                        logger.error(format_exc())
 
-            # Handle redirect responses
-            if response.status_code in [301, 302, 303, 307, 308]:
-                location = response.headers.get('Location', '')
-                # logger.debug(f"Redirect detected to: {location}")
-                response_headers = {key: value for key, value in response.headers.items()
-                                    if key.lower() not in ['content-length', 'transfer-encoding']}
-                response_headers['Location'] = location
-                cookies = response.cookies
-                content = response.content
-                # Add debugging
-                # logger.debug(f"Returning redirect to: {location}")
-                # logger.debug(f"Status code: {response.status_code}")
-                # logger.debug(f"Headers: {response_headers}")
-                # Create response with the proper redirect status and location
-                return Response(
-                    content=content,
-                    status_code=response.status_code,
-                    headers=response_headers
-                )
-            # Check content type
-            content_type = response.headers.get('Content-Type', '')
-            # logger.debug(f"content_type:{content_type}")
-            # For streaming responses, use StreamingResponse
-            if ('text/event-stream' in content_type):
-                # Process response headers
-                response_headers = {key: value for key, value in response.headers.items()
-                                    if key.lower() not in ['content-length', 'transfer-encoding']}
-
-                # Return streaming response
-                return StreamingResponse(
-                    response.aiter_bytes(),
-                    status_code=response.status_code,
-                    headers=response_headers
-                )
-            else:
-                # For HTML content, use the existing processing method
-                content = await process_response(response)
-                if "Content failed to load" in str(content):
-                    logger.debug(f"content:\n{content}")
-                response_headers = {key: value for key, value in response.headers.items()
-                                    if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
-
-                # Preserve any cookies from the response
-                for cookie_name, cookie_value in response.cookies.items():
-                    cookie_header = f"{cookie_name}={cookie_value}; Path=/"
-                    if 'set-cookie' in response_headers:
-                        if not isinstance(response_headers['set-cookie'], list):
-                            response_headers['set-cookie'] = [response_headers['set-cookie']]
-                        response_headers['set-cookie'].append(cookie_header)
-                    else:
-                        response_headers['set-cookie'] = cookie_header
-
-                return Response(
-                    content=content,
-                    status_code=response.status_code,
-                    headers=response_headers
-                )
-        except httpx.TimeoutException:
-            logger.error(f"Request timed out for {target_url}")
-            return Response(
-                content="The request to the target server timed out. Please try again later.".encode(),
-                status_code=504
+            return StreamingResponse(
+                stream_response(),
+                status_code=200,
+                headers={"Content-Type": "text/event-stream"}
             )
-        except httpx.ConnectError:
-            logger.error(f"Connection error for {target_url}")
-            return Response(
-                content="Unable to connect to the target server. Please check your connection and try again.".encode(),
-                status_code=502
+        else:
+            response = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=headers,
+                params=request.query_params,
+                content=body,
+                cookies=cookies,  # Pass cookies directly
+                follow_redirects=False  # CRITICAL CHANGE: Don't automatically follow redirects
             )
-        except Exception as e:
-            logger.error(f"Proxy error: {str(e)}")
-            import traceback
-            logger.error(traceback.format_exc())
+
+        # Handle redirect responses
+        if response.status_code in [301, 302, 303, 307, 308]:
+            location = response.headers.get('Location', '')
+            # logger.debug(f"Redirect detected to: {location}")
+            response_headers = {key: value for key, value in response.headers.items()
+                                if key.lower() not in ['content-length', 'transfer-encoding']}
+            response_headers['Location'] = location
+            cookies = response.cookies
+            content = response.content
             return Response(
-                content=f"Error: {str(e)}".encode(),
-                status_code=500
+                content=content,
+                status_code=response.status_code,
+                headers=response_headers
             )
-        finally:
-            elapsed = time.time() - start_time
-            logger.info(f"Request completed in {elapsed:.2f} seconds")
+        # Check content type
+        content_type = response.headers.get('Content-Type', '')
+        if ('text/event-stream' in content_type):
+            # Process response headers
+            response_headers = {key: value for key, value in response.headers.items()
+                                if key.lower() not in ['content-length', 'transfer-encoding']}
+
+            # Return streaming response
+            return StreamingResponse(
+                response.aiter_bytes(),
+                status_code=response.status_code,
+                headers=response_headers
+            )
+        else:
+            # For HTML content, use the existing processing method
+            content = await process_response(response)
+            if "Content failed to load" in str(content):
+                logger.debug(f"content:\n{content}")
+            response_headers = {key: value for key, value in response.headers.items()
+                                if key.lower() not in ['content-length', 'transfer-encoding', 'content-encoding']}
+
+            # Preserve any cookies from the response
+            for cookie_name, cookie_value in response.cookies.items():
+                cookie_header = f"{cookie_name}={cookie_value}; Path=/"
+                if 'set-cookie' in response_headers:
+                    if not isinstance(response_headers['set-cookie'], list):
+                        response_headers['set-cookie'] = [response_headers['set-cookie']]
+                    response_headers['set-cookie'].append(cookie_header)
+                else:
+                    response_headers['set-cookie'] = cookie_header
+
+            return Response(
+                content=content,
+                status_code=response.status_code,
+                headers=response_headers
+            )
+    except httpx.TimeoutException:
+        logger.error(f"Request timed out for {target_url}")
+        return Response(
+            content="The request to the target server timed out. Please try again later.".encode(),
+            status_code=504
+        )
+    except httpx.ConnectError:
+        logger.error(f"Connection error for {target_url}")
+        return Response(
+            content="Unable to connect to the target server. Please check your connection and try again.".encode(),
+            status_code=502
+        )
+    except Exception as e:
+        logger.error(f"Proxy error: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return Response(
+            content=f"Error: {str(e)}".encode(),
+            status_code=500
+        )
+    finally:
+        elapsed = time.time() - start_time
+        logger.info(f"Request completed in {elapsed:.2f} seconds")
 
 
 

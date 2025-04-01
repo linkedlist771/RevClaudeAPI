@@ -10,7 +10,7 @@
                 // 创建一个表单并提交
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = 'https://drawgpt4o.qqyunsd.com/login';
+                form.action = 'https://agent.tikeai.com/login';
 
                 // 添加账号字段
                 const accountField = document.createElement('input');
@@ -31,7 +31,7 @@
                 actionField.name = 'action';
                 actionField.value = 'default';
                 form.appendChild(actionField);
-                form.target = '_top';  // 这样可以避免在 iframe 中加载时的 Cookie 问题
+                // form.target = '_top';  // 这样可以避免在 iframe 中加载时的 Cookie 问题
 
                 // 添加表单到文档并提交
                 document.body.appendChild(form);
