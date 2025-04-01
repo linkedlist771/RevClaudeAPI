@@ -75,7 +75,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
     """
     设置的变量值为:
     gfsessionids: 一个列表， 记录了所有绑定到该account的gfsessionid
-    usage_count: 一个整数， 记录了该account的使用次数
+    chat_usage_count: 一个整数， 记录了该account的使用次数
     last_used: 一个字符串， 记录了该account上一次使用的时间
     images: 一个列表， 记录了该account生成的图片信息， 每个图片信息是一个字典， 字典中包含图片的地址， 以及图片的生成时间
     """
@@ -101,7 +101,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
                 
             user_data.update({
                 "last_used": current_time,
-                "usage_count": user_data.get("usage_count", 0)
+                "chat_usage_count": user_data.get("chat_usage_count", 0)
             })
             
             self.set_async(account_key, json.dumps(user_data))
@@ -123,7 +123,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
                 if gfsessionid in gfsessionids:
                     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     user_data.update({
-                        "usage_count": user_data.get("usage_count", 0) + 1,
+                        "chat_usage_count": user_data.get("chat_usage_count", 0) + 1,
                         "last_used": current_time
                     })
                     self.set_async(account_key, json.dumps(user_data))
