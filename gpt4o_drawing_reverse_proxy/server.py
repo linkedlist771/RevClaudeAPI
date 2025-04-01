@@ -9,6 +9,8 @@ from utils import get_souruxgpt_manager
 from configs import ROOT, JS_DIR, TARGET_URL
 from sync_base_redis_manager import FlaskUserRecordManager
 
+logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
+
 app = Flask(__name__)
 
 # Initialize Redis manager
