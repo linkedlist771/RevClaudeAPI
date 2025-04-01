@@ -73,7 +73,7 @@ def edit_password():
     gpt_manager = get_souruxgpt_manager()
 
     # 获取请求参数
-    account = request.form.get('username')
+    account = request.form.get('account')
     password = request.form.get('password')
     new_password = request.form.get('new_password')
 
@@ -81,7 +81,7 @@ def edit_password():
     if not account or not password or not new_password:
         return jsonify({
             'status': 'error',
-            'message': '缺少必要参数：username、password 或 new_password'
+            'message': '缺少必要参数：account、password 或 new_password'
         }), 400
 
     # 使用异步运行时来执行异步方法
