@@ -179,6 +179,7 @@ def proxy(path):
                     all_content = all_content.decode("latin-1")
                 if "download" in path:
                     logger.debug(f"download path:\n{path}")
+                    logger.debug(f"all_content:\n{all_content}")
                 return
 
 
