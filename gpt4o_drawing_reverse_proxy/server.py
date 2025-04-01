@@ -241,8 +241,9 @@ def proxy(path):
         # Update usage count for conversation API requests
         if is_conversation_request and 'Cookie' in headers:
             cookie_str = headers['Cookie']
-            logger.debug(f"cookie_str:\n{cookie_str}")
+            # logger.debug(f"cookie_str:\n{cookie_str}")
             extracted_cookies = extract_cookies(cookie_str)
+            logger.debug(extracted_cookies)
 
             # Find the account associated with this cookie
             conn = sqlite3.connect('user_stats.db')
@@ -280,6 +281,7 @@ def proxy(path):
             if 'Secure' not in cookies:
                 cookies += '; Secure'
             response_headers['Set-Cookie'] = cookies
+            logger.debug(f"account:\n{request.get_json().get('account')}")
 
         # 创建一个函数来处理响应内容
         def generate():
