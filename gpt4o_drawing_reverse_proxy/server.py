@@ -10,12 +10,13 @@ from loguru import logger
 from utils import get_souruxgpt_manager
 from configs import ROOT, JS_DIR, TARGET_URL, IMAGES_DIR, SERVER_BASE_URL
 from sync_base_redis_manager import FlaskUserRecordManager
-
+import hashlib
 logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
 
 app = Flask(__name__)
 
 user_record_manager = FlaskUserRecordManager()
+
 
 def save_image_from_dict(data_dict):
     try:
@@ -31,9 +32,38 @@ def save_image_from_dict(data_dict):
         response = requests.get(download_url)
         if response.status_code != 200:
             return f"错误: 下载失败，状态码 {response.status_code}", False
+        # 计算图片内容的SHA-256哈希值
+        content = response.content
+        content_hash = hashlib.sha256(content).hexdigest()
+        # 哈希记录文件路径
+        hash_file = IMAGES_DIR / "image_hashes.json"
+        # 加载现有哈希记录
+        hash_map = {}
+        if hash_file.exists():
+            try:
+                with open(hash_file, 'r', encoding='utf-8') as f:
+                    hash_map = json.load(f)
+            except Exception as e:
+                logger.error(f"读取哈希记录文件时出错: {str(e)}")
+        # 检查是否已存在相同哈希值的图片
+        if content_hash in hash_map:
+            existing_file = hash_map[content_hash]
+            if Path(IMAGES_DIR / existing_file).exists():
+                logger.debug(f"图片已存在(哈希值相同): {existing_file}")
+                return existing_file, False
+        # 如果没有找到相同哈希值的图片，则保存新图片
         save_path = IMAGES_DIR / file_name
         with open(save_path, 'wb') as f:
-            f.write(response.content)
+            f.write(content)
+
+        # 更新哈希记录
+        hash_map[content_hash] = file_name
+        try:
+            with open(hash_file, 'w', encoding='utf-8') as f:
+                json.dump(hash_map, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"更新哈希记录文件时出错: {str(e)}")
+
         logger.debug(f"图片已保存到: \n{save_path}")
         return file_name, True
     except Exception as e:
