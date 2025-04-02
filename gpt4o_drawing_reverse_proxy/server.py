@@ -119,6 +119,7 @@ def proxy(path):
             not in ["content-length", "transfer-encoding", "content-encoding"]
         }
         if is_user_uploaded_image:
+            logger.debug(f"resp.content:\n{resp.content}")
             response_json = json.loads(resp.content.decode("utf-8"))
             # 获取file id 这个变量
             file_id = response_json.get("file_id")
