@@ -1,11 +1,14 @@
 # base_redis_manager.py
 import json
 from datetime import datetime
+import pytz
 
-from redis import Redis
-from loguru import logger
 from configs import REDIS_DB, REDIS_HOST, REDIS_PORT
+from loguru import logger
+from redis import Redis
 
+# Set default timezone to Shanghai
+TIMEZONE = pytz.timezone('Asia/Shanghai')
 
 class SyncBaseRedisManager:
     # Class-level cache to store instances
@@ -29,19 +32,19 @@ class SyncBaseRedisManager:
 
     def get_aioredis(self):
         if self.aioredis is None:
-            self.aioredis =  Redis.from_url(
+            self.aioredis = Redis.from_url(
                 f"redis://{self.host}:{self.port}/{self.db}", decode_responses=True
             )
         return self.aioredis
 
     def decoded_get(self, key):
-        res =  ( self.get_aioredis()).get(key)
+        res = (self.get_aioredis()).get(key)
         if isinstance(res, bytes):
             res = res.decode("utf-8")
         return res
 
     def get_dict_value_async(self, key):
-        value =  self.decoded_get(key)
+        value = self.decoded_get(key)
         if value is None:
             return {}
         try:
@@ -54,10 +57,10 @@ class SyncBaseRedisManager:
             return {}
 
     def set_async(self, key, value):
-         ( self.get_aioredis()).set(key, value)
+        (self.get_aioredis()).set(key, value)
 
     def exists_async(self, key):
-        return  ( self.get_aioredis()).exists(key)
+        return (self.get_aioredis()).exists(key)
 
 
 class FlaskUserRecordManager(SyncBaseRedisManager):
@@ -66,12 +69,14 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
     1. 使用次数， 上一次使用时间。
     2. 生成的图片时间， 以及图片的地址
     """
+
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB):
         super().__init__(host, port, db)
         self.redis = self.get_aioredis()
 
     def get_account_key(self, account):
         return f"account:{account}"
+
     """
     设置的变量值为:
     gfsessionids: 一个列表， 记录了所有绑定到该account的gfsessionid
@@ -85,25 +90,27 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
         try:
             account_key = self.get_account_key(account)
             user_data = self.get_dict_value_async(account_key)
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
+            current_time = datetime.now(TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
+
             # Initialize gfsessionids list if it doesn't exist
             if "gfsessionids" not in user_data:
                 user_data["gfsessionids"] = []
-                
+
             # Add new gfsessionid if not already in the list
             if gfsessionid not in user_data["gfsessionids"]:
                 user_data["gfsessionids"].append(gfsessionid)
-                
+
             # Initialize images list if it doesn't exist
             if "images" not in user_data:
                 user_data["images"] = []
-                
-            user_data.update({
-                "last_used": current_time,
-                "chat_usage_count": user_data.get("chat_usage_count", 0)
-            })
-            
+
+            user_data.update(
+                {
+                    "last_used": current_time,
+                    "chat_usage_count": user_data.get("chat_usage_count", 0),
+                }
+            )
+
             self.set_async(account_key, json.dumps(user_data))
             logger.debug(f"Successfully bound gfsessionid to account: {account}")
             return True
@@ -121,11 +128,14 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
                 # Check both the backward compatibility field and the new list
                 gfsessionids = user_data.get("gfsessionids", [])
                 if gfsessionid in gfsessionids:
-                    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    user_data.update({
-                        "chat_usage_count": user_data.get("chat_usage_count", 0) + 1,
-                        "last_used": current_time
-                    })
+                    current_time = datetime.now(TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
+                    user_data.update(
+                        {
+                            "chat_usage_count": user_data.get("chat_usage_count", 0)
+                            + 1,
+                            "last_used": current_time,
+                        }
+                    )
                     self.set_async(account_key, json.dumps(user_data))
                     logger.debug(f"Updated usage count for account: {account_key}")
                     return True
@@ -135,43 +145,41 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
             logger.error(f"Error updating usage count: {str(e)}")
             return False
 
-
     def add_image_to_account(self, account, image_url):
         """Add a generated image to an account's history"""
         try:
             account_key = self.get_account_key(account)
             user_data = self.get_dict_value_async(account_key)
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
+            current_time = datetime.now(TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
+
             # Initialize images list if it doesn't exist
             if "images" not in user_data:
                 user_data["images"] = []
-                
+
             # Add new image info
-            image_info = {
-                "url": image_url,
-                "generated_at": current_time
-            }
+            image_info = {"url": image_url, "generated_at": current_time}
             user_data["images"].append(image_info)
-            
+
             self.set_async(account_key, json.dumps(user_data))
             logger.debug(f"Added image to account: {account}")
             return True
         except Exception as e:
             logger.error(f"Error adding image to account: {str(e)}")
             return False
-        
+
     def add_image_to_account_by_gfsessionid(self, gfsessionid, image_url):
         """Get account information by gfsessionid"""
         try:
             for raw_key in self.redis.keys("account:*"):
                 account_key = raw_key
                 user_data = self.get_dict_value_async(account_key)
-                
+
                 # Check both the backward compatibility field and the new list
                 gfsessionids = user_data.get("gfsessionids", [])
                 if gfsessionid in gfsessionids:
-                    self.add_image_to_account(account_key.removeprefix("account:"), image_url)
+                    self.add_image_to_account(
+                        account_key.removeprefix("account:"), image_url
+                    )
                     return user_data
             return None
         except Exception as e:
@@ -184,7 +192,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
             for raw_key in self.redis.keys("account:*"):
                 account_key = raw_key
                 user_data = self.get_dict_value_async(account_key)
-                
+
                 # Check both the backward compatibility field and the new list
                 gfsessionids = user_data.get("gfsessionids", [])
                 if gfsessionid in gfsessionids:
@@ -194,28 +202,60 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
             logger.error(f"Error getting account by gfsessionid: {str(e)}")
             return None
 
-    def get_usage_stats(self, account=None, limit=-1):
-        """Get usage statistics for an account or all accounts"""
+    def get_usage_stats(self, account=None, limit=-1, page=1, page_size=10):
+        """Get usage statistics for an account or all accounts
+        
+        Args:
+            account (str, optional): Specific account to get stats for. Defaults to None.
+            limit (int, optional): Limit on number of accounts to return. Defaults to -1.
+            page (int, optional): Page number for images pagination. Defaults to 1.
+            page_size (int, optional): Number of images per page. Defaults to 10.
+        """
         try:
             if account:
                 account_key = self.get_account_key(account)
                 user_data = self.get_dict_value_async(account_key)
                 if user_data:
+                    # Sort images by generated_at in descending order
+                    if "images" in user_data:
+                        images = sorted(
+                            user_data["images"],
+                            key=lambda x: x.get("generated_at", ""),
+                            reverse=True
+                        )
+                        # Calculate pagination
+                        start_idx = (page - 1) * page_size
+                        end_idx = start_idx + page_size
+                        user_data["images"] = images[start_idx:end_idx]
+                        user_data["total_images"] = len(images)
+                        user_data["current_page"] = page
+                        user_data["total_pages"] = (len(images) + page_size - 1) // page_size
                     return user_data
                 return {"message": f"No data found for account: {account}"}
             else:
                 stats = []
                 for raw_key in self.redis.keys("account:*")[:limit]:
-                    # Extract account name from key
-                    account = raw_key.split(":", 1)[1] if ":" in raw_key else raw_key
                     user_data = self.get_dict_value_async(raw_key)
                     if user_data:
+                        # Sort and paginate images for each account
+                        if "images" in user_data:
+                            images = sorted(
+                                user_data["images"],
+                                key=lambda x: x.get("generated_at", ""),
+                                reverse=True
+                            )
+                            start_idx = (page - 1) * page_size
+                            end_idx = start_idx + page_size
+                            user_data["images"] = images[start_idx:end_idx]
+                            user_data["total_images"] = len(images)
+                            user_data["current_page"] = page
+                            user_data["total_pages"] = (len(images) + page_size - 1) // page_size
                         stats.append(user_data)
                 return stats
         except Exception as e:
             logger.error(f"Error getting usage stats: {str(e)}")
             return []
-            
+
     def get_account_images(self, account, limit=None):
         """Get images generated by an account"""
         try:
@@ -223,7 +263,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
             user_data = self.get_dict_value_async(account_key)
             if not user_data or "images" not in user_data:
                 return []
-                
+
             images = user_data["images"]
             if limit and isinstance(limit, int):
                 return images[-limit:]  # Return most recent images

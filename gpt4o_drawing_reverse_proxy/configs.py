@@ -1,6 +1,6 @@
-
-from pathlib import Path
 import os
+from pathlib import Path
+
 TARGET_URL = "https://soruxgpt-saas-liuli.soruxgpt.com"
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))

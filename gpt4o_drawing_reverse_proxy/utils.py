@@ -1,9 +1,15 @@
 import asyncio
+import hashlib
+import json
+import os
 import uuid
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import httpx
+import requests
+from configs import IMAGES_DIR, JS_DIR, ROOT, SERVER_BASE_URL, TARGET_URL
 from loguru import logger
 from tqdm.asyncio import tqdm
 
@@ -431,6 +437,90 @@ async def get_souruxgpt_manager():
     sorux_gpt_manager = SoruxGPTManager(admin_username, admin_password)
     await sorux_gpt_manager.login()
     return sorux_gpt_manager
+
+
+def save_image_from_dict(data_dict):
+    try:
+        download_url = data_dict.get("download_url")
+        if not download_url:
+            return "错误: 字典中没有找到下载URL", False
+        if data_dict.get("file_name"):
+            file_name = Path(data_dict["file_name"]).name
+        else:
+            file_name = f"image_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+        if "part" in file_name:
+            return "中间图片，不保存", False
+        response = requests.get(download_url)
+        if response.status_code != 200:
+            return f"错误: 下载失败，状态码 {response.status_code}", False
+        # 计算图片内容的SHA-256哈希值
+        content = response.content
+        content_hash = hashlib.sha256(content).hexdigest()
+        # 哈希记录文件路径
+        hash_file = IMAGES_DIR / "image_hashes.json"
+        # 加载现有哈希记录
+        hash_map = {}
+        if hash_file.exists():
+            try:
+                with open(hash_file, "r", encoding="utf-8") as f:
+                    hash_map = json.load(f)
+            except Exception as e:
+                logger.error(f"读取哈希记录文件时出错: {str(e)}")
+        # 检查是否已存在相同哈希值的图片
+        if content_hash in hash_map:
+            existing_file = hash_map[content_hash]
+            if Path(IMAGES_DIR / existing_file).exists():
+                logger.debug(f"图片已存在(哈希值相同): {existing_file}")
+                return existing_file, False
+        # 如果没有找到相同哈希值的图片，则保存新图片
+        save_path = IMAGES_DIR / file_name
+        with open(save_path, "wb") as f:
+            f.write(content)
+
+        # 更新哈希记录
+        hash_map[content_hash] = file_name
+        try:
+            with open(hash_file, "w", encoding="utf-8") as f:
+                json.dump(hash_map, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"更新哈希记录文件时出错: {str(e)}")
+
+        logger.debug(f"图片已保存到: \n{save_path}")
+        return file_name, True
+    except Exception as e:
+        return f"错误: {str(e)}", False
+
+
+# Helper function to extract account from login request
+def extract_account_from_request(request):
+    return request.form["account"]
+
+
+# Helper function to extract cookies
+def extract_cookies(cookie_header):
+    if not cookie_header:
+        return {}
+    cookies = {}
+    parts = cookie_header.split("; ")
+    for part in parts:
+        if "=" in part:
+            name, value = part.split("=", 1)
+            cookies[name] = value
+    return cookies
+
+
+# Function to read JavaScript files
+def read_js_file(filename):
+    file_path = os.path.join(JS_DIR, filename)
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        # If file doesn't exist, create it with default content
+        default_content = "// Default content for " + filename
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(default_content)
+        return default_content
 
 
 async def amain():
