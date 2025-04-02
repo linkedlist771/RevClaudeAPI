@@ -120,10 +120,20 @@ def proxy(path):
         }
         if is_user_uploaded_image:
             logger.debug(f"resp.content:\n{resp.content}")
-            response_json = json.loads(resp.content.decode("utf-8"))
-            # 获取file id 这个变量
-            file_id = response_json.get("file_id")
-            logger.debug(f"用户上传file_id:\n{file_id}")
+            # Split content by newlines and process each JSON response
+            content_lines = resp.content.decode("utf-8").strip().split("\n")
+            file_id = None
+            for line in content_lines:
+                try:
+                    response_json = json.loads(line)
+                    # Get file_id from any of the responses that contain it
+                    if "file_id" in response_json:
+                        file_id = response_json["file_id"]
+                        logger.debug(f"用户上传file_id:\n{file_id}")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Error parsing JSON line: {e}")
+                    continue
+            
             if file_id:
                 user_record_manager.add_uploaded_file_id(file_id)
                 logger.debug(f"Added file_id {file_id} to shared uploaded files list")
