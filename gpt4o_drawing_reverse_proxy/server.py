@@ -178,7 +178,7 @@ def proxy(path):
                     logger.debug(f"download path:\n{path}")
                     logger.debug(f"all_content:\n{all_content}")
                     content_dict = json.loads(all_content)
-                    file_id = content_dict.get("file_id")
+                    file_id = path.split("/")[-1].strip()
                     
                     # Check if this is a user-uploaded file
                     if file_id and user_record_manager.is_uploaded_file(file_id):
@@ -250,4 +250,4 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=5001, help="端口号")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="主机地址")
     args = parser.parse_args()
-    app.run(host=args.host, port=args.port, debug=True, threaded=True)
+    app.run(host=args.host, port=args.port, debug=False, threaded=True)
