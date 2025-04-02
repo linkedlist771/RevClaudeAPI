@@ -119,9 +119,14 @@ def proxy(path):
             not in ["content-length", "transfer-encoding", "content-encoding"]
         }
         if is_user_uploaded_image:
-            logger.debug(f"payload:\n{data}")
-            logger.debug(f"params:\n{params}")
-            logger.debug(f"response content:\n{resp.content}")
+            response_json = json.loads(resp.content.decode("utf-8"))
+            # 获取file id 这个变量
+            file_id = response_json.get("file_id")
+            logger.debug(f"用户上传file_id:\n{file_id}")
+            if file_id:
+                user_record_manager.add_uploaded_file_id(file_id)
+                logger.debug(f"Added file_id {file_id} to shared uploaded files list")
+
 
         if is_conversation_request and "Cookie" in headers:
             cookie_str = headers["Cookie"]
@@ -161,7 +166,14 @@ def proxy(path):
                 if "download" in path:
                     logger.debug(f"download path:\n{path}")
                     logger.debug(f"all_content:\n{all_content}")
-                    file_name, save = save_image_from_dict(json.loads(all_content))
+                    content_dict = json.loads(all_content)
+                    file_id = content_dict.get("file_id")
+                    
+                    # Check if this is a user-uploaded file
+                    if file_id and user_record_manager.is_uploaded_file(file_id):
+                        logger.debug(f"Skipping download for user-uploaded file: {file_id}")
+                        return
+                    file_name, save = save_image_from_dict(content_dict)
                     cookies = request.cookies
                     if "gfsessionid" in cookies and save:
                         gfsessionid = cookies["gfsessionid"]

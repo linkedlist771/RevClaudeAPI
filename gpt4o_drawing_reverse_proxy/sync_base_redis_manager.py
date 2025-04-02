@@ -14,7 +14,6 @@ TIMEZONE = pytz.timezone("Asia/Shanghai")
 class SyncBaseRedisManager:
     # Class-level cache to store instances
     _instances = {}
-
     def __new__(cls, host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB):
         """Implement singleton pattern for each unique connection configuration."""
         key = (cls.__name__, host, port, db)
@@ -70,6 +69,8 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
     1. 使用次数， 上一次使用时间。
     2. 生成的图片时间， 以及图片的地址
     """
+
+    UPLOADED_FILES_KEY = "shared:uploaded_file_ids"  # 共享的上传文件ID存储键
 
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB):
         super().__init__(host, port, db)
@@ -276,3 +277,31 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
         except Exception as e:
             logger.error(f"Error getting account images: {str(e)}")
             return []
+
+    def add_uploaded_file_id(self, file_id):
+        """Add a file_id to the shared uploaded files set"""
+        try:
+            uploaded_files = self.get_dict_value_async(self.UPLOADED_FILES_KEY)
+            if not uploaded_files:
+                uploaded_files = {"file_ids": []}
+            
+            if file_id not in uploaded_files["file_ids"]:
+                uploaded_files["file_ids"].append(file_id)
+                self.set_async(self.UPLOADED_FILES_KEY, json.dumps(uploaded_files))
+                logger.debug(f"Added file_id {file_id} to shared uploaded files")
+            return True
+        except Exception as e:
+            logger.error(f"Error adding file_id to shared uploaded files: {str(e)}")
+            return False
+
+    def is_uploaded_file(self, file_id):
+        """Check if a file_id exists in the shared uploaded files set"""
+        try:
+            uploaded_files = self.get_dict_value_async(self.UPLOADED_FILES_KEY)
+            return uploaded_files and file_id in uploaded_files.get("file_ids", [])
+        except Exception as e:
+            logger.error(f"Error checking uploaded file_id: {str(e)}")
+            return False
+
+
+
