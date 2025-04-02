@@ -1,14 +1,15 @@
 # base_redis_manager.py
 import json
 from datetime import datetime
-import pytz
 
+import pytz
 from configs import REDIS_DB, REDIS_HOST, REDIS_PORT
 from loguru import logger
 from redis import Redis
 
 # Set default timezone to Shanghai
-TIMEZONE = pytz.timezone('Asia/Shanghai')
+TIMEZONE = pytz.timezone("Asia/Shanghai")
+
 
 class SyncBaseRedisManager:
     # Class-level cache to store instances
@@ -204,7 +205,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
 
     def get_usage_stats(self, account=None, limit=-1, page=1, page_size=10):
         """Get usage statistics for an account or all accounts
-        
+
         Args:
             account (str, optional): Specific account to get stats for. Defaults to None.
             limit (int, optional): Limit on number of accounts to return. Defaults to -1.
@@ -221,7 +222,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
                         images = sorted(
                             user_data["images"],
                             key=lambda x: x.get("generated_at", ""),
-                            reverse=True
+                            reverse=True,
                         )
                         # Calculate pagination
                         start_idx = (page - 1) * page_size
@@ -229,7 +230,9 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
                         user_data["images"] = images[start_idx:end_idx]
                         user_data["total_images"] = len(images)
                         user_data["current_page"] = page
-                        user_data["total_pages"] = (len(images) + page_size - 1) // page_size
+                        user_data["total_pages"] = (
+                            len(images) + page_size - 1
+                        ) // page_size
                     return user_data
                 return {"message": f"No data found for account: {account}"}
             else:
@@ -242,14 +245,16 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
                             images = sorted(
                                 user_data["images"],
                                 key=lambda x: x.get("generated_at", ""),
-                                reverse=True
+                                reverse=True,
                             )
                             start_idx = (page - 1) * page_size
                             end_idx = start_idx + page_size
                             user_data["images"] = images[start_idx:end_idx]
                             user_data["total_images"] = len(images)
                             user_data["current_page"] = page
-                            user_data["total_pages"] = (len(images) + page_size - 1) // page_size
+                            user_data["total_pages"] = (
+                                len(images) + page_size - 1
+                            ) // page_size
                         stats.append(user_data)
                 return stats
         except Exception as e:

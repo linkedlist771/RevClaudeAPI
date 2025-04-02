@@ -1,10 +1,5 @@
 import asyncio
-import hashlib
 import json
-import os
-from datetime import datetime, timedelta
-from pathlib import Path
-
 import requests
 from configs import IMAGES_DIR, JS_DIR, ROOT, SERVER_BASE_URL, TARGET_URL
 from flask import (Flask, Response, jsonify, make_response, redirect, request,
@@ -66,7 +61,9 @@ def usage_stats():
         page_size = int(data.get("page_size", 10))  # Default to 10 items per page
 
         if account:
-            result = user_record_manager.get_usage_stats(account, page=page, page_size=page_size)
+            result = user_record_manager.get_usage_stats(
+                account, page=page, page_size=page_size
+            )
         else:
             result = user_record_manager.get_usage_stats(page=page, page_size=page_size)
 
@@ -98,6 +95,8 @@ def proxy(path):
         "backend-api/conversation" in path and request.method == "POST"
     )
     is_login_request = request.method == "POST" and path == "login"
+    is_user_uploaded_image = "backend-api/files/process_upload_stream" in path
+
     account = None
     if is_login_request:
         account = extract_account_from_request(request)
@@ -119,6 +118,10 @@ def proxy(path):
             if key.lower()
             not in ["content-length", "transfer-encoding", "content-encoding"]
         }
+        if is_user_uploaded_image:
+            logger.debug(f"payload:\n{data}")
+            logger.debug(f"params:\n{params}")
+            logger.debug(f"response content:\n{resp.content}")
 
         if is_conversation_request and "Cookie" in headers:
             cookie_str = headers["Cookie"]
@@ -160,7 +163,6 @@ def proxy(path):
                     logger.debug(f"all_content:\n{all_content}")
                     file_name, save = save_image_from_dict(json.loads(all_content))
                     cookies = request.cookies
-                    logger.debug(f"cookies:\n{cookies}")
                     if "gfsessionid" in cookies and save:
                         gfsessionid = cookies["gfsessionid"]
                         image_url = f"{SERVER_BASE_URL}/images/{file_name}"
