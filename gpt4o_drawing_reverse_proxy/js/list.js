@@ -186,6 +186,14 @@ function removeTargetElements() {
             div.textContent === 'yanjiu') {
             div.remove();
         }
+
+        // AI回复变成白色
+        if (div.getAttribute('data-message-author-role') === 'assistant') {
+            const paragraphs = div.querySelectorAll('p');
+            for (let p of paragraphs) {
+                p.style.color = 'white';
+            }
+        }
     }
 
     // 移除特定的 h1 元素
