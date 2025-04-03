@@ -1,16 +1,16 @@
 import argparse
 import asyncio
-import os
 import time
 
 import fire
 import httpx
-import requests
 import uvicorn
+from configs import TARGET_URL
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from loguru import logger
+from utils import read_js_file
 
 app = FastAPI()
 
@@ -22,26 +22,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-TARGET_URL = "https://soruxgpt-saas-liuli.soruxgpt.com"
-
-# Create JavaScript directory
-js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "js")
-os.makedirs(js_dir, exist_ok=True)
-
-
-# Read JavaScript file function
-def read_js_file(filename):
-    file_path = os.path.join(js_dir, filename)
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            return file.read()
-    except FileNotFoundError:
-        # If file doesn't exist, create default content
-        default_content = "// Default content for " + filename
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(default_content)
-        return default_content
 
 
 # Serve list.js file
@@ -62,13 +42,8 @@ async def proxy(request: Request, path: str = ""):
         return Response(status_code=204, content="", media_type="application/json")
 
     start_time = time.time()
-    client = httpx.AsyncClient(
-        follow_redirects=False,
-        timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
-        limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-    )
     target_url = f"{TARGET_URL}/{path}"
-    # logger.info(f"Target URL: {target_url}")
+
     # Get request headers
     headers = {
         key: value
@@ -77,95 +52,94 @@ async def proxy(request: Request, path: str = ""):
     }
     headers["Host"] = TARGET_URL.split("//")[1]
     headers["Accept-Encoding"] = "identity"
+
     # Get request body
     body = await request.body()
-    # Get cookies from request
     cookies = request.cookies
 
     try:
-        # response = await client.request(
-        #     method=request.method,
-        #     url=target_url,
-        #     headers=headers,
-        #     params=request.query_params,
-        #     content=body,
-        #     cookies=cookies,  # Pass cookies directly
-        #     follow_redirects=False,  # CRITICAL CHANGE: Don't automatically follow redirects
-        #
-        # )
-        # 使用适当的方法发送请求
-        response = requests.request(
-            method=request.method,
-            url=target_url,
-            headers=headers,
-            params=request.query_params,
-            data=body,
-            cookies=request.cookies,
-            allow_redirects=False,
-            stream=True,
-        )
-        # Handle redirect responses
-        if response.status_code in [301, 302, 303, 307, 308]:
-            location = response.headers.get("Location", "")
-            # logger.debug(f"Redirect detected to: {location}")
-            response_headers = {key: value for key, value in response.headers.items()}
-            response_headers["Location"] = location
-            cookies = response.cookies
-            content = response.content
-            return Response(
-                content=content,
+        async with httpx.AsyncClient(
+                follow_redirects=False,
+                timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
+                limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+        ) as client:
+            response = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=headers,
+                params=request.query_params,
+                content=body,
+                cookies=cookies,
+                follow_redirects=False,
+            )
+
+            # Handle redirect responses
+            if response.status_code in [301, 302, 303, 307, 308]:
+                location = response.headers.get("Location", "")
+                response_headers = {key: value for key, value in response.headers.items()}
+                response_headers["Location"] = location
+                return Response(
+                    content=response.content,
+                    status_code=response.status_code,
+                    headers=response_headers,
+                )
+
+            # Check content type
+            content_type = response.headers.get("Content-Type", "")
+
+            # 处理非HTML内容
+            if "text/html" not in content_type:
+                return StreamingResponse(
+                    response.aiter_bytes(),
+                    status_code=response.status_code,
+                    headers=response.headers,
+                    media_type=content_type
+                )
+
+            # 处理HTML内容
+            async def process_html():
+                full_content = await response.aread()
+
+                try:
+                    html_content = full_content.decode("utf-8")
+                except UnicodeDecodeError:
+                    try:
+                        html_content = full_content.decode("latin-1")
+                    except Exception:
+                        yield full_content
+                        return
+
+                # 注入JavaScript
+                if "</head>" in html_content:
+                    html_content = html_content.replace(
+                        "</head>", '<script src="/list.js"></script></head>'
+                    )
+                elif "<body" in html_content:
+                    body_pos = html_content.find("<body")
+                    body_end = html_content.find(">", body_pos)
+                    if body_end != -1:
+                        html_content = (
+                                html_content[: body_end + 1]
+                                + '<script src="/list.js"></script>'
+                                + html_content[body_end + 1:]
+                        )
+                else:
+                    html_content = '<script src="/list.js"></script>' + html_content
+
+                yield html_content.encode("utf-8")
+
+            response_headers = {
+                key: value
+                for key, value in response.headers.items()
+                if key.lower() not in ["content-length", "transfer-encoding", "content-encoding"]
+            }
+
+            return StreamingResponse(
+                process_html(),
                 status_code=response.status_code,
                 headers=response_headers,
+                media_type=content_type
             )
-        # Check content type
-        content_type = response.headers.get("Content-Type", "")
-
-        def generator():
-            # 对于非HTML内容，直接流式传
-            if "text/html" not in response.headers.get("Content-Type", ""):
-                for chunk in response.iter_content(chunk_size=1024):
-                    yield chunk
-
-                return
-
-            content = b""
-            for chunk in response.iter_content(chunk_size=1024):
-                content += chunk
-
-            try:
-                html_content = content.decode("utf-8")
-            except UnicodeDecodeError:
-                try:
-                    html_content = content.decode("latin-1")
-                except Exception:
-                    yield content
-                    return
-
-            # 注入JavaScript
-            if "</head>" in html_content:
-                html_content = html_content.replace(
-                    "</head>", '<script src="/list.js"></script></head>'
-                )
-            elif "<body" in html_content:
-                body_pos = html_content.find("<body")
-                body_end = html_content.find(">", body_pos)
-                if body_end != -1:
-                    html_content = (
-                        html_content[: body_end + 1]
-                        + '<script src="/list.js"></script>'
-                        + html_content[body_end + 1 :]
-                    )
-            else:
-                html_content = '<script src="/list.js"></script>' + html_content
-
-            yield html_content.encode("utf-8")
-
-        return StreamingResponse(
-            generator(),
-            status_code=response.status_code,
-            headers=response.headers,
-            media_type=content_type,
-        )
 
     except httpx.TimeoutException:
         logger.error(f"Request timed out for {target_url}")
@@ -202,7 +176,6 @@ def start_server(port=args.port, host=args.host):
     logger.info(f"Proxy target URL: {TARGET_URL}")
 
     # Configure more detailed logging
-
     config = uvicorn.Config(
         app, host=host, port=port, workers=args.workers, log_level="info"
     )
