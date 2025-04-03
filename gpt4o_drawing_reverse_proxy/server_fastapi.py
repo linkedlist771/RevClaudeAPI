@@ -69,13 +69,6 @@ async def process_response(response):
     return html_content.encode("utf-8")
 
 
-# Create a stream generator for httpx responses
-async def stream_response_content(response):
-    async for chunk in response.aiter_bytes():
-        if chunk:  # Make sure we only send non-empty chunks
-            yield chunk
-
-
 # Main proxy route
 @app.api_route("/", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
 @app.api_route(
@@ -152,7 +145,7 @@ async def proxy(request: Request, path: str = ""):
 
             # Return streaming response
             return StreamingResponse(
-                stream_response_content(response),
+                response.iter_bytes(),
                 status_code=response.status_code,
                 headers=response_headers,
             )
