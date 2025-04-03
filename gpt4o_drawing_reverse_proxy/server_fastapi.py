@@ -151,6 +151,7 @@ async def proxy(request: Request, path: str = ""):
             )
         # Check content type
         content_type = response.headers.get("Content-Type", "")
+        logger.debug(f"Content-Type: {content_type}")
         if "text/html" not in content_type:
             # Process response headers
             response_headers = {
