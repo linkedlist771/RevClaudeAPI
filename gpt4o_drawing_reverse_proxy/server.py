@@ -1,5 +1,6 @@
 import asyncio
 import json
+
 import requests
 from configs import IMAGES_DIR, JS_DIR, ROOT, SERVER_BASE_URL, TARGET_URL
 from flask import (Flask, Response, jsonify, make_response, redirect, request,
@@ -133,11 +134,10 @@ def proxy(path):
                 except json.JSONDecodeError as e:
                     logger.error(f"Error parsing JSON line: {e}")
                     continue
-            
+
             if file_id:
                 user_record_manager.add_uploaded_file_id(file_id)
                 logger.debug(f"Added file_id {file_id} to shared uploaded files list")
-
 
         if is_conversation_request and "Cookie" in headers:
             cookie_str = headers["Cookie"]
@@ -179,10 +179,12 @@ def proxy(path):
                     logger.debug(f"all_content:\n{all_content}")
                     content_dict = json.loads(all_content)
                     file_id = path.split("/")[-1].strip()
-                    
+
                     # Check if this is a user-uploaded file
                     if file_id and user_record_manager.is_uploaded_file(file_id):
-                        logger.debug(f"Skipping download for user-uploaded file: {file_id}")
+                        logger.debug(
+                            f"Skipping download for user-uploaded file: {file_id}"
+                        )
                         return
                     file_name, save = save_image_from_dict(content_dict)
                     cookies = request.cookies

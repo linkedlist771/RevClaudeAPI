@@ -14,6 +14,7 @@ TIMEZONE = pytz.timezone("Asia/Shanghai")
 class SyncBaseRedisManager:
     # Class-level cache to store instances
     _instances = {}
+
     def __new__(cls, host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB):
         """Implement singleton pattern for each unique connection configuration."""
         key = (cls.__name__, host, port, db)
@@ -284,7 +285,7 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
             uploaded_files = self.get_dict_value_async(self.UPLOADED_FILES_KEY)
             if not uploaded_files:
                 uploaded_files = {"file_ids": []}
-            
+
             if file_id not in uploaded_files["file_ids"]:
                 uploaded_files["file_ids"].append(file_id)
                 self.set_async(self.UPLOADED_FILES_KEY, json.dumps(uploaded_files))
@@ -302,6 +303,3 @@ class FlaskUserRecordManager(SyncBaseRedisManager):
         except Exception as e:
             logger.error(f"Error checking uploaded file_id: {str(e)}")
             return False
-
-
-

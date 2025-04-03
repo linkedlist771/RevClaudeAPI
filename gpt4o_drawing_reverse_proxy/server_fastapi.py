@@ -51,38 +51,6 @@ async def list_js():
     return Response(content=js_content, media_type="application/javascript")
 
 
-# Process response content function
-async def process_response(response):
-    # Process HTML content
-    content = response.content
-    # Try to decode content
-    try:
-        html_content = content.decode("utf-8")
-    except UnicodeDecodeError:
-        try:
-            html_content = content.decode("latin-1")
-        except Exception:
-            return content
-    # Inject JavaScript
-    if "</head>" in html_content:
-        html_content = html_content.replace(
-            "</head>", '<script src="/list.js"></script></head>'
-        )
-    elif "<body" in html_content:
-        body_pos = html_content.find("<body")
-        body_end = html_content.find(">", body_pos)
-        if body_end != -1:
-            html_content = (
-                html_content[: body_end + 1]
-                + '<script src="/list.js"></script>'
-                + html_content[body_end + 1 :]
-            )
-    else:
-        html_content = '<script src="/list.js"></script>' + html_content
-
-    return html_content.encode("utf-8")
-
-
 # Main proxy route
 @app.api_route("/", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
 @app.api_route(
@@ -113,7 +81,6 @@ async def proxy(request: Request, path: str = ""):
     body = await request.body()
     # Get cookies from request
     cookies = request.cookies
-    logger.debug(f"cookies:\n{cookies}")
 
     try:
         # response = await client.request(
@@ -126,7 +93,6 @@ async def proxy(request: Request, path: str = ""):
         #     follow_redirects=False,  # CRITICAL CHANGE: Don't automatically follow redirects
         #
         # )
-
         # 使用适当的方法发送请求
         response = requests.request(
             method=request.method,
@@ -142,10 +108,7 @@ async def proxy(request: Request, path: str = ""):
         if response.status_code in [301, 302, 303, 307, 308]:
             location = response.headers.get("Location", "")
             # logger.debug(f"Redirect detected to: {location}")
-            response_headers = {
-                key: value
-                for key, value in response.headers.items()
-            }
+            response_headers = {key: value for key, value in response.headers.items()}
             response_headers["Location"] = location
             cookies = response.cookies
             content = response.content
@@ -156,49 +119,54 @@ async def proxy(request: Request, path: str = ""):
             )
         # Check content type
         content_type = response.headers.get("Content-Type", "")
-        logger.debug(f"Content-Type: {content_type}")
-        if "text/html" not in content_type:
-            # Process response headers
-            # response_headers = {
-            #     key: value
-            #     for key, value in response.headers.items()
-            # }
-            return StreamingResponse(
-                # content=response.aiter_bytes(),  # 流式返回二进制内容
-                response.iter_content(chunk_size=1024),
-                status_code=response.status_code,
-                headers=response.headers,
-                media_type=content_type
-            )
-        else:
-            # For HTML content, use the existing processing method
-            content = await process_response(response)
-            if "Content failed to load" in str(content):
-                logger.debug(f"content:\n{content}")
-            response_headers = {
-                key: value
-                for key, value in response.headers.items()
-                if key.lower()
-                not in ["content-length", "transfer-encoding", "content-encoding"]
-            }
 
-            # Preserve any cookies from the response
-            for cookie_name, cookie_value in response.cookies.items():
-                cookie_header = f"{cookie_name}={cookie_value}; Path=/"
-                if "set-cookie" in response_headers:
-                    if not isinstance(response_headers["set-cookie"], list):
-                        response_headers["set-cookie"] = [
-                            response_headers["set-cookie"]
-                        ]
-                    response_headers["set-cookie"].append(cookie_header)
-                else:
-                    response_headers["set-cookie"] = cookie_header
+        def generator():
+            # 对于非HTML内容，直接流式传
+            if "text/html" not in response.headers.get("Content-Type", ""):
+                for chunk in response.iter_content(chunk_size=1024):
+                    yield chunk
 
-            return Response(
-                content=content,
-                status_code=response.status_code,
-                headers=response_headers,
-            )
+                return
+
+            content = b""
+            for chunk in response.iter_content(chunk_size=1024):
+                content += chunk
+
+            try:
+                html_content = content.decode("utf-8")
+            except UnicodeDecodeError:
+                try:
+                    html_content = content.decode("latin-1")
+                except Exception:
+                    yield content
+                    return
+
+            # 注入JavaScript
+            if "</head>" in html_content:
+                html_content = html_content.replace(
+                    "</head>", '<script src="/list.js"></script></head>'
+                )
+            elif "<body" in html_content:
+                body_pos = html_content.find("<body")
+                body_end = html_content.find(">", body_pos)
+                if body_end != -1:
+                    html_content = (
+                        html_content[: body_end + 1]
+                        + '<script src="/list.js"></script>'
+                        + html_content[body_end + 1 :]
+                    )
+            else:
+                html_content = '<script src="/list.js"></script>' + html_content
+
+            yield html_content.encode("utf-8")
+
+        return StreamingResponse(
+            generator(),
+            status_code=response.status_code,
+            headers=response.headers,
+            media_type=content_type,
+        )
+
     except httpx.TimeoutException:
         logger.error(f"Request timed out for {target_url}")
         return Response(
