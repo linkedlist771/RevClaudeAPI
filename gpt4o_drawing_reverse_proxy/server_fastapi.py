@@ -23,23 +23,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Serve list.js file
 @app.get("/list.js")
 async def list_js():
     js_content = read_js_file("list.js")
     return Response(content=js_content, media_type="application/javascript")
 
-
 # Process response content function
 async def process_response(response):
     content_type = response.headers.get("Content-Type", "")
     # For non-HTML content, return directly
     if "text/html" not in content_type:
-        return response.content
+        return response.read()
 
     # Process HTML content
-    content = response.content
+    content = response.read()
 
     # Try to decode content
     try:
@@ -59,9 +57,9 @@ async def process_response(response):
         body_end = html_content.find(">", body_pos)
         if body_end != -1:
             html_content = (
-                    html_content[: body_end + 1]
-                    + '<script src="/list.js"></script>'
-                    + html_content[body_end + 1:]
+                html_content[: body_end + 1]
+                + '<script src="/list.js"></script>'
+                + html_content[body_end + 1 :]
             )
     else:
         html_content = '<script src="/list.js"></script>' + html_content
@@ -80,59 +78,55 @@ async def proxy(request: Request, path: str = ""):
         return Response(status_code=204, content="", media_type="application/json")
 
     start_time = time.time()
-    client = None
-    response = None
+    client = httpx.AsyncClient(
+        follow_redirects=False,
+        timeout=httpx.Timeout(60.0, connect=30.0, read=30.0, write=30.0, pool=30.0),
+        limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+    )
+    target_url = f"{TARGET_URL}/{path}"
+    # logger.info(f"Target URL: {target_url}")
+    # Get request headers
+    headers = {
+        key: value
+        for key, value in request.headers.items()
+        if key.lower() not in ["host", "content-length"]
+    }
+    headers["Host"] = TARGET_URL.split("//")[1]
+    headers["Accept-Encoding"] = "identity"
+    # Get request body
+    body = await request.body()
+    # Get cookies from request
+    cookies = request.cookies
+    logger.debug(f"cookies:\n{cookies}")
 
     try:
-        # Create httpx client inside the function to ensure clear scope
-        client = httpx.AsyncClient(
-            timeout=60.0,
-            follow_redirects=False,
-        )
-
-        target_url = f"{TARGET_URL}/{path}"
-
-        # Get request headers
-        headers = {
-            key: value
-            for key, value in request.headers.items()
-            if key.lower() not in ["host", "content-length"]
-        }
-        headers["Host"] = TARGET_URL.split("//")[1]
-        headers["Accept-Encoding"] = "identity"
-
-        # Get request body
-        body = await request.body()
-
-        # Get cookies from request
-        cookies = request.cookies
-        logger.debug(f"cookies:\n{cookies}")
-
-        # Make the request with httpx
         response = await client.request(
             method=request.method,
             url=target_url,
             headers=headers,
             params=request.query_params,
             content=body,
-            cookies=cookies,
+            cookies=cookies,  # Pass cookies directly
+            follow_redirects=False,  # CRITICAL CHANGE: Don't automatically follow redirects
         )
 
         # Handle redirect responses
         if response.status_code in [301, 302, 303, 307, 308]:
             location = response.headers.get("Location", "")
+            # logger.debug(f"Redirect detected to: {location}")
             response_headers = {
                 key: value
                 for key, value in response.headers.items()
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
             response_headers["Location"] = location
+            cookies = response.cookies
+            content = response.content
             return Response(
-                content=response.content,
+                content=content,
                 status_code=response.status_code,
                 headers=response_headers,
             )
-
         # Check content type
         content_type = response.headers.get("Content-Type", "")
         if "text/html" not in content_type:
@@ -142,10 +136,9 @@ async def proxy(request: Request, path: str = ""):
                 for key, value in response.headers.items()
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
-
             # Return streaming response
             return StreamingResponse(
-                response.iter_bytes(),
+                response.aiter_bytes(chunk_size=1024),
                 status_code=response.status_code,
                 headers=response_headers,
             )
@@ -154,24 +147,25 @@ async def proxy(request: Request, path: str = ""):
             content = await process_response(response)
             if "Content failed to load" in str(content):
                 logger.debug(f"content:\n{content}")
-
             response_headers = {
                 key: value
                 for key, value in response.headers.items()
                 if key.lower()
-                   not in ["content-length", "transfer-encoding", "content-encoding"]
+                not in ["content-length", "transfer-encoding", "content-encoding"]
             }
 
             # Preserve any cookies from the response
-            cookies_to_set = []
-            for cookie in response.cookies.jar:
-                cookie_header = f"{cookie.name}={cookie.value}; Path=/"
-                cookies_to_set.append(cookie_header)
+            for cookie_name, cookie_value in response.cookies.items():
+                cookie_header = f"{cookie_name}={cookie_value}; Path=/"
+                if "set-cookie" in response_headers:
+                    if not isinstance(response_headers["set-cookie"], list):
+                        response_headers["set-cookie"] = [
+                            response_headers["set-cookie"]
+                        ]
+                    response_headers["set-cookie"].append(cookie_header)
+                else:
+                    response_headers["set-cookie"] = cookie_header
 
-            if cookies_to_set:
-                response_headers["set-cookie"] = cookies_to_set
-
-            # Return the processed response
             return Response(
                 content=content,
                 status_code=response.status_code,
@@ -192,22 +186,12 @@ async def proxy(request: Request, path: str = ""):
     except Exception as e:
         logger.error(f"Proxy error: {str(e)}")
         import traceback
+
         logger.error(traceback.format_exc())
         return Response(content=f"Error: {str(e)}".encode(), status_code=500)
     finally:
         elapsed = time.time() - start_time
         logger.info(f"Request completed in {elapsed:.2f} seconds")
-        # Ensure resources are properly released
-        try:
-            if response:
-                response.close()
-        except:
-            pass
-        try:
-            if client:
-                await client.aclose()
-        except:
-            pass
 
 
 parser = argparse.ArgumentParser()
@@ -222,17 +206,9 @@ def start_server(port=args.port, host=args.host):
     logger.info(f"Proxy target URL: {TARGET_URL}")
 
     # Configure more detailed logging
-    logger.add("proxy_server.log", rotation="10 MB", level="DEBUG", backtrace=True, diagnose=True)
 
-    # Add ASGI application lifecycle and timeout settings
     config = uvicorn.Config(
-        app,
-        host=host,
-        port=port,
-        workers=args.workers,
-        log_level="info",
-        timeout_keep_alive=65,  # Increase keep-alive timeout
-        loop="auto"  # Let uvicorn automatically choose the most suitable event loop
+        app, host=host, port=port, workers=args.workers, log_level="info"
     )
     server = uvicorn.Server(config=config)
     try:
