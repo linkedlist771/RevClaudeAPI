@@ -154,7 +154,7 @@ async def proxy(request: Request, path: str = ""):
             return StreamingResponse(
                 content=response.aiter_bytes(),  # 流式返回二进制内容
                 status_code=response.status_code,
-                headers=response.headers.items(),
+                headers=response.headers,
                 media_type=content_type
             )
         else:
