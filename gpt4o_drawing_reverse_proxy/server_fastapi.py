@@ -5,6 +5,7 @@ import time
 
 import fire
 import httpx
+import requests
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,7 +54,7 @@ async def list_js():
 # Process response content function
 async def process_response(response):
     # Process HTML content
-    content = response.read()
+    content = response.content
     # Try to decode content
     try:
         html_content = content.decode("utf-8")
@@ -115,17 +116,28 @@ async def proxy(request: Request, path: str = ""):
     logger.debug(f"cookies:\n{cookies}")
 
     try:
-        response = await client.request(
+        # response = await client.request(
+        #     method=request.method,
+        #     url=target_url,
+        #     headers=headers,
+        #     params=request.query_params,
+        #     content=body,
+        #     cookies=cookies,  # Pass cookies directly
+        #     follow_redirects=False,  # CRITICAL CHANGE: Don't automatically follow redirects
+        #
+        # )
+
+        # 使用适当的方法发送请求
+        response = requests.request(
             method=request.method,
             url=target_url,
             headers=headers,
             params=request.query_params,
-            content=body,
-            cookies=cookies,  # Pass cookies directly
-            follow_redirects=False,  # CRITICAL CHANGE: Don't automatically follow redirects
-
+            data=body,
+            cookies=request.cookies,
+            allow_redirects=False,
+            stream=True,
         )
-
         # Handle redirect responses
         if response.status_code in [301, 302, 303, 307, 308]:
             location = response.headers.get("Location", "")
@@ -152,7 +164,8 @@ async def proxy(request: Request, path: str = ""):
             #     for key, value in response.headers.items()
             # }
             return StreamingResponse(
-                content=response.aiter_bytes(),  # 流式返回二进制内容
+                # content=response.aiter_bytes(),  # 流式返回二进制内容
+                response.iter_content(chunk_size=1024),
                 status_code=response.status_code,
                 headers=response.headers,
                 media_type=content_type
