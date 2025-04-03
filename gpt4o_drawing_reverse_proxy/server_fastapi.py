@@ -150,36 +150,11 @@ async def proxy(request: Request, path: str = ""):
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
 
-            # Create a copy of the response for streaming
-            resp_copy = response
-            client_copy = client
-
-            # Implement a cleanup function to close resources after streaming
-            async def cleanup():
-                await asyncio.sleep(1)  # Give streaming a little time to start
-                try:
-                    resp_copy.close()
-                except:
-                    pass
-                try:
-                    await client_copy.aclose()
-                except:
-                    pass
-
-            # Create a background task to handle cleanup
-            cleanup_task = asyncio.create_task(cleanup())
-
-            def on_response_end():
-                # Ensure we don't reference global variables
-                if not cleanup_task.done():
-                    cleanup_task.cancel()
-
             # Return streaming response
             return StreamingResponse(
                 stream_response_content(response),
                 status_code=response.status_code,
                 headers=response_headers,
-                background=on_response_end
             )
         else:
             # For HTML content, use the existing processing method
