@@ -160,12 +160,19 @@ async def proxy(request: Request, path: str = ""):
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
 
-            # Return streaming response
-            return StreamingResponse(
-                response.aiter_lines(),
+            # # Return streaming response
+            # return StreamingResponse(
+            #     response.aiter_lines(),
+            #     status_code=response.status_code,
+            #     headers=response_headers,
+            # )
+            return Response(
+                content=response.content,  # Use response.content directly
                 status_code=response.status_code,
                 headers=response_headers,
+                media_type=content_type,  # Explicitly set the media type
             )
+
         else:
             # For HTML content, use the existing processing method
             content = await process_response(response)
