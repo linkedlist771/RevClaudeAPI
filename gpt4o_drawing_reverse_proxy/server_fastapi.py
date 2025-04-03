@@ -87,7 +87,7 @@ async def proxy(request: Request, path: str = ""):
         return Response(status_code=204, content="", media_type="application/json")
 
     start_time = time.time()
-
+    response = None
     # Create aiohttp ClientSession
     session = aiohttp.ClientSession(
         timeout=aiohttp.ClientTimeout(total=60, connect=30, sock_read=30, sock_connect=30),
@@ -134,8 +134,8 @@ async def proxy(request: Request, path: str = ""):
             }
             response_headers["Location"] = location
             content = await response.read()
-            await response.release()
-            await session.close()
+            # await response.release()
+            # await session.close()
             return Response(
                 content=content,
                 status_code=response.status,
@@ -163,14 +163,14 @@ async def proxy(request: Request, path: str = ""):
 
             # Important: We need to manage the session lifecycle - this is a key difference from httpx
             # We need to ensure cleanup when the stream is done
-            async def cleanup():
-                # Wait for streaming to complete before closing
-                await asyncio.sleep(0.1)  # Give time for streaming to start
-                await response.release()
-                await session.close()
-
-            # Start cleanup task - this runs in the background
-            asyncio.create_task(cleanup())
+            # async def cleanup():
+            #     # Wait for streaming to complete before closing
+            #     await asyncio.sleep(0.1)  # Give time for streaming to start
+            #     await response.release()
+            #     await session.close()
+            #
+            # # Start cleanup task - this runs in the background
+            # asyncio.create_task(cleanup())
 
             return streaming_response
         else:
@@ -196,9 +196,9 @@ async def proxy(request: Request, path: str = ""):
             if cookies_to_set:
                 response_headers["set-cookie"] = cookies_to_set
 
-            # Clean up resources
-            await response.release()
-            await session.close()
+            # # Clean up resources
+            # await response.release()
+            # await session.close()
 
             return Response(
                 content=content,
@@ -207,14 +207,14 @@ async def proxy(request: Request, path: str = ""):
             )
     except asyncio.TimeoutError:
         logger.error(f"Request timed out for {target_url}")
-        await session.close()
+        # await session.close()
         return Response(
             content="The request to the target server timed out. Please try again later.".encode(),
             status_code=504,
         )
     except aiohttp.ClientConnectorError:
         logger.error(f"Connection error for {target_url}")
-        await session.close()
+        # await session.close()
         return Response(
             content="Unable to connect to the target server. Please check your connection and try again.".encode(),
             status_code=502,
@@ -223,11 +223,15 @@ async def proxy(request: Request, path: str = ""):
         logger.error(f"Proxy error: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        await session.close()
+        # await session.close()
         return Response(content=f"Error: {str(e)}".encode(), status_code=500)
     finally:
         elapsed = time.time() - start_time
         logger.info(f"Request completed in {elapsed:.2f} seconds")
+        if response:
+            # Close the response and session
+            await response.release()
+        await session.close()
 
 
 parser = argparse.ArgumentParser()
