@@ -52,15 +52,8 @@ async def list_js():
 
 # Process response content function
 async def process_response(response):
-    content_type = response.headers.get("Content-Type", "")
-
-    # For non-HTML content, return directly
-    if "text/html" not in content_type:
-        return response.read()
-
     # Process HTML content
     content = response.read()
-
     # Try to decode content
     try:
         html_content = content.decode("utf-8")
@@ -159,20 +152,12 @@ async def proxy(request: Request, path: str = ""):
                 for key, value in response.headers.items()
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
-
-            # # Return streaming response
-            # return StreamingResponse(
-            #     response.aiter_lines(),
-            #     status_code=response.status_code,
-            #     headers=response_headers,
-            # )
-            return Response(
-                content=response.content,  # Use response.content directly
+            return StreamingResponse(
+                response.aiter_bytes(),  # 流式返回二进制内容
                 status_code=response.status_code,
                 headers=response_headers,
-                media_type=content_type,  # Explicitly set the media type
+                media_type=content_type
             )
-
         else:
             # For HTML content, use the existing processing method
             content = await process_response(response)
