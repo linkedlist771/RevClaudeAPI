@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import os
 import time
+
 import fire
 import httpx
 import uvicorn
@@ -9,8 +10,6 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from loguru import logger
-from utils import read_js_file
-from configs import IMAGES_DIR, JS_DIR, ROOT, SERVER_BASE_URL, TARGET_URL
 
 app = FastAPI()
 
@@ -23,7 +22,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+TARGET_URL = "https://soruxgpt-saas-liuli.soruxgpt.com"
 
+# Create JavaScript directory
+js_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "js")
+os.makedirs(js_dir, exist_ok=True)
+
+
+# Read JavaScript file function
+def read_js_file(filename):
+    file_path = os.path.join(js_dir, filename)
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        # If file doesn't exist, create default content
+        default_content = "// Default content for " + filename
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(default_content)
+        return default_content
 
 
 # Serve list.js file
@@ -134,7 +151,6 @@ async def proxy(request: Request, path: str = ""):
             )
         # Check content type
         content_type = response.headers.get("Content-Type", "")
-        logger.debug(f"Content-Type: {content_type}")
         if "text/html" not in content_type:
             # Process response headers
             response_headers = {
@@ -144,14 +160,8 @@ async def proxy(request: Request, path: str = ""):
             }
 
             # Return streaming response
-            # return StreamingResponse(
-            #     response.content,
-            #     status_code=response.status_code,
-            #     headers=response_headers,
-            # )
-            logger.debug(f"response.content:\n{response.content}")
-            return Response(
-                content=response.content,
+            return StreamingResponse(
+                response.aiter_bytes(chunk_size=1024),
                 status_code=response.status_code,
                 headers=response_headers,
             )
