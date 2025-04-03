@@ -123,6 +123,7 @@ async def proxy(request: Request, path: str = ""):
             content=body,
             cookies=cookies,  # Pass cookies directly
             follow_redirects=False,  # CRITICAL CHANGE: Don't automatically follow redirects
+
         )
 
         # Handle redirect responses
@@ -132,7 +133,6 @@ async def proxy(request: Request, path: str = ""):
             response_headers = {
                 key: value
                 for key, value in response.headers.items()
-                # if key.lower() not in ["content-length", "transfer-encoding"]
             }
             response_headers["Location"] = location
             cookies = response.cookies
@@ -147,15 +147,14 @@ async def proxy(request: Request, path: str = ""):
         logger.debug(f"Content-Type: {content_type}")
         if "text/html" not in content_type:
             # Process response headers
-            response_headers = {
-                key: value
-                for key, value in response.headers.items()
-                # if key.lower() not in ["content-length", "transfer-encoding"]
-            }
+            # response_headers = {
+            #     key: value
+            #     for key, value in response.headers.items()
+            # }
             return StreamingResponse(
-                response.aiter_bytes(),  # 流式返回二进制内容
+                content=response.aiter_bytes(),  # 流式返回二进制内容
                 status_code=response.status_code,
-                headers=response_headers,
+                headers=response.headers.items(),
                 media_type=content_type
             )
         else:
