@@ -132,7 +132,7 @@ async def proxy(request: Request, path: str = ""):
             response_headers = {
                 key: value
                 for key, value in response.headers.items()
-                if key.lower() not in ["content-length", "transfer-encoding"]
+                # if key.lower() not in ["content-length", "transfer-encoding"]
             }
             response_headers["Location"] = location
             cookies = response.cookies
@@ -150,7 +150,7 @@ async def proxy(request: Request, path: str = ""):
             response_headers = {
                 key: value
                 for key, value in response.headers.items()
-                if key.lower() not in ["content-length", "transfer-encoding"]
+                # if key.lower() not in ["content-length", "transfer-encoding"]
             }
             return StreamingResponse(
                 response.aiter_bytes(),  # 流式返回二进制内容
