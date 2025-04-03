@@ -143,8 +143,13 @@ async def proxy(request: Request, path: str = ""):
             }
 
             # Return streaming response
-            return StreamingResponse(
-                response.aiter_bytes(chunk_size=1024),
+            # return StreamingResponse(
+            #     response.content,
+            #     status_code=response.status_code,
+            #     headers=response_headers,
+            # )
+            return Response(
+                content=response.content,
                 status_code=response.status_code,
                 headers=response_headers,
             )
