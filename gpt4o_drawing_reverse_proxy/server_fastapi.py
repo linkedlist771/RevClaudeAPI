@@ -23,15 +23,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+
+
 # Serve list.js file
 @app.get("/list.js")
 async def list_js():
     js_content = read_js_file("list.js")
     return Response(content=js_content, media_type="application/javascript")
 
+
 # Process response content function
 async def process_response(response):
     content_type = response.headers.get("Content-Type", "")
+
     # For non-HTML content, return directly
     if "text/html" not in content_type:
         return response.read()
@@ -136,6 +141,7 @@ async def proxy(request: Request, path: str = ""):
                 for key, value in response.headers.items()
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
+
             # Return streaming response
             return StreamingResponse(
                 response.aiter_bytes(chunk_size=1024),
