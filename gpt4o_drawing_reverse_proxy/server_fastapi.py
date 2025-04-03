@@ -161,7 +161,7 @@ async def proxy(request: Request, path: str = ""):
 
             # Return streaming response
             return StreamingResponse(
-                response.aiter_bytes(chunk_size=1024),
+                response.aiter_lines(),
                 status_code=response.status_code,
                 headers=response_headers,
             )
