@@ -3,7 +3,7 @@ import asyncio
 import os
 import time
 import fire
-import aiohttp
+import httpx
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,10 +36,10 @@ async def process_response(response):
     content_type = response.headers.get("Content-Type", "")
     # For non-HTML content, return directly
     if "text/html" not in content_type:
-        return await response.read()
+        return response.content
 
     # Process HTML content
-    content = await response.read()
+    content = response.content
 
     # Try to decode content
     try:
@@ -69,16 +69,11 @@ async def process_response(response):
     return html_content.encode("utf-8")
 
 
-# Create a stream generator for aiohttp responses
+# Create a stream generator for httpx responses
 async def stream_response_content(response):
-    chunk_size = 8192  # 增大块大小以减少迭代次数
-    try:
-        async for chunk in response.content.iter_chunked(chunk_size):
-            if chunk:  # 确保只发送非空数据块
-                yield chunk
-    except (aiohttp.ClientConnectionError, aiohttp.ClientPayloadError) as e:
-        logger.error(f"Streaming error: {str(e)}")
-        # 不再产生新的数据块，流会自然结束
+    async for chunk in response.aiter_bytes():
+        if chunk:  # Make sure we only send non-empty chunks
+            yield chunk
 
 
 # Main proxy route
@@ -92,15 +87,14 @@ async def proxy(request: Request, path: str = ""):
         return Response(status_code=204, content="", media_type="application/json")
 
     start_time = time.time()
-    session = None
+    client = None
     response = None
 
     try:
-        # 在函数内部创建session，确保作用域清晰
-        timeout = aiohttp.ClientTimeout(total=60, connect=30, sock_read=30, sock_connect=30)
-        session = aiohttp.ClientSession(
-            timeout=timeout,
-            cookie_jar=aiohttp.CookieJar()
+        # Create httpx client inside the function to ensure clear scope
+        client = httpx.AsyncClient(
+            timeout=60.0,
+            follow_redirects=False,
         )
 
         target_url = f"{TARGET_URL}/{path}"
@@ -121,19 +115,18 @@ async def proxy(request: Request, path: str = ""):
         cookies = request.cookies
         logger.debug(f"cookies:\n{cookies}")
 
-        # Make the request with aiohttp
-        response = await session.request(
+        # Make the request with httpx
+        response = await client.request(
             method=request.method,
             url=target_url,
             headers=headers,
             params=request.query_params,
-            data=body,
+            content=body,
             cookies=cookies,
-            allow_redirects=False,  # Don't automatically follow redirects
         )
 
         # Handle redirect responses
-        if response.status in [301, 302, 303, 307, 308]:
+        if response.status_code in [301, 302, 303, 307, 308]:
             location = response.headers.get("Location", "")
             response_headers = {
                 key: value
@@ -141,10 +134,9 @@ async def proxy(request: Request, path: str = ""):
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
             response_headers["Location"] = location
-            content = await response.read()
             return Response(
-                content=content,
-                status_code=response.status,
+                content=response.content,
+                status_code=response.status_code,
                 headers=response_headers,
             )
 
@@ -158,35 +150,34 @@ async def proxy(request: Request, path: str = ""):
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
 
-            # 使用自定义的背景任务管理器来处理资源清理
-            # 创建一个副本以防response在流式传输期间被修改
+            # Create a copy of the response for streaming
             resp_copy = response
-            session_copy = session
+            client_copy = client
 
-            # 实现一个cleanup函数，在流结束后关闭资源
+            # Implement a cleanup function to close resources after streaming
             async def cleanup():
-                await asyncio.sleep(1)  # 给流式传输一点开始时间
+                await asyncio.sleep(1)  # Give streaming a little time to start
                 try:
-                    await resp_copy.release()
+                    resp_copy.close()
                 except:
                     pass
                 try:
-                    await session_copy.close()
+                    await client_copy.aclose()
                 except:
                     pass
 
-            # 创建一个背景任务来处理清理工作
+            # Create a background task to handle cleanup
             cleanup_task = asyncio.create_task(cleanup())
 
             def on_response_end():
-                # 确保不再引用全局变量
+                # Ensure we don't reference global variables
                 if not cleanup_task.done():
                     cleanup_task.cancel()
 
-            # 返回流式响应
+            # Return streaming response
             return StreamingResponse(
                 stream_response_content(response),
-                status_code=response.status,
+                status_code=response.status_code,
                 headers=response_headers,
                 background=on_response_end
             )
@@ -205,26 +196,26 @@ async def proxy(request: Request, path: str = ""):
 
             # Preserve any cookies from the response
             cookies_to_set = []
-            for key, morsel in session.cookie_jar.filter_cookies(response.url).items():
-                cookie_header = f"{key}={morsel.value}; Path=/"
+            for cookie in response.cookies.jar:
+                cookie_header = f"{cookie.name}={cookie.value}; Path=/"
                 cookies_to_set.append(cookie_header)
 
             if cookies_to_set:
                 response_headers["set-cookie"] = cookies_to_set
 
-            # 等待关闭资源之前确保我们已经收到了所有数据
+            # Return the processed response
             return Response(
                 content=content,
-                status_code=response.status,
+                status_code=response.status_code,
                 headers=response_headers,
             )
-    except asyncio.TimeoutError:
+    except httpx.TimeoutException:
         logger.error(f"Request timed out for {target_url}")
         return Response(
             content="The request to the target server timed out. Please try again later.".encode(),
             status_code=504,
         )
-    except aiohttp.ClientConnectorError:
+    except httpx.ConnectError:
         logger.error(f"Connection error for {target_url}")
         return Response(
             content="Unable to connect to the target server. Please check your connection and try again.".encode(),
@@ -238,17 +229,15 @@ async def proxy(request: Request, path: str = ""):
     finally:
         elapsed = time.time() - start_time
         logger.info(f"Request completed in {elapsed:.2f} seconds")
-        # 确保资源被正确释放
+        # Ensure resources are properly released
         try:
             if response:
-                # 关闭响应，释放资源
-                await response.release()
+                response.close()
         except:
             pass
         try:
-            if session:
-                # 关闭会话
-                await session.close()
+            if client:
+                await client.aclose()
         except:
             pass
 
@@ -264,18 +253,18 @@ def start_server(port=args.port, host=args.host):
     logger.info(f"Starting server at {host}:{port}")
     logger.info(f"Proxy target URL: {TARGET_URL}")
 
-    # 配置更细致的日志
+    # Configure more detailed logging
     logger.add("proxy_server.log", rotation="10 MB", level="DEBUG", backtrace=True, diagnose=True)
 
-    # 增加 ASGI 应用的生命周期和超时设置
+    # Add ASGI application lifecycle and timeout settings
     config = uvicorn.Config(
         app,
         host=host,
         port=port,
         workers=args.workers,
         log_level="info",
-        timeout_keep_alive=65,  # 提高keep-alive超时
-        loop="auto"  # 让uvicorn自动选择最合适的事件循环
+        timeout_keep_alive=65,  # Increase keep-alive timeout
+        loop="auto"  # Let uvicorn automatically choose the most suitable event loop
     )
     server = uvicorn.Server(config=config)
     try:
