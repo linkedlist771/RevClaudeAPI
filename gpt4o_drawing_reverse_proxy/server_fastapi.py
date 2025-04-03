@@ -71,9 +71,14 @@ async def process_response(response):
 
 # Create a stream generator for aiohttp responses
 async def stream_response_content(response):
-    chunk_size = 1024
-    async for chunk in response.content.iter_chunked(chunk_size):
-        yield chunk
+    chunk_size = 8192  # 增大块大小以减少迭代次数
+    try:
+        async for chunk in response.content.iter_chunked(chunk_size):
+            if chunk:  # 确保只发送非空数据块
+                yield chunk
+    except (aiohttp.ClientConnectionError, aiohttp.ClientPayloadError) as e:
+        logger.error(f"Streaming error: {str(e)}")
+        # 不再产生新的数据块，流会自然结束
 
 
 # Main proxy route
@@ -87,32 +92,35 @@ async def proxy(request: Request, path: str = ""):
         return Response(status_code=204, content="", media_type="application/json")
 
     start_time = time.time()
+    session = None
     response = None
-    # Create aiohttp ClientSession
-    session = aiohttp.ClientSession(
-        timeout=aiohttp.ClientTimeout(total=60, connect=30, sock_read=30, sock_connect=30),
-        cookie_jar=aiohttp.CookieJar()
-    )
-
-    target_url = f"{TARGET_URL}/{path}"
-
-    # Get request headers
-    headers = {
-        key: value
-        for key, value in request.headers.items()
-        if key.lower() not in ["host", "content-length"]
-    }
-    headers["Host"] = TARGET_URL.split("//")[1]
-    headers["Accept-Encoding"] = "identity"
-
-    # Get request body
-    body = await request.body()
-
-    # Get cookies from request
-    cookies = request.cookies
-    logger.debug(f"cookies:\n{cookies}")
 
     try:
+        # 在函数内部创建session，确保作用域清晰
+        timeout = aiohttp.ClientTimeout(total=60, connect=30, sock_read=30, sock_connect=30)
+        session = aiohttp.ClientSession(
+            timeout=timeout,
+            cookie_jar=aiohttp.CookieJar()
+        )
+
+        target_url = f"{TARGET_URL}/{path}"
+
+        # Get request headers
+        headers = {
+            key: value
+            for key, value in request.headers.items()
+            if key.lower() not in ["host", "content-length"]
+        }
+        headers["Host"] = TARGET_URL.split("//")[1]
+        headers["Accept-Encoding"] = "identity"
+
+        # Get request body
+        body = await request.body()
+
+        # Get cookies from request
+        cookies = request.cookies
+        logger.debug(f"cookies:\n{cookies}")
+
         # Make the request with aiohttp
         response = await session.request(
             method=request.method,
@@ -134,8 +142,6 @@ async def proxy(request: Request, path: str = ""):
             }
             response_headers["Location"] = location
             content = await response.read()
-            # await response.release()
-            # await session.close()
             return Response(
                 content=content,
                 status_code=response.status,
@@ -152,27 +158,38 @@ async def proxy(request: Request, path: str = ""):
                 if key.lower() not in ["content-length", "transfer-encoding"]
             }
 
-            # Return streaming response
-            # Note: We need to close the session after the streaming is complete
-            # This is handled in the generator and this requires separate handling
-            streaming_response = StreamingResponse(
+            # 使用自定义的背景任务管理器来处理资源清理
+            # 创建一个副本以防response在流式传输期间被修改
+            resp_copy = response
+            session_copy = session
+
+            # 实现一个cleanup函数，在流结束后关闭资源
+            async def cleanup():
+                await asyncio.sleep(1)  # 给流式传输一点开始时间
+                try:
+                    await resp_copy.release()
+                except:
+                    pass
+                try:
+                    await session_copy.close()
+                except:
+                    pass
+
+            # 创建一个背景任务来处理清理工作
+            cleanup_task = asyncio.create_task(cleanup())
+
+            def on_response_end():
+                # 确保不再引用全局变量
+                if not cleanup_task.done():
+                    cleanup_task.cancel()
+
+            # 返回流式响应
+            return StreamingResponse(
                 stream_response_content(response),
                 status_code=response.status,
                 headers=response_headers,
+                background=on_response_end
             )
-
-            # Important: We need to manage the session lifecycle - this is a key difference from httpx
-            # We need to ensure cleanup when the stream is done
-            # async def cleanup():
-            #     # Wait for streaming to complete before closing
-            #     await asyncio.sleep(0.1)  # Give time for streaming to start
-            #     await response.release()
-            #     await session.close()
-            #
-            # # Start cleanup task - this runs in the background
-            # asyncio.create_task(cleanup())
-
-            return streaming_response
         else:
             # For HTML content, use the existing processing method
             content = await process_response(response)
@@ -187,7 +204,6 @@ async def proxy(request: Request, path: str = ""):
             }
 
             # Preserve any cookies from the response
-            # aiohttp handles cookies differently than httpx
             cookies_to_set = []
             for key, morsel in session.cookie_jar.filter_cookies(response.url).items():
                 cookie_header = f"{key}={morsel.value}; Path=/"
@@ -196,10 +212,7 @@ async def proxy(request: Request, path: str = ""):
             if cookies_to_set:
                 response_headers["set-cookie"] = cookies_to_set
 
-            # # Clean up resources
-            # await response.release()
-            # await session.close()
-
+            # 等待关闭资源之前确保我们已经收到了所有数据
             return Response(
                 content=content,
                 status_code=response.status,
@@ -207,14 +220,12 @@ async def proxy(request: Request, path: str = ""):
             )
     except asyncio.TimeoutError:
         logger.error(f"Request timed out for {target_url}")
-        # await session.close()
         return Response(
             content="The request to the target server timed out. Please try again later.".encode(),
             status_code=504,
         )
     except aiohttp.ClientConnectorError:
         logger.error(f"Connection error for {target_url}")
-        # await session.close()
         return Response(
             content="Unable to connect to the target server. Please check your connection and try again.".encode(),
             status_code=502,
@@ -223,15 +234,23 @@ async def proxy(request: Request, path: str = ""):
         logger.error(f"Proxy error: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        # await session.close()
         return Response(content=f"Error: {str(e)}".encode(), status_code=500)
     finally:
         elapsed = time.time() - start_time
         logger.info(f"Request completed in {elapsed:.2f} seconds")
-        if response:
-            # Close the response and session
-            await response.release()
-        await session.close()
+        # 确保资源被正确释放
+        try:
+            if response:
+                # 关闭响应，释放资源
+                await response.release()
+        except:
+            pass
+        try:
+            if session:
+                # 关闭会话
+                await session.close()
+        except:
+            pass
 
 
 parser = argparse.ArgumentParser()
@@ -245,10 +264,18 @@ def start_server(port=args.port, host=args.host):
     logger.info(f"Starting server at {host}:{port}")
     logger.info(f"Proxy target URL: {TARGET_URL}")
 
-    # Configure more detailed logging
+    # 配置更细致的日志
+    logger.add("proxy_server.log", rotation="10 MB", level="DEBUG", backtrace=True, diagnose=True)
 
+    # 增加 ASGI 应用的生命周期和超时设置
     config = uvicorn.Config(
-        app, host=host, port=port, workers=args.workers, log_level="info"
+        app,
+        host=host,
+        port=port,
+        workers=args.workers,
+        log_level="info",
+        timeout_keep_alive=65,  # 提高keep-alive超时
+        loop="auto"  # 让uvicorn自动选择最合适的事件循环
     )
     server = uvicorn.Server(config=config)
     try:
