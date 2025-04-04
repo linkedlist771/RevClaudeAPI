@@ -245,8 +245,10 @@ class ClientsStatusManager:
             await self.set_async(usage_key, 0)
 
     async def get_all_clients_status(self, basic_clients, plus_clients):
-        from rev_claude.cookie.claude_cookie_manage import (CookieUsageType,
-                                                            get_cookie_manager)
+        from rev_claude.cookie.claude_cookie_manage import (
+            CookieUsageType,
+            get_cookie_manager,
+        )
 
         async def retrieve_client_status(idx, client, client_type, models):
             # self.create_if_not_exist(client_type, idx, models)

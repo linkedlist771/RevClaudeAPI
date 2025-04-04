@@ -4,8 +4,7 @@ import time
 from loguru import logger
 from tqdm.asyncio import tqdm
 
-from rev_claude.configs import (CLAUDE_CLIENT_LIMIT_CHECKS_PROMPT,
-                                NEW_CONVERSATION_RETRY)
+from rev_claude.configs import CLAUDE_CLIENT_LIMIT_CHECKS_PROMPT, NEW_CONVERSATION_RETRY
 from rev_claude.models import ClaudeModels
 from rev_claude.utility import get_client_status
 

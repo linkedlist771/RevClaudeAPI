@@ -3,12 +3,26 @@ import json
 
 import requests
 from configs import IMAGES_DIR, JS_DIR, ROOT, SERVER_BASE_URL, TARGET_URL
-from flask import (Flask, Response, jsonify, make_response, redirect, request,
-                   send_file, send_from_directory, stream_with_context)
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    make_response,
+    redirect,
+    request,
+    send_file,
+    send_from_directory,
+    stream_with_context,
+)
 from loguru import logger
 from sync_base_redis_manager import FlaskUserRecordManager
-from utils import (extract_account_from_request, extract_cookies,
-                   get_souruxgpt_manager, read_js_file, save_image_from_dict)
+from utils import (
+    extract_account_from_request,
+    extract_cookies,
+    get_souruxgpt_manager,
+    read_js_file,
+    save_image_from_dict,
+)
 
 logger.add("log_file.log", rotation="1 week")  # 每周轮换一次文件
 

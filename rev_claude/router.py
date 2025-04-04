@@ -1,18 +1,18 @@
 from fastapi import APIRouter
 
 from rev_claude.api_key.api_key_router import router as api_key_router
-from rev_claude.artifacts_sharing.artifacts_sharing_router import \
-    router as artifacts_sharing_router
+from rev_claude.artifacts_sharing.artifacts_sharing_router import (
+    router as artifacts_sharing_router,
+)
 from rev_claude.client.claude_router import router as claude_router
-from rev_claude.cookie.claude_cookie_router import \
-    router as claude_cookie_router
+from rev_claude.cookie.claude_cookie_router import router as claude_cookie_router
 from rev_claude.devices.devices_router import router as devices_router
 from rev_claude.gpt_cookie_login.router import router as gpt_login_router
-from rev_claude.history.conversation_history_router import \
-    router as conversation_history_router
+from rev_claude.history.conversation_history_router import (
+    router as conversation_history_router,
+)
 from rev_claude.renewal.renewal_router import router as renewal_router
-from rev_claude.status.clients_status_router import \
-    router as clients_status_router
+from rev_claude.status.clients_status_router import router as clients_status_router
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(claude_router, prefix="/claude", tags=["claude"])

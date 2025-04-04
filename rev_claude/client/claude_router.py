@@ -2,25 +2,30 @@ import asyncio
 import json
 from functools import partial
 
-from fastapi import (APIRouter, Depends, File, Form, HTTPException, Request,
-                     UploadFile)
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 
-from rev_claude.api_key.api_key_manage import (APIKeyManager,
-                                               get_api_key_manager)
+from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
 from rev_claude.client.claude import upload_attachment_for_fastapi
 from rev_claude.client.client_manager import ClientManager
-from rev_claude.configs import (CLAUDE_OFFICIAL_USAGE_INCREASE,
-                                NEW_CONVERSATION_RETRY, USE_MERMAID_AND_SVG)
+from rev_claude.configs import (
+    CLAUDE_OFFICIAL_USAGE_INCREASE,
+    NEW_CONVERSATION_RETRY,
+    USE_MERMAID_AND_SVG,
+)
 from rev_claude.history.conversation_history_manager import (
-    ConversationHistoryRequestInput, Message, RoleType,
-    conversation_history_manager)
+    ConversationHistoryRequestInput,
+    Message,
+    RoleType,
+    conversation_history_manager,
+)
 from rev_claude.models import ClaudeModels
-from rev_claude.prompts_builder.artifacts_render_prompt import \
-    ArtifactsRendererPrompt
-from rev_claude.schemas import (ClaudeChatRequest,
-                                ObtainReverseOfficialLoginRouterRequest)
+from rev_claude.prompts_builder.artifacts_render_prompt import ArtifactsRendererPrompt
+from rev_claude.schemas import (
+    ClaudeChatRequest,
+    ObtainReverseOfficialLoginRouterRequest,
+)
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from rev_claude.status_code.status_code_enum import HTTP_480_API_KEY_INVALID
 from rev_claude.utils.sse_utils import build_sse_data
@@ -327,8 +332,9 @@ async def chat(
     logger.debug(f"Need web search: {claude_chat_request.need_web_search}")
     hrefs = []
     if claude_chat_request.need_web_search:
-        from rev_claude.prompts_builder.duckduck_search_prompt import \
-            DuckDuckSearchPrompt
+        from rev_claude.prompts_builder.duckduck_search_prompt import (
+            DuckDuckSearchPrompt,
+        )
 
         # here we choose a number from 3 to 5
         message, hrefs = await DuckDuckSearchPrompt(

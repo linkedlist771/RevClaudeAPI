@@ -5,8 +5,7 @@ import pytz
 from httpx import AsyncClient
 from pydantic import BaseModel
 
-from rev_claude.configs import (CLAUDE_BACKEND_API_APIAUTH,
-                                CLAUDE_BACKEND_API_USER_URL)
+from rev_claude.configs import CLAUDE_BACKEND_API_APIAUTH, CLAUDE_BACKEND_API_USER_URL
 from rev_claude.utils.time_zone_utils import get_shanghai_time
 
 
