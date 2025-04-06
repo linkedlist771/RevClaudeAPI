@@ -317,6 +317,7 @@ class SoruxGPTManager:
                 logger.debug(f"finished: {len(created_users)}/{count}")
                 if i + batch_size < count:
                     await asyncio.sleep(1)
+                await self.login()
         except:
             from traceback import format_exc
             logger.error(format_exc())
