@@ -279,30 +279,34 @@ class SoruxGPTManager:
             return []
 
         created_users = []
-        for i in range(0, count, batch_size):
-            batch_count = min(batch_size, count - i)
-            tasks = [
-                self.create_single_user(
-                    days,
-                    hours,
-                    j + i,
-                    message_limited,
-                    rate_refresh_time,
-                    message_bucket_sum,
-                    message_bucket_time,
+        try:
+            for i in range(0, count, batch_size):
+                batch_count = min(batch_size, count - i)
+                tasks = [
+                    self.create_single_user(
+                        days,
+                        hours,
+                        j + i,
+                        message_limited,
+                        rate_refresh_time,
+                        message_bucket_sum,
+                        message_bucket_time,
+                    )
+                    for j in range(batch_count)
+                ]
+                results = await tqdm.gather(
+                    *tasks,
+                    desc=f"Creating users (batch {i // batch_size + 1})",
+                    total=batch_count,
                 )
-                for j in range(batch_count)
-            ]
-            results = await tqdm.gather(
-                *tasks,
-                desc=f"Creating users (batch {i // batch_size + 1})",
-                total=batch_count,
-            )
 
-            created_users.extend([r for r in results if r])
-            logger.debug(f"finished: {i + batch_size}/{count}")
-            if i + batch_size < count:
-                await asyncio.sleep(1)
+                created_users.extend([r for r in results if r])
+                logger.debug(f"finished: {len(created_users)}/{count}")
+                if i + batch_size < count:
+                    await asyncio.sleep(1)
+        except:
+            from traceback import format_exc
+            logger.error(format_exc())
 
 
         return created_users
