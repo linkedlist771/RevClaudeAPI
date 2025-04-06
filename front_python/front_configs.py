@@ -21,5 +21,7 @@ ROOT = Path(__file__).parent.parent
 STREAMLIT_LOGS = ROOT / "streamlit_logs"
 STREAMLIT_LOGS.mkdir(exist_ok=True, parents=True)
 
+HTTP_TIMEOUT = 3600
+
 if __name__ == "__main__":
     print(STREAMLIT_LOGS)

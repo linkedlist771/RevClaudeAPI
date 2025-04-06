@@ -2,7 +2,7 @@ import asyncio
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-
+from front_configs import *
 import httpx
 import streamlit as st
 from loguru import logger
@@ -47,6 +47,7 @@ class SoruxGPTManager:
                         "username": self.admin_username,
                         "password": self.admin_password,
                     },
+                    timeout=HTTP_TIMEOUT
                 )
                 # logger.debug(f"response:\n{response}")
                 response.raise_for_status()
@@ -67,6 +68,8 @@ class SoruxGPTManager:
                     headers=self.headers,
                     params={"token": self.token},
                     data={"username": username, "password": password},
+                    timeout=HTTP_TIMEOUT
+
                 )
                 response.raise_for_status()
                 return response.json()["UserID"]
@@ -91,6 +94,8 @@ class SoruxGPTManager:
                         "node_id": "185",
                         "time": expire_time.strftime("%Y-%m-%d %H:%M:%S"),
                     },
+                    timeout=HTTP_TIMEOUT
+
                 )
                 response.raise_for_status()
                 return True
@@ -125,6 +130,8 @@ class SoruxGPTManager:
                         "pageSize": page_size,
                         "UserName": user_name,
                     },
+                    timeout=HTTP_TIMEOUT
+
                 )
                 response.raise_for_status()
                 return response.json()
@@ -165,6 +172,8 @@ class SoruxGPTManager:
                     headers=self.headers,
                     params={"token": self.token},
                     data={"user_id": user_id},
+                    timeout=HTTP_TIMEOUT
+
                 )
                 response.raise_for_status()
                 return {"username": user_name, "success": True, "user_id": user_id}
@@ -223,6 +232,8 @@ class SoruxGPTManager:
                         "message_bucket_sum": str(message_bucket_sum),
                         "message_bucket_time": str(message_bucket_time),
                     },
+                    timeout=HTTP_TIMEOUT
+
                 )
                 response.raise_for_status()
                 return True
@@ -349,6 +360,8 @@ class SoruxGPTManager:
                         "description": "兑换额度后请点击渠道商店购买相应的套餐才能续费",
                         "time": expire_time,
                     },
+                    timeout=HTTP_TIMEOUT
+
                 )
                 response.raise_for_status()
                 return {
@@ -471,6 +484,8 @@ class SoruxGPTManagerV2(SoruxGPTManager):
                     "https://soruxgpt-liuli-usersystem.soruxgpt.com/api/add",
                     headers=headers,
                     json=data,
+                    timeout=HTTP_TIMEOUT
+
                 )
                 response.raise_for_status()
                 return True
