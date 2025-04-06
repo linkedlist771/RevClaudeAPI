@@ -10,7 +10,7 @@ services:
       - .:/workspace
     restart: always
     command: >
-      sh -c "streamlit run /workspace/front_python/front_manager.py --server.port 5000 &
+      sh -c "streamlit run /workspace/front_python/front_manager.py --server.port 5000 > streamlit_log.txt 2>&1 & &
              python /workspace/main.py --port 1145"
     depends_on:
       redis:
