@@ -1,5 +1,5 @@
 import os
-
+from pathlib import Path
 ADMIN_USERNAME = "claude-backend"
 ADMIN_PASSWORD = "20Wd!!!!"
 
@@ -15,3 +15,11 @@ API_KEY_ROUTER = f"{BASE_URL}/api/v1/api_key"
 API_CLAUDE35_URL = "https://api.claude35.585dg.com/api/v1"
 
 CLAUDE_AUDIT_BASE_URL = "http://54.254.143.80:8090"
+
+ROOT = Path(__file__).parent.parent
+
+STREAMLIT_LOGS = ROOT / "streamlit_logs"
+STREAMLIT_LOGS.mkdir(exist_ok=True, parents=True)
+
+if __name__ == "__main__":
+    print(STREAMLIT_LOGS)

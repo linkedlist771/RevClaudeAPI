@@ -26,6 +26,7 @@ from conversation_utils import get_all_conversations, get_single_conversation
 
 
 st.set_page_config(page_title="API密钥和Cookie管理")
+logger.add(STREAMLIT_LOGS / "log_file.log", rotation="1 week")  # 每周轮换一次文件
 
 
 def get_all_devices():
