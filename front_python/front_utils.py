@@ -72,6 +72,8 @@ class SoruxGPTManager:
                 return response.json()["UserID"]
             except Exception as e:
                 logger.error(f"Registration failed for {username}: {str(e)}")
+                from traceback import format_exc
+                logger.error(format_exc())
                 return None
 
     async def add_node(self, user_id: str, expire_time: datetime) -> bool:
