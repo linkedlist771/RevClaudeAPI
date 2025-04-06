@@ -48,6 +48,7 @@ class SoruxGPTManager:
                         "password": self.admin_password,
                     },
                 )
+                # logger.debug(f"response:\n{response}")
                 response.raise_for_status()
                 self.token = response.json()["Token"]
                 return True
