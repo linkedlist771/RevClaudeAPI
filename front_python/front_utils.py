@@ -282,7 +282,7 @@ class SoruxGPTManager:
         count: int,
         days: int,
         hours: int = 0,
-        batch_size: int = 200,
+        batch_size: int = 50,
         message_limited: int = 5,
         rate_refresh_time: int = 1,
         message_bucket_sum: int = 100,
