@@ -82,7 +82,6 @@ class SoruxGPTManager:
     async def add_node(self, user_id: str, expire_time: datetime) -> bool:
         if not self.token:
             return False
-
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
