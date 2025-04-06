@@ -300,7 +300,7 @@ class SoruxGPTManager:
             )
 
             created_users.extend([r for r in results if r])
-            logger.debug()
+            logger.debug(f"finished: {i + batch_size}/{count}")
             if i + batch_size < count:
                 await asyncio.sleep(1)
 
