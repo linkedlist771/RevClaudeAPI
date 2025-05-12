@@ -180,11 +180,12 @@ class SoruxGPTManager:
         except Exception as e:
             return {"username": user_name, "success": False, "error": str(e)}
 
-    async def batch_delete_users(self, user_names: List[str]) -> List[Dict]:
+    async def batch_delete_users(self, user_names: List[str], batch_size: int = 50) -> List[Dict]:
         """Batch delete multiple users.
 
         Args:
             user_names: List of usernames to delete
+            batch_size: Number of users to delete in each batch
 
         Returns:
             List[Dict]: List of deletion results for each user
@@ -195,16 +196,31 @@ class SoruxGPTManager:
                 for username in user_names
             ]
 
-        if not self.token:
-            return [
-                {"username": username, "success": False, "error": "No valid token"}
-                for username in user_names
-            ]
-
-        tasks = [self.delete_user(user_name) for user_name in user_names]
-        results = await tqdm.gather(
-            *tasks, desc="Deleting users", total=len(user_names)
-        )
+        results = []
+        for i in range(0, len(user_names), batch_size):
+            try:
+                batch_users = user_names[i:i+batch_size]
+                batch_count = len(batch_users)
+                
+                tasks = [self.delete_user(user_name) for user_name in batch_users]
+                batch_results = await tqdm.gather(
+                    *tasks, 
+                    desc=f"Deleting users (batch {i // batch_size + 1})", 
+                    total=batch_count
+                )
+                
+                results.extend(batch_results)
+                logger.debug(f"finished: {len(results)}/{len(user_names)}")
+                
+                if i + batch_size < len(user_names):
+                    await asyncio.sleep(1)
+                await self.login()
+            except:
+                from traceback import format_exc
+                logger.error(format_exc())
+                await asyncio.sleep(10)
+                await self.login()
+                
         return results
 
     async def set_user_limits(
@@ -291,8 +307,9 @@ class SoruxGPTManager:
             return []
 
         created_users = []
-        try:
-            for i in range(0, count, batch_size):
+        for i in range(0, count, batch_size):
+            try:
+
                 batch_count = min(batch_size, count - i)
                 tasks = [
                     self.create_single_user(
@@ -317,9 +334,11 @@ class SoruxGPTManager:
                 if i + batch_size < count:
                     await asyncio.sleep(1)
                 await self.login()
-        except:
-            from traceback import format_exc
-            logger.error(format_exc())
+            except:
+                from traceback import format_exc
+                logger.error(format_exc())
+                await asyncio.sleep(10)
+                await self.login()
 
 
         return created_users
@@ -406,7 +425,6 @@ class SoruxGPTManager:
                 await asyncio.sleep(1)  # Add delay between batches
 
         return created_codes
-
 
 class SoruxGPTManagerV2(SoruxGPTManager):
 
