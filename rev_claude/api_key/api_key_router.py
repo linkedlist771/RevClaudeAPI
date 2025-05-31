@@ -96,7 +96,11 @@ async def get_information(api_key: str):
 
     try:
         async with AsyncClient() as client:
-            headers = {"APIAUTH": CLAUDE_BACKEND_API_APIAUTH}
+            headers = {
+                "APIAUTH": CLAUDE_BACKEND_API_APIAUTH,
+                "Content-Type": "application/json",
+                "Cookie": "adminKey=ThisIsAPassword"
+            }
             url = f"{CLAUDE_BACKEND_API_USER_URL}/page/"
             # post data
             payload = {"page": 1, "size": 20, "keyWord": api_key}
