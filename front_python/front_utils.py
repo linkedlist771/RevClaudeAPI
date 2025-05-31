@@ -608,6 +608,12 @@ async def delete_sorux_accounts_main():
     res = await delete_sorux_accounts(user_names)
     logger.debug(res)
 
+async def get_user_info_main():
+    manager = SoruxGPTManager(admin_username, admin_password)
+    await manager.login()
+    user_info = await manager.get_user_info("30_1_b4ef10a9ac1b")
+    logger.debug(user_info)
+
 
 async def create_sorux_redemption_codes(points: int, code_number: int) -> List[Dict]:
     """Helper function to create redemption codes.
@@ -627,4 +633,4 @@ async def create_sorux_redemption_codes(points: int, code_number: int) -> List[D
 
 
 if __name__ == "__main__":
-    asyncio.run(delete_sorux_accounts_main())
+    asyncio.run(get_user_info_main())

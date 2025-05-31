@@ -220,6 +220,7 @@ def build_client_headers() -> dict:
     headers = {
         "APIAUTH": CLAUDE_BACKEND_API_APIAUTH,
         "Content-Type": "application/json",
+        "adminkey": "ThisIsAPassword"
     }
     return headers
 
