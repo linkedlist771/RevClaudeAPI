@@ -8,27 +8,31 @@ services:
       - "1145:1145"
     volumes:
       - .:/workspace
-    restart: always
-    command: >
-      sh -c "streamlit run /workspace/front_python/front_manager.py --server.port 5000 > streamlit_log.txt 2>&1 &
-             python /workspace/main.py --port 1145"
+    restart: unless-stopped
+    command: ["bash", "/workspace/start_services.sh"]
     depends_on:
-      redis:
-        condition: service_healthy
+      - redis
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1145/api/v1/clients_status", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   redis:
     image: redis:latest
     volumes:
       - redis_data:/data
-    restart: always
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
-      timeout: 5s
+      timeout: 3s
       retries: 5
+      start_period: 30s
 
 volumes:
   redis_data:
