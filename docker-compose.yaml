@@ -3,37 +3,63 @@ version: '3'
 services:
   node-serve-front:
     image: llinkedlist/python-rev-front:v1
+    container_name: revclaudeapi_front_container
     ports:
       - "5000:5000"
       - "1145:1145"
     volumes:
       - .:/workspace
-    restart: unless-stopped
+    restart: always
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: [ "CMD", "python", "/workspace/health_check.py" ]
+      interval: 10m  # 每10分钟检查一次
+      timeout: 30s
+      retries: 3
+      start_period: 2m  # 启动后等待2分钟再开始健康检查
     command: ["bash", "/workspace/start_services.sh"]
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:1145/api/v1/clients_status", "||", "exit", "1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    networks:
+      - revclaudeapi_network
 
   redis:
     image: redis:latest
+    container_name: revclaudeapi_redis_container
+    # 不暴露端口到主机，避免端口冲突
     volumes:
-      - redis_data:/data
-    restart: unless-stopped
+      - ./redis_data:/data
+    restart: always
+    labels:
+      - "autoheal=true"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
+      interval: 30s
+      timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - revclaudeapi_network
 
-volumes:
-  redis_data:
-    driver: local
+  autoheal:
+    image: willfarrell/autoheal
+    container_name: revclaudeapi_autoheal_container
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=5  # 每5秒检查一次
+      - AUTOHEAL_START_PERIOD=30  # 启动后30秒开始检查
+    networks:
+      - revclaudeapi_network
+
+networks:
+  revclaudeapi_network:
+    name: revclaudeapi_bridge_network
+    driver: bridge

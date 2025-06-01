@@ -22,6 +22,18 @@ app = FastAPI(lifespan=lifespan)
 app = register_middleware(app)
 
 
+@app.get("/health")
+async def health_check():
+    """简单的健康检查端点，不依赖外部服务"""
+    return {"status": "healthy", "message": "RevClaudeAPI is running"}
+
+
+@app.get("/api/v1/health")
+async def api_health_check():
+    """API版本的健康检查端点"""
+    return {"status": "healthy", "message": "RevClaudeAPI is running", "version": "v1"}
+
+
 @app.get("/api/v1/clients_status")
 async def _get_client_status():
     basic_clients, plus_clients = ClientManager().get_clients()
