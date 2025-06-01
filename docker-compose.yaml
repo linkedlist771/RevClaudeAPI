@@ -33,7 +33,7 @@ services:
     container_name: revclaudeapi_redis_container
     # 不暴露端口到主机，避免端口冲突
     volumes:
-      - ./redis_data:/data
+      - redis_data:/data
     restart: always
     labels:
       - "autoheal=true"
@@ -58,6 +58,10 @@ services:
       - AUTOHEAL_START_PERIOD=30  # 启动后30秒开始检查
     networks:
       - revclaudeapi_network
+
+volumes:
+  redis_data:
+    driver: local
 
 networks:
   revclaudeapi_network:
