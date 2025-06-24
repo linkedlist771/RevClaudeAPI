@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
-
+from loguru import  logger
 import pytz
 from httpx import AsyncClient
 from pydantic import BaseModel
@@ -45,11 +45,16 @@ async def get_api_key_information(api_key: str):
 
 
 async def update_api_key_information(api_key_info: dict):
-    async with AsyncClient() as client:
-        headers = build_client_headers()
-        url = f"{CLAUDE_BACKEND_API_USER_URL}/update"
-        res = await client.post(url, headers=headers, json=api_key_info, timeout=60)
-        return res.json()
+    try:
+        async with AsyncClient() as client:
+            headers = build_client_headers()
+            url = f"{CLAUDE_BACKEND_API_USER_URL}/update"
+            res = await client.post(url, headers=headers, json=api_key_info, timeout=60)
+            return res.json()
+    except Exception as e:
+        from traceback import  format_exc
+        logger.error(f"Renew apikey info:{api_key_info} error:\n{str(e)}")
+        logger.error(format_exc())
 
 
 async def create_api_key(api_key: str, expire_time: str):

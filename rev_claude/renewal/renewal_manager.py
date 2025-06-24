@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import List
 
+from loguru import logger
 from pydantic import BaseModel
 
 from rev_claude.redis_manager.base_redis_manager import BaseRedisManager
@@ -167,6 +168,8 @@ class RenewalManager(BaseRedisManager):
         # Convert minutes to days for the API key manager
         days = total_minutes / (24 * 60)
         result = await renew_api_key(api_key, days)
+        logger.debug(f"Renew the apikey:{api_key} with code:{renewal_code}.\n"
+                     f"Results: {result}")
 
         return f"成功续期 {code_info.days} 天 {code_info.hours} 小时 "
 
