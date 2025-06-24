@@ -4,8 +4,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from rev_claude.configs import CLAUDE_CLIENT_LIMIT_CHECKS_INTERVAL_MINUTES
-from rev_claude.periodic_checks.clients_limit_checks import \
-    check_reverse_official_usage_limits
+from rev_claude.periodic_checks.clients_limit_checks import (
+    check_reverse_official_usage_limits,
+)
 
 limit_check_scheduler = AsyncIOScheduler()
 

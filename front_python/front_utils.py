@@ -2,11 +2,13 @@ import asyncio
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-from front_configs import *
+
 import httpx
 import streamlit as st
 from loguru import logger
 from tqdm.asyncio import tqdm
+
+from front_configs import *
 
 admin_username = "liuliu"
 admin_password = "123.liu"
@@ -47,7 +49,7 @@ class SoruxGPTManager:
                         "username": self.admin_username,
                         "password": self.admin_password,
                     },
-                    timeout=HTTP_TIMEOUT
+                    timeout=HTTP_TIMEOUT,
                 )
                 # logger.debug(f"response:\n{response}")
                 response.raise_for_status()
@@ -68,14 +70,14 @@ class SoruxGPTManager:
                     headers=self.headers,
                     params={"token": self.token},
                     data={"username": username, "password": password},
-                    timeout=HTTP_TIMEOUT
-
+                    timeout=HTTP_TIMEOUT,
                 )
                 response.raise_for_status()
                 return response.json()["UserID"]
             except Exception as e:
                 logger.error(f"Registration failed for {username}: {str(e)}")
                 from traceback import format_exc
+
                 logger.error(format_exc())
                 return None
 
@@ -93,8 +95,7 @@ class SoruxGPTManager:
                         "node_id": "185",
                         "time": expire_time.strftime("%Y-%m-%d %H:%M:%S"),
                     },
-                    timeout=HTTP_TIMEOUT
-
+                    timeout=HTTP_TIMEOUT,
                 )
                 response.raise_for_status()
                 return True
@@ -129,8 +130,7 @@ class SoruxGPTManager:
                         "pageSize": page_size,
                         "UserName": user_name,
                     },
-                    timeout=HTTP_TIMEOUT
-
+                    timeout=HTTP_TIMEOUT,
                 )
                 response.raise_for_status()
                 return response.json()
@@ -171,8 +171,7 @@ class SoruxGPTManager:
                     headers=self.headers,
                     params={"token": self.token},
                     data={"user_id": user_id},
-                    timeout=HTTP_TIMEOUT
-
+                    timeout=HTTP_TIMEOUT,
                 )
                 response.raise_for_status()
                 return {"username": user_name, "success": True, "user_id": user_id}
@@ -180,7 +179,9 @@ class SoruxGPTManager:
         except Exception as e:
             return {"username": user_name, "success": False, "error": str(e)}
 
-    async def batch_delete_users(self, user_names: List[str], batch_size: int = 50) -> List[Dict]:
+    async def batch_delete_users(
+        self, user_names: List[str], batch_size: int = 50
+    ) -> List[Dict]:
         """Batch delete multiple users.
 
         Args:
@@ -199,28 +200,29 @@ class SoruxGPTManager:
         results = []
         for i in range(0, len(user_names), batch_size):
             try:
-                batch_users = user_names[i:i+batch_size]
+                batch_users = user_names[i : i + batch_size]
                 batch_count = len(batch_users)
-                
+
                 tasks = [self.delete_user(user_name) for user_name in batch_users]
                 batch_results = await tqdm.gather(
-                    *tasks, 
-                    desc=f"Deleting users (batch {i // batch_size + 1})", 
-                    total=batch_count
+                    *tasks,
+                    desc=f"Deleting users (batch {i // batch_size + 1})",
+                    total=batch_count,
                 )
-                
+
                 results.extend(batch_results)
                 logger.debug(f"finished: {len(results)}/{len(user_names)}")
-                
+
                 if i + batch_size < len(user_names):
                     await asyncio.sleep(1)
                 await self.login()
             except:
                 from traceback import format_exc
+
                 logger.error(format_exc())
                 await asyncio.sleep(10)
                 await self.login()
-                
+
         return results
 
     async def set_user_limits(
@@ -247,8 +249,7 @@ class SoruxGPTManager:
                         "message_bucket_sum": str(message_bucket_sum),
                         "message_bucket_time": str(message_bucket_time),
                     },
-                    timeout=HTTP_TIMEOUT
-
+                    timeout=HTTP_TIMEOUT,
                 )
                 response.raise_for_status()
                 return True
@@ -309,7 +310,6 @@ class SoruxGPTManager:
         created_users = []
         for i in range(0, count, batch_size):
             try:
-
                 batch_count = min(batch_size, count - i)
                 tasks = [
                     self.create_single_user(
@@ -336,10 +336,10 @@ class SoruxGPTManager:
                 await self.login()
             except:
                 from traceback import format_exc
+
                 logger.error(format_exc())
                 await asyncio.sleep(10)
                 await self.login()
-
 
         return created_users
 
@@ -379,8 +379,7 @@ class SoruxGPTManager:
                         "description": "兑换额度后请点击渠道商店购买相应的套餐才能续费",
                         "time": expire_time,
                     },
-                    timeout=HTTP_TIMEOUT
-
+                    timeout=HTTP_TIMEOUT,
                 )
                 response.raise_for_status()
                 return {
@@ -425,6 +424,7 @@ class SoruxGPTManager:
                 await asyncio.sleep(1)  # Add delay between batches
 
         return created_codes
+
 
 class SoruxGPTManagerV2(SoruxGPTManager):
 
@@ -502,8 +502,7 @@ class SoruxGPTManagerV2(SoruxGPTManager):
                     "https://soruxgpt-liuli-usersystem.soruxgpt.com/api/add",
                     headers=headers,
                     json=data,
-                    timeout=HTTP_TIMEOUT
-
+                    timeout=HTTP_TIMEOUT,
                 )
                 response.raise_for_status()
                 return True
@@ -607,6 +606,7 @@ async def delete_sorux_accounts_main():
     user_names = ["0_1_d42ae9aa9ecb", "30_1_039f8a3d1c7d"]
     res = await delete_sorux_accounts(user_names)
     logger.debug(res)
+
 
 async def get_user_info_main():
     manager = SoruxGPTManager(admin_username, admin_password)

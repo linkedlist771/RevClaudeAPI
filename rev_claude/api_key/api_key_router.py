@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from rev_claude.api_key.api_key_manage import (APIKeyManager,
-                                               get_api_key_manager)
-from rev_claude.configs import (CLAUDE_BACKEND_API_APIAUTH,
-                                CLAUDE_BACKEND_API_USER_URL)
-from rev_claude.schemas import (BatchAPIKeysDeleteRequest, CreateAPIKeyRequest,
-                                ExtendExpirationRequest)
+from rev_claude.api_key.api_key_manage import APIKeyManager, get_api_key_manager
+from rev_claude.configs import CLAUDE_BACKEND_API_APIAUTH, CLAUDE_BACKEND_API_USER_URL
+from rev_claude.schemas import (
+    BatchAPIKeysDeleteRequest,
+    CreateAPIKeyRequest,
+    ExtendExpirationRequest,
+)
 
 router = APIRouter()
 
@@ -99,7 +100,7 @@ async def get_information(api_key: str):
             headers = {
                 "APIAUTH": CLAUDE_BACKEND_API_APIAUTH,
                 "Content-Type": "application/json",
-                "Cookie": "adminKey=ThisIsAPassword"
+                "Cookie": "adminKey=ThisIsAPassword",
             }
             url = f"{CLAUDE_BACKEND_API_USER_URL}/page/"
             # post data

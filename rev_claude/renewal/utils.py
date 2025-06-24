@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from loguru import  logger
+
 import pytz
 from httpx import AsyncClient
+from loguru import logger
 from pydantic import BaseModel
 
-from rev_claude.configs import (CLAUDE_BACKEND_API_APIAUTH,
-                                CLAUDE_BACKEND_API_USER_URL)
+from rev_claude.configs import CLAUDE_BACKEND_API_APIAUTH, CLAUDE_BACKEND_API_USER_URL
 from rev_claude.utils.time_zone_utils import get_shanghai_time
 
 
@@ -26,7 +26,7 @@ def build_client_headers() -> dict:
     headers = {
         "APIAUTH": CLAUDE_BACKEND_API_APIAUTH,
         "Content-Type": "application/json",
-        "Cookie": "adminKey=ThisIsAPassword"
+        "Cookie": "adminKey=ThisIsAPassword",
     }
     return headers
 
@@ -52,7 +52,8 @@ async def update_api_key_information(api_key_info: dict):
             res = await client.post(url, headers=headers, json=api_key_info, timeout=60)
             return res.json()
     except Exception as e:
-        from traceback import  format_exc
+        from traceback import format_exc
+
         logger.error(f"Renew apikey info:{api_key_info} error:\n{str(e)}")
         logger.error(format_exc())
 

@@ -15,16 +15,25 @@ from fastapi.responses import JSONResponse
 from httpx_sse._decoders import SSEDecoder
 from loguru import logger
 
-from rev_claude.configs import (CLAUDE_OFFICIAL_EXPIRE_TIME,
-                                CLAUDE_OFFICIAL_REVERSE_BASE_URL, PROXIES,
-                                STREAM_CONNECTION_TIME_OUT, STREAM_TIMEOUT,
-                                USE_PROXY)
-from rev_claude.REMINDING_MESSAGE import (EXCEED_LIMIT_MESSAGE,
-                                          NO_EMPTY_PROMPT_MESSAGE, PLUS_EXPIRE,
-                                          PROMPT_TOO_LONG_MESSAGE)
+from rev_claude.configs import (
+    CLAUDE_OFFICIAL_EXPIRE_TIME,
+    CLAUDE_OFFICIAL_REVERSE_BASE_URL,
+    PROXIES,
+    STREAM_CONNECTION_TIME_OUT,
+    STREAM_TIMEOUT,
+    USE_PROXY,
+)
+from rev_claude.REMINDING_MESSAGE import (
+    EXCEED_LIMIT_MESSAGE,
+    NO_EMPTY_PROMPT_MESSAGE,
+    PLUS_EXPIRE,
+    PROMPT_TOO_LONG_MESSAGE,
+)
 from rev_claude.status.clients_status_manager import ClientsStatusManager
 from rev_claude.status_code.status_code_enum import (
-    HTTP_481_IMAGE_UPLOAD_FAILED, HTTP_482_DOCUMENT_UPLOAD_FAILED)
+    HTTP_481_IMAGE_UPLOAD_FAILED,
+    HTTP_482_DOCUMENT_UPLOAD_FAILED,
+)
 from rev_claude.utils.file_utils import DocumentConverter
 
 

@@ -3,8 +3,12 @@ from typing import List
 from fastapi import APIRouter
 
 from rev_claude.history.conversation_history_manager import (
-    ConversationHistory, ConversationHistoryManager,
-    ConversationHistoryRequestInput, Message, conversation_history_manager)
+    ConversationHistory,
+    ConversationHistoryManager,
+    ConversationHistoryRequestInput,
+    Message,
+    conversation_history_manager,
+)
 
 router = APIRouter()
 

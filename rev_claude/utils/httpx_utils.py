@@ -4,10 +4,20 @@ import typing
 
 import httpx
 from httpx._config import DEFAULT_TIMEOUT_CONFIG
-from httpx._types import (AuthTypes, CertTypes, CookieTypes, HeaderTypes,
-                          ProxiesTypes, ProxyTypes, QueryParamTypes,
-                          RequestContent, RequestData, RequestFiles,
-                          TimeoutTypes, VerifyTypes)
+from httpx._types import (
+    AuthTypes,
+    CertTypes,
+    CookieTypes,
+    HeaderTypes,
+    ProxiesTypes,
+    ProxyTypes,
+    QueryParamTypes,
+    RequestContent,
+    RequestData,
+    RequestFiles,
+    TimeoutTypes,
+    VerifyTypes,
+)
 
 
 async def async_stream(

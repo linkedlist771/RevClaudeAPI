@@ -1,5 +1,8 @@
 import os
 from pathlib import Path
+
+import redis
+
 ADMIN_USERNAME = "claude-backend"
 ADMIN_PASSWORD = "20Wd!!!!"
 
@@ -22,6 +25,14 @@ STREAMLIT_LOGS = ROOT / "streamlit_logs"
 STREAMLIT_LOGS.mkdir(exist_ok=True, parents=True)
 
 HTTP_TIMEOUT = 3600
+
+# Redis 连接设置
+redis_client = redis.Redis(
+    host=os.getenv("REDIS_HOST", "redis"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    decode_responses=True,
+)
+
 
 if __name__ == "__main__":
     print(STREAMLIT_LOGS)
