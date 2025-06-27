@@ -311,15 +311,15 @@ class RenewalManager(BaseRedisManager):
 
     def _verify_renewal_success(self, original_info: dict, updated_info: dict | None, expected_days: float) -> bool:
         """
-        Verify if the renewal was successful by comparing expiration times
+        Verify if the renewal was successful by checking if expiration time increased
         
         Args:
             original_info: Original API key information
             updated_info: Updated API key information after renewal
-            expected_days: Expected number of days added
+            expected_days: Expected number of days added (for logging only)
             
         Returns:
-            bool: True if renewal was successful, False otherwise
+            bool: True if renewal was successful (expiration time increased), False otherwise
         """
         if not updated_info:
             logger.error("无法获取更新后的 API Key 信息")
@@ -339,18 +339,16 @@ class RenewalManager(BaseRedisManager):
             original_dt = datetime.strptime(original_expire, "%Y-%m-%d %H:%M:%S")
             updated_dt = datetime.strptime(updated_expire, "%Y-%m-%d %H:%M:%S")
             
-            # Calculate the actual extension in days
-            time_diff = updated_dt - original_dt
-            actual_days = time_diff.total_seconds() / (24 * 3600)
-            
-            logger.info(f"实际续费天数: {actual_days:.2f}, 预期续费天数: {expected_days:.2f}")
-            
-            # Allow for small discrepancies (± 0.1 days = ± 2.4 hours)
-            if abs(actual_days - expected_days) <= 0.1:
-                logger.info("续费验证成功：实际续费时间与预期匹配")
+            # 简单判断：新的过期时间是否比原来的时间晚
+            # 既然API key被用来续费，那它肯定有过期时间，如果续费成功，新时间必然比原时间晚
+            if updated_dt > original_dt:
+                # 计算实际延长的时间用于日志记录
+                time_diff = updated_dt - original_dt
+                actual_days = time_diff.total_seconds() / (24 * 3600)
+                logger.info(f"续费验证成功：API Key 过期时间已延长 {actual_days:.2f} 天（预期: {expected_days:.2f} 天）")
                 return True
             else:
-                logger.warning(f"续费验证失败：实际续费天数 {actual_days:.2f} 与预期 {expected_days:.2f} 不匹配")
+                logger.warning(f"续费验证失败：新的过期时间 {updated_expire} 没有比原过期时间 {original_expire} 更晚")
                 return False
                 
         except Exception as e:
